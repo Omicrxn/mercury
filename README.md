@@ -1,58 +1,73 @@
-# create-svelte
+# Mercury
 
-Everything you need to build a Svelte library, powered by [`create-svelte`](https://github.com/sveltejs/kit/tree/main/packages/create-svelte).
+Mercury is a powerful animation library for Svelte, designed to provide a seamless and intuitive animation experience with a syntax that feels natural to Svelte developers.
 
-Read more about creating a library [in the docs](https://svelte.dev/docs/kit/packaging).
+## Features
 
-## Creating a project
+- **Svelte-native syntax**: Use Mercury through a Svelte action, allowing you to animate components without wrapper elements.
+- **Full HTML/Svelte component compatibility**: Benefit from all features of standard HTML tags and Svelte components without API limitations.
+- **Powered by Anime.js**: Leverages the robust Anime.js library as its animation core.
+- **Layout animations**: Smooth transitions for layout changes (coming soon).
+- **Expanded feature set**: Additional animation capabilities beyond basic Anime.js functionality.
 
-If you're seeing this, you've probably already done this step. Congrats!
+## Installation
+(npm package comming soon)
 
-```bash
-# create a new project in the current directory
-npx sv create
+## Usage
 
-# create a new project in my-app
-npx sv create my-app
+Here's a basic example of how to use Mercury in your Svelte component:
+
+```svelte
+<script>
+  import { mercury, useExit } from 'mercury';
+
+  let show = $state(false);
+</script>
+
+<button onclick={() => show = !show}>Toggle Show</button>
+
+{#if show}
+  <div
+    class="w-24 h-24 rounded-lg bg-blue-400 border border-blue-600"
+    use:mercury={{
+      opacity: 1,
+      scale: [1, 2, 2, 1, 1],
+      rotate: [0, 0, 180, 180, 0],
+      borderRadius: ['8%', '8%', '50%', '50%', '8%'],
+      duration: 3,
+      ease: 'inOutSine',
+      delay: 0.5,
+      loop: true
+    }}
+    out:useExit={{
+      opacity: 0,
+      scale: 0,
+      duration: 1
+    }}
+  />
+{/if}
 ```
 
-## Developing
+## Why Mercury?
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+Mercury brings the power of advanced animation libraries like Framer Motion to Svelte, but with a twist. Instead of wrapping your components, Mercury uses Svelte actions. This approach allows you to:
 
-```bash
-npm run dev
+1. Keep your markup clean and semantic
+2. Utilize all native HTML attributes and Svelte component props without restrictions
+3. Enjoy a more Svelte-like development experience
 
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
-```
+## Documentation
 
-Everything inside `src/lib` is part of your library, everything inside `src/routes` can be used as a showcase or preview app.
+(Coming soon) Comprehensive documentation covering all features, options, and advanced usage scenarios.
 
-## Building
+## Contributing
 
-To build your library:
+We welcome contributions! More details on this soon.
 
-```bash
-npm run package
-```
+## License
 
-To create a production version of your showcase app:
+Mercury is [MIT licensed](LICENSE).
 
-```bash
-npm run build
-```
+## Acknowledgements
 
-You can preview the production build with `npm run preview`.
-
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
-
-## Publishing
-
-Go into the `package.json` and give your package the desired name through the `"name"` option. Also consider adding a `"license"` field and point it to a `LICENSE` file which you can create from a template (one popular option is the [MIT license](https://opensource.org/license/mit/)).
-
-To publish your library to [npm](https://www.npmjs.com):
-
-```bash
-npm publish
-```
+Mercury is built on the shoulders of giants. Special thanks to the creators and maintainers of Svelte, Anime.js, and all the other open-source projects that make this possible.
