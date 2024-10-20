@@ -1,3 +1,6 @@
-<h1>Welcome to your library project</h1>
-<p>Create your package using @sveltejs/package and preview/showcase your work with SvelteKit</p>
-<p>Visit <a href="https://svelte.dev/docs/kit">svelte.dev/docs/kit</a> to read the documentation</p>
+<script lang="ts">
+</script>
+
+<div class="p-32 h-screen w-full">
+	<div class="w-16 h-16 rounded-lg bg-blue-400 border border-blue-600"></div>
+</div>
