@@ -1,6 +1,6 @@
 import { engine, animate, type TargetsParam, type Animation } from '@juliangarnierorg/anime-beta';
 import type { ActionReturn } from 'svelte/action';
-
+import flip from './flip.svelte.js';
 interface MercuryAttributes {
   layout?: boolean;
 }
@@ -37,6 +37,7 @@ export function mercury(
 
   if(layout){
     // TODO: Add layout animation (Need to choose between: FLIP, Layout Projection or ViewTransition API)
+    flip(node,{})
   }
 
   // Initialize animation for this node
