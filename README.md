@@ -27,24 +27,25 @@ Here's a basic example of how to use Mercury in your Svelte component:
 <button onclick={() => show = !show}>Toggle Show</button>
 
 {#if show}
-		<div
-			class="w-24 h-24 rounded-lg bg-blue-400 border border-blue-600"
-			use:mercury={{
-				scale: [1, 2, 2, 1, 1],
-				rotate: [0, 0, 180, 180, 0],
-				borderRadius: ['8%', '8%', '50%', '50%', '8%'],
-				duration: 3,
-				ease: 'inOutSine',
-				delay: 0.5,
-				loop: true
-			}}
-				out:useExit={{
-				opacity: 0,
-				scale: 0,
-				duration: 1
-			}}
-		></div>
-	{/if}
+  <div
+    class="w-24 h-24 rounded-lg bg-blue-400 border border-blue-600"
+    use:mercury={{
+      opacity: 1,
+      scale: [1, 2, 2, 1, 1],
+      rotate: [0, 0, 180, 180, 0],
+      borderRadius: ['8%', '8%', '50%', '50%', '8%'],
+      duration: 3,
+      ease: 'inOutSine',
+      delay: 0.5,
+      loop: true
+    }}
+    out:useExit={{
+      opacity: 0,
+      scale: 0,
+      duration: 1
+    }}
+  />
+{/if}
 ```
 
 ## Why Mercury?
