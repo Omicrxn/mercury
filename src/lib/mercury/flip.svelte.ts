@@ -19,17 +19,16 @@ function createAnimation(
 ): Animation {
 	const dx = from.left - to.left;
 	const dy = from.top - to.top;
+	const dw = to.width / from.width;
+	const dh = to.height / from.height;
+	node.style.transformOrigin = 'top left';
 	return node.animate(
 		[
 			{
-				width: `${from.width}px`,
-				height: `${from.height}px`,
-				transform: `translate(${dx}px, ${dy}px)`
+				transform: ` translate(${dx}px, ${dy}px) scale(${dw},${dh})`
 			},
 			{
-				width: `${to.width}px`,
-				height: `${to.height}px`,
-				transform: 'translate(0, 0)'
+				transform: ' translate(0, 0) scale(0, 0)'
 			}
 		],
 		{

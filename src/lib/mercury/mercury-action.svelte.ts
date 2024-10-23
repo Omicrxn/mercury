@@ -1,108 +1,213 @@
-import { engine, animate, type TargetsParam, type Animation } from '@juliangarnierorg/anime-beta';
-import type { ActionReturn } from 'svelte/action';
+import {
+  engine,
+  animate,
+  type TargetsParam,
+  type Animation,
+  createDraggable
+} from '@juliangarnierorg/anime-beta';
+import type { Action } from 'svelte/action';
 import flip from './flip.svelte.js';
+import layoutProjection from './layout.svelte.js';
+
+// Constants
+const DEFAULT_DURATION = 1;
+const DEFAULT_DELAY = 0;
+
+// Enums
+enum ExitMode {
+  SYNC = 'sync',
+  WAIT = 'wait',
+  POP_LAYOUT = 'popLayout'
+}
+
+// Interfaces
 interface MercuryAttributes {
   layout?: boolean;
+  draggable?: boolean;
 }
 
-type MercuryParams = TargetsParam & {
+interface MercuryParams extends TargetsParam {
   play?: boolean;
-};
+}
 
-type MercuryExitParams = TargetsParam & {
-  mode?: 'sync' | 'wait' | 'popLayout';
-};
+interface MercuryExitParams extends TargetsParam {
+  mode?: ExitMode;
+  duration?: number;
+  delay?: number;
+}
 
-const activeAnimations: Set<Animation> = new Set();
-const exitingNodes: Set<HTMLElement> = new Set();
+// State management
+class AnimationState {
+  private static instance: AnimationState;
+  private activeAnimations: Set<Animation>;
+  private exitingNodes: Set<HTMLElement>;
 
-// Mercury action definition
-export function mercury(
-  node: HTMLElement,
-  params: MercuryParams = {}
-): ActionReturn<MercuryParams, MercuryAttributes> {
-  engine.timeUnit = 's'; // Change the time unit globally to seconds
+  private constructor() {
+    this.activeAnimations = new Set();
+    this.exitingNodes = new Set();
+  }
+
+  static getInstance(): AnimationState {
+    if (!AnimationState.instance) {
+      AnimationState.instance = new AnimationState();
+    }
+    return AnimationState.instance;
+  }
+
+  addAnimation(animation: Animation): void {
+    this.activeAnimations.add(animation);
+  }
+
+  removeAnimation(animation: Animation): void {
+    this.activeAnimations.delete(animation);
+  }
+
+  addExitingNode(node: HTMLElement): void {
+    this.exitingNodes.add(node);
+  }
+
+  removeExitingNode(node: HTMLElement): void {
+    this.exitingNodes.delete(node);
+  }
+
+  get hasExitingNodes(): boolean {
+    return this.exitingNodes.size > 0;
+  }
+
+  get allActiveAnimations(): Animation[] {
+    return Array.from(this.activeAnimations);
+  }
+}
+
+// Mercury action
+export const mercury: Action<HTMLElement, () => MercuryParams, MercuryAttributes> = (
+  node,
+  params = () => ({})
+) => {
+  engine.timeUnit = 's';
+  const state = AnimationState.getInstance();
   let currentAnimation: Animation | null = null;
-  let animationParams: MercuryParams = { ...params };
-  const layout = node.hasAttribute('layout');
+  let animationParams: MercuryParams;
 
-  function updateAnimation(node: HTMLElement, animationParams: MercuryParams, isExit = false) {
+  const initializeNode = () => {
+    const layout = node.hasAttribute('layout');
+    const draggable = node.hasAttribute('draggable');
+
+    if (layout) {
+      flip(node, {});
+      // Alternative: layoutProjection(node);
+    }
+
+    if (draggable) {
+      createDraggable(node);
+    }
+  };
+
+  const updateAnimation = (node: HTMLElement, params: MercuryParams): void => {
     if (currentAnimation) {
       currentAnimation.pause();
-      activeAnimations.delete(currentAnimation);
+      state.removeAnimation(currentAnimation);
     }
-    currentAnimation = animate(node, animationParams);
-    activeAnimations.add(currentAnimation);
-  }
 
-  if(layout){
-    // TODO: Add layout animation (Need to choose between: FLIP, Layout Projection or ViewTransition API)
-    flip(node,{})
-  }
+    currentAnimation = animate(node, params);
+    state.addAnimation(currentAnimation);
+  };
 
-  // Initialize animation for this node
-  updateAnimation(node, animationParams);
+  // Initialize
+  initializeNode();
 
-  return {
-    update(newParams: MercuryParams) {
-      animationParams = { ...newParams };
+  $effect(() => {
+    try {
+      animationParams = { ...params() };
       updateAnimation(node, animationParams);
-    },
-    destroy() {
-      if (currentAnimation) {
-        activeAnimations.delete(currentAnimation);
-        currentAnimation.pause();
-      }
-    }
-  };
-}
 
-// Function to handle exit animations
-export function useExit(outNode: HTMLElement, params: MercuryExitParams = {}) {
-  const { duration = 1, delay = 0, mode = 'sync', ...restParams } = params;
-  let isExiting = false;
-
-  function startAnimation() {
-    const exitAnimation = animate(outNode, { duration, delay, ...restParams });
-    activeAnimations.add(exitAnimation);
-    exitingNodes.add(outNode);
-    exitAnimation.then(() => {
-      activeAnimations.delete(exitAnimation);
-      exitingNodes.delete(outNode);
-    });
-  }
-
-  function handleExitAnimation() {
-    switch (mode) {
-      case 'wait':
-        Promise.all(Array.from(activeAnimations).map((anim) => anim.completed)).then(startAnimation);
-        break;
-      case 'popLayout':
-        if (outNode.parentNode) {
-          (outNode.parentNode as HTMLElement).style.position = 'relative';
+      return () => {
+        if (currentAnimation) {
+          state.removeAnimation(currentAnimation);
+          currentAnimation.pause();
         }
-        outNode.style.position = 'absolute';
-        startAnimation();
-        return new Promise((resolve) => setTimeout(resolve, duration * 1000));
-      default: // 'sync' mode
-        startAnimation();
+      };
+    } catch (error) {
+      console.error('Error in mercury animation effect:', error);
+    }
+  });
+};
+
+// Exit animation handler
+export class ExitAnimationHandler {
+  private node: HTMLElement;
+  private params: MercuryExitParams;
+  private state: AnimationState;
+  private isExiting: boolean;
+
+  constructor(node: HTMLElement, params: MercuryExitParams = {}) {
+    this.node = node;
+    this.params = {
+      duration: DEFAULT_DURATION,
+      delay: DEFAULT_DELAY,
+      mode: ExitMode.SYNC,
+      ...params
+    };
+    this.state = AnimationState.getInstance();
+    this.isExiting = false;
+  }
+
+  private async startAnimation(): Promise<void> {
+    const { duration, delay, mode, ...restParams } = this.params;
+    const exitAnimation = animate(this.node, { duration, delay, ...restParams });
+
+    this.state.addAnimation(exitAnimation);
+    this.state.addExitingNode(this.node);
+
+    try {
+      await exitAnimation;
+    } finally {
+      this.state.removeAnimation(exitAnimation);
+      this.state.removeExitingNode(this.node);
     }
   }
 
-  return {
-    duration: duration * 1000,
-    delay: delay * 1000,
-    css: (t: number, u: number) => {
-      if (!isExiting && t <= u) {
-        isExiting = true;
-        handleExitAnimation();
-      }
-      return '';
+  async handleExit(): Promise<void> {
+    const { mode, duration = DEFAULT_DURATION } = this.params;
+    switch (mode) {
+      case ExitMode.WAIT:
+        await Promise.all(this.state.allActiveAnimations.map(anim => anim.completed));
+        await this.startAnimation();
+        break;
+
+      case ExitMode.POP_LAYOUT:
+        if (this.node.parentNode) {
+          (this.node.parentNode as HTMLElement).style.position = 'relative';
+        }
+        this.node.style.position = 'absolute';
+        await this.startAnimation();
+        await new Promise(resolve => setTimeout(resolve, duration * 1000));
+        break;
+
+      default:
+        await this.startAnimation();
     }
-  };
+  }
+
+  getTransition(): { duration: number; delay: number; css: (t: number, u: number) => string } {
+    const { duration = DEFAULT_DURATION, delay = DEFAULT_DELAY } = this.params;
+
+    return {
+      duration: duration * 1000,
+      delay: delay * 1000,
+      css: (t: number, u: number) => {
+        if (!this.isExiting && t <= u) {
+          this.isExiting = true;
+          this.handleExit();
+        }
+        return '';
+      }
+    };
+  }
 }
 
-// Helper function to check if layout animations should be blocked
-export function shouldBlockLayout(): boolean {
-  return exitingNodes.size > 0;
+// Helper functions
+export function useExit(node: HTMLElement, params: MercuryExitParams = {}): ReturnType<ExitAnimationHandler['getTransition']> {
+  const handler = new ExitAnimationHandler(node, params);
+  return handler.getTransition();
 }
