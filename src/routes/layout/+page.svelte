@@ -4,7 +4,7 @@
 	let x = $state(0);
 </script>
 
-<div class="relative flex h-full flex-col items-center gap-12 p-32">
+<div class="relative flex h-full items-center gap-12 p-32">
 	<div class="flex justify-center gap-4">
 		<button
 			variant="secondary"
@@ -32,11 +32,24 @@
 	</div>
 	<div class="flex min-h-16 w-96 p-4 items-center bg-gray-200 {justify}">
 		<div
-			class="w-24 h-24 rounded-lg bg-blue-400 border border-blue-600"
+			class="w-24 h-24 rounded-lg bg-blue-400 border items-center justify-center flex border-blue-600"
 			style={justify === 'justify-end' ? 'width:200px;height:200px;' : 'width:96px;height:96px;'}
-			use:mercury
+			use:mercury={() => ({})}
 			out:useExit
 			layout
-		></div>
+		>
+			<p use:mercury={() => ({})} layout>Projection</p>
+		</div>
+	</div>
+	<div class="flex min-h-16 w-96 p-4 items-center bg-gray-200 {justify}">
+		<div
+			class="w-24 h-24 rounded-lg bg-blue-400 border items-center justify-center flex border-blue-600"
+			style={justify === 'justify-end' ? 'width:200px;height:200px;' : 'width:96px;height:96px;'}
+			use:mercury={() => ({})}
+			out:useExit
+			flip
+		>
+			FLIP
+		</div>
 	</div>
 </div>

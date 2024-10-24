@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { mercury, useExit } from '$lib/mercury/mercury-action.svelte.js';
 	let show = $state(true);
-	import CopyButton from './component/copy-button.svelte';
 	let xValue = $state(0);
 	let yValue = $state(0);
 	let rotateValue = $state(0);

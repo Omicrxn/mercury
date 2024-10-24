@@ -8,74 +8,67 @@ import {
 	ProjectionNodeSnapper,
 	ProjectionTreeAnimationEngine
 } from '@layout-projection/core';
+import { useMutationObserver } from 'runed';
 import { tick } from 'svelte';
 
-interface AnimationParameters {
-	duration?: number;
-	delay?: number;
-	easing?: string;
-}
+// Global WeakMap to store projection nodes
+const nodes = new WeakMap<Node, ProjectionNode>();
+const measurer = new ElementMeasurer(new CssBorderRadiusParser());
+const snapper = new ProjectionNodeSnapper(measurer);
+const animator = new LayoutAnimator(
+	new ProjectionTreeAnimationEngine(new ProjectionNodeAnimationEngine()),
+	measurer,
+	new CssEasingParser()
+);
 
-export default function layoutProjection(node: HTMLElement, params: AnimationParameters = {}) {
-	const measurer = new ElementMeasurer(new CssBorderRadiusParser());
-	const snapper = new ProjectionNodeSnapper(measurer);
-	const animator = new LayoutAnimator(
-		new ProjectionTreeAnimationEngine(new ProjectionNodeAnimationEngine()),
-		measurer,
-		new CssEasingParser()
+export default function setupProjection(node: Node) {
+	let parentNode: ProjectionNode | undefined = undefined;
+	if (node.parentNode && !nodes.has(node.parentNode)) {
+		parentNode = new ProjectionNode(node.parentElement!, measurer);
+		nodes.set(node.parentNode, parentNode);
+	} else if (node.parentNode) {
+		parentNode = nodes.get(node.parentNode);
+	}
+
+	const projectionNode = new ProjectionNode(node, measurer);
+	nodes.set(node, projectionNode);
+	// If parent element has a projection node, attach to it
+	if (node.parentNode && nodes.has(node.parentNode)) {
+		projectionNode.attach(nodes.get(node.parentNode));
+	}
+	console.log('parentNode', node, parentNode);
+	let snapshots = snapper.snapshotTree(parentNode);
+	const observer = useMutationObserver(
+		() => node.parentNode,
+		(mutations) => {
+			for (const mutation of mutations) {
+				if (
+					(mutation.type === 'attributes' && mutation.attributeName === 'class') ||
+					mutation.type === 'childList'
+				) {
+					requestAnimationFrame(() => {
+						if (parentNode) {
+							console.log(snapshots);
+							tick().then(() => {
+								console.log('update');
+								animator.animate({ root: parentNode, from: snapshots }).then(() => {
+									snapshots = snapper.snapshotTree(parentNode);
+								});
+								console.log('element rect:', (node as HTMLElement).getBoundingClientRect());
+							});
+						}
+					});
+					break;
+				}
+			}
+		},
+		{ attributes: true, childList: true }
 	);
 
-	let projectionNode: ProjectionNode;
-
-	function createProjectionNode() {
-		projectionNode = new ProjectionNode(node, measurer);
-	}
-
-	function updateProjection(snapshots: any) {
-		if (!projectionNode) return;
-
-		// Animate from the previous state to the new state
-		animator.animate({
-			root: projectionNode,
-			from: snapshots
-		});
-	}
-
-	// Create the projection node immediately
-	createProjectionNode();
-
-	// Set up the mutation observer
-	const observer = new MutationObserver((mutations) => {
-		for (const mutation of mutations) {
-			if (
-				(mutation.type === 'attributes' && mutation.attributeName === 'class') ||
-				mutation.type === 'childList'
-			) {
-				console.log('updated');
-				requestAnimationFrame(() => {
-					// Re-measure and update the projection node
-					projectionNode.measure();
-					const snapshots = snapper.snapshotTree(projectionNode);
-
-					tick().then(() => {
-						updateProjection(snapshots);
-					});
-				});
-				break;
-			}
-		}
-	});
-
-	// Observe the node itself and its children
-	observer.observe(node, { attributes: true, childList: true, subtree: true });
-	observer.observe(node.parentNode, { attributes: true, childList: true, subtree: true });
-
 	return {
-		update(newParams: AnimationParameters) {
-			Object.assign(params, newParams);
-		},
-		destroy() {
-			observer.disconnect();
+		destroy: () => {
+			observer.stop();
+			nodes.delete(node);
 		}
 	};
 }
