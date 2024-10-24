@@ -1,18 +1,16 @@
 import {
-	CssBorderRadiusParser,
-	CssEasingParser,
 	ElementMeasurer,
 	LayoutAnimator,
 	ProjectionNode,
-	ProjectionNodeAnimationEngine,
 	ProjectionNodeSnapper,
-	ProjectionTreeAnimationEngine
+	ProjectionTreeAnimationEngine,
+	ProjectionNodeAnimationEngine,
+	CssBorderRadiusParser,
+	CssEasingParser
 } from '@layout-projection/core';
 import { useMutationObserver } from 'runed';
 import { tick } from 'svelte';
-
-// Global WeakMap to store projection nodes
-const nodes = new WeakMap<Node, ProjectionNode>();
+// Initialize core services
 const measurer = new ElementMeasurer(new CssBorderRadiusParser());
 const snapper = new ProjectionNodeSnapper(measurer);
 const animator = new LayoutAnimator(
@@ -20,51 +18,55 @@ const animator = new LayoutAnimator(
 	measurer,
 	new CssEasingParser()
 );
-
+// Store projection nodes
+const nodes = new WeakMap<Node, ProjectionNode>();
+function findRootProjectionNode(node: ProjectionNode): ProjectionNode {
+	console.log('this node is', node);
+	if (!node) return node;
+	return node.parent ? findRootProjectionNode(node.parent) : node;
+}
 export default function setupProjection(node: Node) {
-	let parentNode: ProjectionNode | undefined = undefined;
-	if (node.parentNode && !nodes.has(node.parentNode)) {
-		parentNode = new ProjectionNode(node.parentElement!, measurer);
-		nodes.set(node.parentNode, parentNode);
-	} else if (node.parentNode) {
-		parentNode = nodes.get(node.parentNode);
-	}
-
+	// Get or create parent projection node
+	const parentNode =
+		node.parentNode &&
+		(nodes.get(node.parentNode) ||
+			(() => {
+				const newParent = new ProjectionNode(node.parentElement!, measurer);
+				nodes.set(node.parentNode, newParent);
+				return newParent;
+			})());
+	// Create and store projection node
 	const projectionNode = new ProjectionNode(node, measurer);
 	nodes.set(node, projectionNode);
-	// If parent element has a projection node, attach to it
-	if (node.parentNode && nodes.has(node.parentNode)) {
-		projectionNode.attach(nodes.get(node.parentNode));
+	// Attach to parent if exists
+	if (parentNode) {
+		projectionNode.attach(parentNode);
 	}
-	console.log('parentNode', node, parentNode);
-	let snapshots = snapper.snapshotTree(parentNode);
+
+	const rootNode = findRootProjectionNode(projectionNode);
+
+	let snapshots = snapper.snapshotTree(rootNode);
+	console.log('root', rootNode);
+	// Setup mutation observer
 	const observer = useMutationObserver(
 		() => node.parentNode,
 		(mutations) => {
-			for (const mutation of mutations) {
-				if (
+			const shouldUpdate = mutations.some(
+				(mutation) =>
 					(mutation.type === 'attributes' && mutation.attributeName === 'class') ||
 					mutation.type === 'childList'
-				) {
-					requestAnimationFrame(() => {
-						if (parentNode) {
-							console.log(snapshots);
-							tick().then(() => {
-								console.log('update');
-								animator.animate({ root: parentNode, from: snapshots }).then(() => {
-									snapshots = snapper.snapshotTree(parentNode);
-								});
-								console.log('element rect:', (node as HTMLElement).getBoundingClientRect());
-							});
-						}
+			);
+			if (shouldUpdate && parentNode) {
+				requestAnimationFrame(() => {
+					tick().then(async () => {
+						await animator.animate({ root: rootNode, from: snapshots });
+						snapshots = snapper.snapshotTree(rootNode);
 					});
-					break;
-				}
+				});
 			}
 		},
 		{ attributes: true, childList: true }
 	);
-
 	return {
 		destroy: () => {
 			observer.stop();

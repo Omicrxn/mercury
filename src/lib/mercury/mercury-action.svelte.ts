@@ -8,6 +8,7 @@ import {
 import type { Action } from 'svelte/action';
 import flip from './flip.svelte.js';
 import setupProjection from './layout.svelte.js';
+import { tick } from 'svelte';
 
 // Constants
 const DEFAULT_DURATION = 1;
@@ -91,16 +92,11 @@ export const mercury: Action<HTMLElement, () => MercuryParams, MercuryAttributes
 
 	const initializeNode = () => {
 		const layout = node.hasAttribute('layout');
-		const layoutFlip = node.hasAttribute('flip');
+
 		const draggable = node.hasAttribute('draggable');
-		if (layoutFlip) {
-			flip(node, {});
-		}
 		if (layout) {
 			setupProjection(node);
-			// Alternative: layoutProjection(node);
 		}
-
 		if (draggable) {
 			createDraggable(node);
 		}

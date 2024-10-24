@@ -4,7 +4,7 @@
 	let x = $state(0);
 </script>
 
-<div class="relative flex h-full items-center gap-12 p-32">
+<div class="relative flex flex-col h-full items-center gap-12 p-32">
 	<div class="flex justify-center gap-4">
 		<button
 			variant="secondary"
@@ -30,26 +30,43 @@
 			}}>increase X</button
 		>
 	</div>
-	<div class="flex min-h-16 w-96 p-4 items-center bg-gray-200 {justify}">
-		<div
-			class="w-24 h-24 rounded-lg bg-blue-400 border items-center justify-center flex border-blue-600"
-			style={justify === 'justify-end' ? 'width:200px;height:200px;' : 'width:96px;height:96px;'}
-			use:mercury={() => ({})}
-			out:useExit
-			layout
-		>
-			<p use:mercury={() => ({})} layout>Projection</p>
-		</div>
-	</div>
-	<div class="flex min-h-16 w-96 p-4 items-center bg-gray-200 {justify}">
-		<div
-			class="w-24 h-24 rounded-lg bg-blue-400 border items-center justify-center flex border-blue-600"
-			style={justify === 'justify-end' ? 'width:200px;height:200px;' : 'width:96px;height:96px;'}
-			use:mercury={() => ({})}
-			out:useExit
-			flip
-		>
-			FLIP
+	<div class="flex gap-3">
+		<!-- <div class="flex min-h-16 w-96 p-4 items-center bg-gray-200 {justify}">
+			<div
+				class="w-24 h-24 rounded-lg bg-blue-400 border items-center justify-center flex border-blue-600"
+				style={justify === 'justify-end' ? 'width:200px;height:200px;' : 'width:96px;height:96px;'}
+				use:mercury={() => ({})}
+				out:useExit
+				layout
+			></div>
+		</div> -->
+		<!-- <div class="flex gap-2 min-h-16 w-96 p-4 items-center bg-gray-200 {justify}">
+			<div
+				class="w-24 h-24 rounded-lg bg-blue-400 border items-center justify-center flex border-blue-600"
+				style={justify === 'justify-end' ? 'width:200px;height:200px;' : 'width:96px;height:96px;'}
+				use:mercury={() => ({})}
+				out:useExit
+				layout
+			></div>
+			<div
+				class="w-24 h-24 rounded-lg bg-blue-400 border items-center justify-center flex border-blue-600"
+				style={justify === 'justify-end' ? 'width:200px;height:200px;' : 'width:96px;height:96px;'}
+				use:mercury={() => ({})}
+				out:useExit
+				layout
+			></div>
+		</div> -->
+		<div id="flexWrapper" class="flex min-h-16 w-96 p-4 items-center bg-gray-200 {justify}">
+			<div
+				id="box"
+				class="w-24 h-24 rounded-lg bg-blue-400 border items-center justify-center flex border-blue-600"
+				style={justify === 'justify-end' ? 'width:200px;height:200px;' : 'width:96px;height:96px;'}
+				use:mercury={() => ({})}
+				out:useExit
+				layout
+			>
+				<p id="text" use:mercury={() => ({})} layout>Projection</p>
+			</div>
 		</div>
 	</div>
 </div>
