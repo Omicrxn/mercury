@@ -21,7 +21,7 @@ npm install @omicrxn/mercury
 
 ```svelte
 <script>
-	import { mercury } from '@omicrxn/mercury';
+	import { mercury,useExit } from '@omicrxn/mercury';
 	let show = true;
 </script>
 
@@ -75,6 +75,10 @@ Example Parameters:
 - `opacity`: The opacity change during exit
 - `scale`: The scale during exit
 - `duration`: The duration of the exit animation
+
+## Acknowledgments
+Mercury is built on the shoulders of giants. Special thanks to the creators and maintainers of [Svelte](https://svelte.dev/), [Anime.js](https://github.com/juliangarnier/anime/), and special thanks to [@Char2sGu](https://github.com/Char2sGu) for helping me integrate layout projections into the library.
+
 
 ## License
 
