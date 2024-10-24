@@ -24,6 +24,7 @@ enum ExitMode {
 // Interfaces
 interface MercuryAttributes {
 	layout?: boolean;
+	layoutid?: string;
 	draggable?: boolean;
 }
 
@@ -94,9 +95,11 @@ export const mercury: Action<HTMLElement, () => MercuryParams, MercuryAttributes
 	} | null = null;
 	const initializeNode = () => {
 		const layout = node.hasAttribute('layout');
+		const layoutId = node.getAttribute('layoutid');
 		const draggable = node.hasAttribute('draggable');
 		if (layout) {
-			layoutProjection = setupProjection(node);
+		  console.log(layoutId);
+			layoutProjection = setupProjection(node,layoutId);
 		}
 		if (draggable) {
 			createDraggable(node);
@@ -127,7 +130,7 @@ export const mercury: Action<HTMLElement, () => MercuryParams, MercuryAttributes
 					state.removeAnimation(currentAnimation);
 					currentAnimation.pause();
 				}
-				layoutProjection?.destroy()
+				layoutProjection?.destroy();
 			};
 		} catch (error) {
 			console.error('Error in mercury animation effect:', error);
