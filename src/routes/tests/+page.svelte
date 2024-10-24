@@ -1,5 +1,5 @@
-<script>
-	import { mercury } from '$lib/mercury/mercury-action.svelte';
+<script lang="ts">
+	import { mercury } from '$lib/index';
 
 	let show = $state(false);
 </script>

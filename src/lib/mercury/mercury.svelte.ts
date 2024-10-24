@@ -7,30 +7,30 @@ import {
 	type AnimationParams
 } from '@juliangarnierorg/anime-beta';
 import type { Action } from 'svelte/action';
-import { setupProjection } from './layout.svelte.js';
+import { setupProjection } from './layout.js';
 
 // Constants
 const DEFAULT_DURATION = 1;
 const DEFAULT_DELAY = 0;
 
 // Enums
-enum ExitMode {
+export enum ExitMode {
 	SYNC = 'sync',
 	WAIT = 'wait',
 	POP_LAYOUT = 'popLayout'
 }
 
 // Interfaces
-interface MercuryAttributes {
+export interface MercuryAttributes {
 	layout?: string | boolean;
 	draggable?: boolean;
 }
 
-type MercuryParams = TargetsParam & {
+export type MercuryParams = TargetsParam & {
 	play?: boolean;
 };
 
-type MercuryExitParams = TargetsParam & {
+export type MercuryExitParams = TargetsParam & {
 	mode?: ExitMode;
 	duration?: number;
 	delay?: number;
@@ -128,7 +128,6 @@ export const mercury: Action<
 	initializeNode();
 
 	$effect(() => {
-		console.log('updated');
 		try {
 			animationParams = { ...(typeof params === 'function' ? params() : params || {}) };
 			updateAnimation(node, animationParams);

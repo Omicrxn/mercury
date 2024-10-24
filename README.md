@@ -1,73 +1,81 @@
 # Mercury
 
-Mercury is a powerful animation library for Svelte, designed to provide a seamless and intuitive animation experience with a syntax that feels natural to Svelte developers.
+**Mercury** is a powerful Svelte animation library built on top of AnimeJS, offering an intuitive, streamlined way to animate DOM elements directly using Svelte actions. Mercury allows for seamless integration with existing Svelte features like transitions, actions, and motion, while eliminating the need for wrapper components. It also introduces layout animations and exit animations inspired by Framer Motion, all while keeping a clean and svelte-friendly syntax.
 
 ## Features
 
-- **Svelte-native syntax**: Use Mercury through a Svelte action, allowing you to animate components without wrapper elements.
-- **Full HTML/Svelte component compatibility**: Benefit from all features of standard HTML tags and Svelte components without API limitations.
-- **Powered by Anime.js**: Leverages the robust Anime.js library as its animation core.
-- **Layout animations**: Smooth transitions for layout changes (coming soon).
-- **Expanded feature set**: Additional animation capabilities beyond basic Anime.js functionality.
+- Leverages **AnimeJS** for powerful animations
+- Supports **layout animations**
+- Provides **exit animations**
+- Simple, expressive Svelte syntax using `use:mercury`
+- No wrapper components, all animations applied directly to DOM elements
+- Works with all Svelte features for the DOM like transitions, actions, and motion, which also allows for direct binding to the element
 
 ## Installation
-(npm package comming soon)
+
+```bash
+npm install mercury
+```
 
 ## Usage
 
-Here's a basic example of how to use Mercury in your Svelte component:
-
 ```svelte
 <script>
-  import { mercury, useExit } from 'mercury';
-
-  let show = $state(false);
+	import { mercury } from 'mercury';
+	let show = true;
 </script>
 
-<button onclick={() => show = !show}>Toggle Show</button>
+<button on:click={() => (show = !show)}>Toggle Show</button>
 
 {#if show}
-  <div
-    class="w-24 h-24 rounded-lg bg-blue-400 border border-blue-600"
-    use:mercury={{
-      opacity: 1,
-      scale: [1, 2, 2, 1, 1],
-      rotate: [0, 0, 180, 180, 0],
-      borderRadius: ['8%', '8%', '50%', '50%', '8%'],
-      duration: 3,
-      ease: 'inOutSine',
-      delay: 0.5,
-      loop: true
-    }}
-    out:useExit={{
-      opacity: 0,
-      scale: 0,
-      duration: 1
-    }}
-  />
+	<div
+		class="w-24 h-24 rounded-lg bg-blue-400 border border-blue-600"
+		use:mercury={{
+			opacity: 1,
+			scale: [1, 2, 2, 1, 1],
+			rotate: [0, 0, 180, 180, 0],
+			borderRadius: ['8%', '8%', '50%', '50%', '8%'],
+			duration: 3,
+			ease: 'inOutSine',
+			delay: 0.5,
+			loop: true
+		}}
+		out:useExit={{
+			opacity: 0,
+			scale: 0,
+			duration: 1
+		}}
+	></div>
 {/if}
 ```
 
-## Why Mercury?
+## API
 
-Mercury brings the power of advanced animation libraries like Framer Motion to Svelte, but with a twist. Instead of wrapping your components, Mercury uses Svelte actions. This approach allows you to:
+### `use:mercury`
 
-1. Keep your markup clean and semantic
-2. Utilize all native HTML attributes and Svelte component props without restrictions
-3. Enjoy a more Svelte-like development experience
+The primary action for applying animations to DOM elements. It accepts an object with animation parameters, similar to **AnimeJS**.
 
-## Documentation
+Example Parameters:
 
-(Coming soon) Comprehensive documentation covering all features, options, and advanced usage scenarios.
+- `opacity`: The opacity of the element
+- `scale`: A series of values to scale the element
+- `rotate`: Rotate the element around the Z-axis
+- `borderRadius`: A series of values to animate the border-radius
+- `duration`: The length of the animation in seconds
+- `ease`: The easing function for the animation
+- `delay`: The delay before the animation starts
+- `loop`: Specifies if the animation should loop
 
-## Contributing
+### `out:useExit`
 
-We welcome contributions! More details on this soon.
+Action for defining exit animations when the element is removed from the DOM.
+
+Example Parameters:
+
+- `opacity`: The opacity change during exit
+- `scale`: The scale during exit
+- `duration`: The duration of the exit animation
 
 ## License
 
-Mercury is [MIT licensed](LICENSE).
-
-## Acknowledgements
-
-Mercury is built on the shoulders of giants. Special thanks to the creators and maintainers of Svelte, Anime.js, and all the other open-source projects that make this possible.
+MIT License

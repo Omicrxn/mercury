@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { mercury, useExit } from '$lib/mercury/mercury-action.svelte.js';
+	import { mercury, useExit } from '$lib/index.js';
+
 	let justify = $state('justify-start');
 	let show = $state(true);
 </script>
@@ -7,19 +8,16 @@
 <div class="relative flex flex-col h-full items-center gap-12 p-32 bg-blue-500">
 	<div class="flex justify-center gap-4">
 		<button
-			variant="secondary"
 			onclick={() => {
 				justify = 'justify-start';
 			}}>Justify Start</button
 		>
 		<button
-			variant="secondary"
 			onclick={() => {
 				justify = 'justify-center';
 			}}>Justify Center</button
 		>
 		<button
-			variant="secondary"
 			onclick={() => {
 				justify = 'justify-end';
 			}}>Justify End</button

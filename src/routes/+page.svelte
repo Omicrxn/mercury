@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { mercury, useExit } from '$lib/mercury/mercury-action.svelte.js';
+	import { mercury, useExit } from '$lib/index';
 	let show = $state(true);
 	let xValue = $state(0);
 	let yValue = $state(0);
