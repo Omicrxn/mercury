@@ -14,14 +14,14 @@
 ## Installation
 
 ```bash
-npm install mercury
+npm install @omicrxn/mercury
 ```
 
 ## Usage
 
 ```svelte
 <script>
-	import { mercury } from 'mercury';
+	import { mercury } from '@omicrxn/mercury';
 	let show = true;
 </script>
 
