@@ -7,7 +7,7 @@ import {
 } from '@juliangarnierorg/anime-beta';
 import type { Action } from 'svelte/action';
 import flip from './flip.svelte.js';
-import {setupProjection} from './layout.svelte.js';
+import { setupProjection } from './layout.svelte.js';
 import { tick } from 'svelte';
 
 // Constants
@@ -89,13 +89,14 @@ export const mercury: Action<HTMLElement, () => MercuryParams, MercuryAttributes
 	const state = AnimationState.getInstance();
 	let currentAnimation: Animation | null = null;
 	let animationParams: MercuryParams;
-
+	let layoutProjection: {
+		destroy: () => void;
+	} | null = null;
 	const initializeNode = () => {
 		const layout = node.hasAttribute('layout');
-
 		const draggable = node.hasAttribute('draggable');
 		if (layout) {
-			setupProjection(node);
+			layoutProjection = setupProjection(node);
 		}
 		if (draggable) {
 			createDraggable(node);
@@ -126,6 +127,7 @@ export const mercury: Action<HTMLElement, () => MercuryParams, MercuryAttributes
 					state.removeAnimation(currentAnimation);
 					currentAnimation.pause();
 				}
+				layoutProjection?.destroy()
 			};
 		} catch (error) {
 			console.error('Error in mercury animation effect:', error);

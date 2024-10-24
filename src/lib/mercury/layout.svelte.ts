@@ -53,6 +53,7 @@ function createProjectionTree(node: HTMLElement): ProjectionNode {
 
 	return projectionNode;
 }
+
 function findRootProjectionNode(node: ProjectionNode): ProjectionNode {
 	console.log('this node is', node);
 	if (!node) return node;
@@ -73,17 +74,20 @@ export function setupProjection(node: Node) {
 					(mutation.type === 'attributes' && mutation.attributeName === 'class') ||
 					mutation.type === 'childList'
 			);
+
 			if (shouldUpdate && rootProjectionNode) {
-			animator.animate({ root: rootProjectionNode, from: snapshots }).then(() => {
-				snapshots = snapper.snapshotTree(rootProjectionNode);
-			});
+				animator.animate({ root: rootProjectionNode, from: snapshots }).then(() => {
+					snapshots = snapper.snapshotTree(rootProjectionNode);
+				});
 			}
 		},
 		{ attributes: true, childList: true }
 	);
 	return {
 		destroy: () => {
+			console.log('destroying');
 			observer.stop();
+			nodes.get(node)?.detach();
 			nodes.delete(node);
 		}
 	};
