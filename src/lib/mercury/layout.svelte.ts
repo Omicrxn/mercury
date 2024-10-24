@@ -19,14 +19,10 @@ const animator = new LayoutAnimator(
 	new CssEasingParser()
 );
 // Store projection nodes
-const nodes = new WeakMap<Node, ProjectionNode>();
-function findRootProjectionNode(node: ProjectionNode): ProjectionNode {
-	console.log('this node is', node);
-	if (!node) return node;
-	return node.parent ? findRootProjectionNode(node.parent) : node;
-}
-export default function setupProjection(node: Node) {
-	// Get or create parent projection node
+export const nodes = new WeakMap<Node, ProjectionNode>();
+
+function createProjectionTree(node: HTMLElement): ProjectionNode {
+	// First create or get projection node for parent if it exists
 	const parentNode =
 		node.parentNode &&
 		(nodes.get(node.parentNode) ||
@@ -35,18 +31,39 @@ export default function setupProjection(node: Node) {
 				nodes.set(node.parentNode, newParent);
 				return newParent;
 			})());
-	// Create and store projection node
+
+	// Create and store projection node for current element
 	const projectionNode = new ProjectionNode(node, measurer);
 	nodes.set(node, projectionNode);
+
 	// Attach to parent if exists
 	if (parentNode) {
 		projectionNode.attach(parentNode);
 	}
 
-	const rootNode = findRootProjectionNode(projectionNode);
+	// Recursively create projection nodes for all child elements
+	Array.from(node.children).forEach((child) => {
+		if (child instanceof HTMLElement) {
+			const childNode = createProjectionTree(child);
+			// Child nodes automatically attach to their parent when created
+			// but we make it explicit here for clarity
+			childNode.attach(projectionNode);
+		}
+	});
 
-	let snapshots = snapper.snapshotTree(rootNode);
-	console.log('root', rootNode);
+	return projectionNode;
+}
+function findRootProjectionNode(node: ProjectionNode): ProjectionNode {
+	console.log('this node is', node);
+	if (!node) return node;
+	return node.parent ? findRootProjectionNode(node.parent) : node;
+}
+export function setupProjection(node: Node) {
+	const thisProjectionNode = createProjectionTree(node as HTMLElement);
+	const rootProjectionNode = findRootProjectionNode(thisProjectionNode);
+	console.log('this element', thisProjectionNode);
+	console.log('true root', rootProjectionNode);
+	let snapshots = snapper.snapshotTree(rootProjectionNode);
 	// Setup mutation observer
 	const observer = useMutationObserver(
 		() => node.parentNode,
@@ -56,13 +73,10 @@ export default function setupProjection(node: Node) {
 					(mutation.type === 'attributes' && mutation.attributeName === 'class') ||
 					mutation.type === 'childList'
 			);
-			if (shouldUpdate && parentNode) {
-				requestAnimationFrame(() => {
-					tick().then(async () => {
-						await animator.animate({ root: rootNode, from: snapshots });
-						snapshots = snapper.snapshotTree(rootNode);
-					});
-				});
+			if (shouldUpdate && rootProjectionNode) {
+			animator.animate({ root: rootProjectionNode, from: snapshots }).then(() => {
+				snapshots = snapper.snapshotTree(rootProjectionNode);
+			});
 			}
 		},
 		{ attributes: true, childList: true }

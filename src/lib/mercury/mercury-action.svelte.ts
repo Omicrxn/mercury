@@ -7,7 +7,7 @@ import {
 } from '@juliangarnierorg/anime-beta';
 import type { Action } from 'svelte/action';
 import flip from './flip.svelte.js';
-import setupProjection from './layout.svelte.js';
+import {setupProjection} from './layout.svelte.js';
 import { tick } from 'svelte';
 
 // Constants

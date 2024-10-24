@@ -1,7 +1,13 @@
 <script lang="ts">
+	import { nodes } from '$lib/mercury/layout.svelte.js';
+
 	import { mercury, useExit } from '$lib/mercury/mercury-action.svelte.js';
+	import { onMount } from 'svelte';
 	let justify = $state('justify-start');
 	let x = $state(0);
+	onMount(() => {
+		console.log('mounted', nodes);
+	});
 </script>
 
 <div class="relative flex flex-col h-full items-center gap-12 p-32">
@@ -65,7 +71,17 @@
 				out:useExit
 				layout
 			>
-				<p id="text" use:mercury={() => ({})} layout>Projection</p>
+				<p id="text">Projection</p>
+			</div>
+			<div
+				id="box-two"
+				class="w-24 h-24 rounded-lg bg-blue-400 border items-center justify-center flex border-blue-600"
+				style={justify === 'justify-end' ? 'width:200px;height:200px;' : 'width:96px;height:96px;'}
+				use:mercury={() => ({})}
+				out:useExit
+				layout
+			>
+				<p id="text-2">Projection</p>
 			</div>
 		</div>
 	</div>
