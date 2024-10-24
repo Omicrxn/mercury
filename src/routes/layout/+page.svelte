@@ -1,13 +1,7 @@
 <script lang="ts">
-	import { nodes } from '$lib/mercury/layout.svelte.js';
-
 	import { mercury, useExit } from '$lib/mercury/mercury-action.svelte.js';
-	import { onMount } from 'svelte';
 	let justify = $state('justify-start');
 	let show = $state(true);
-	onMount(() => {
-		console.log('mounted', nodes);
-	});
 </script>
 
 <div class="relative flex flex-col h-full items-center gap-12 p-32 bg-blue-500">
@@ -36,7 +30,38 @@
 			}}>Toggle show</button
 		>
 	</div>
-	<div class="flex w-full gap-3">
+	<div class="flex w-full flex-col gap-3">
+		<!-- <div id="flexWrapper" class="flex gap-2 min-h-16 w-full p-4 items-center bg-gray-200 {justify}">
+			<div
+				id="box"
+				class="w-24 h-24 rounded-lg bg-blue-400 border items-center justify-center flex border-blue-600"
+				style={justify === 'justify-end' ? 'width:200px;height:200px;' : 'width:96px;height:96px;'}
+			>
+				<p id="text">Projection</p>
+			</div>
+			{#if show}
+				<div
+					id="box-two"
+					class="w-24 h-24 rounded-lg bg-blue-400 border items-center justify-center flex border-blue-600"
+					style={justify === 'justify-end'
+						? 'width:200px;height:200px;'
+						: 'width:96px;height:96px;'}
+				>
+					<p id="text-2">Projection</p>
+				</div>
+			{/if}
+
+			<div
+				id="box-three"
+				class="w-24 h-24 rounded-lg bg-blue-400 border items-center justify-center flex border-blue-600"
+				style={justify === 'justify-end' ? 'width:200px;height:200px;' : 'width:96px;height:96px;'}
+			>
+				<div class="flex flex-col">
+					<p id="text-three">Projection</p>
+					<p id="text-three">Projection</p>
+				</div>
+			</div>
+		</div> -->
 		<div id="flexWrapper" class="flex gap-2 min-h-16 w-full p-4 items-center bg-gray-200 {justify}">
 			<div
 				id="box"
@@ -55,8 +80,8 @@
 					style={justify === 'justify-end'
 						? 'width:200px;height:200px;'
 						: 'width:96px;height:96px;'}
-					use:mercury={() => ({})}
-					out:useExit={{ opacity: 0 }}
+					use:mercury
+					out:useExit={{ opacity: 0, scale: 0.5, rotate: 90 }}
 					layout
 				>
 					<p id="text-2">Projection</p>

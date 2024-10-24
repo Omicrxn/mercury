@@ -12,7 +12,7 @@
 	{#if show}
 		<div
 			class="w-24 h-24 rounded-lg bg-blue-400 border border-blue-600"
-			use:mercury={() => ({
+			use:mercury={{
 				opacity: 1,
 				scale: [1, 2, 2, 1, 1],
 				rotate: [0, 0, 180, 180, 0],
@@ -21,7 +21,7 @@
 				ease: 'inOutSine',
 				delay: 0.5,
 				loop: true
-			})}
+			}}
 			out:useExit={{
 				opacity: 0,
 				scale: 0,

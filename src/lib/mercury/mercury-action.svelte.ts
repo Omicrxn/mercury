@@ -3,12 +3,11 @@ import {
 	animate,
 	type TargetsParam,
 	type Animation,
-	createDraggable
+	createDraggable,
+	type AnimationParams
 } from '@juliangarnierorg/anime-beta';
 import type { Action } from 'svelte/action';
-import flip from './flip.svelte.js';
 import { setupProjection } from './layout.svelte.js';
-import { tick } from 'svelte';
 
 // Constants
 const DEFAULT_DURATION = 1;
@@ -23,20 +22,19 @@ enum ExitMode {
 
 // Interfaces
 interface MercuryAttributes {
-	layout?: boolean;
-	layoutid?: string;
+	layout?: string | boolean;
 	draggable?: boolean;
 }
 
-interface MercuryParams extends TargetsParam {
+type MercuryParams = TargetsParam & {
 	play?: boolean;
-}
+};
 
-interface MercuryExitParams extends TargetsParam {
+type MercuryExitParams = TargetsParam & {
 	mode?: ExitMode;
 	duration?: number;
 	delay?: number;
-}
+};
 
 // State management
 class AnimationState {
@@ -82,10 +80,11 @@ class AnimationState {
 }
 
 // Mercury action
-export const mercury: Action<HTMLElement, (() => MercuryParams) | undefined, MercuryAttributes> = (
-	node,
-	params?: () => MercuryParams
-) => {
+export const mercury: Action<
+	HTMLElement,
+	(() => MercuryParams) | MercuryParams | undefined,
+	MercuryAttributes
+> = (node, params) => {
 	engine.timeUnit = 's';
 	const state = AnimationState.getInstance();
 	let currentAnimation: Animation | null = null;
@@ -95,14 +94,23 @@ export const mercury: Action<HTMLElement, (() => MercuryParams) | undefined, Mer
 	} | null = null;
 	const initializeNode = () => {
 		const layout = node.hasAttribute('layout');
-		const layoutId = node.getAttribute('layoutid');
+		const layoutId = node.getAttribute('layout');
 		const draggable = node.hasAttribute('draggable');
-		if (layout) {
-		  console.log(layoutId);
-			layoutProjection = setupProjection(node,layoutId);
+
+		if (layout || layoutId) {
+			try {
+				layoutProjection = setupProjection(node, layoutId);
+			} catch (error) {
+				console.error('Error setting up layout projection:', error);
+			}
 		}
+
 		if (draggable) {
-			createDraggable(node);
+			try {
+				createDraggable(node);
+			} catch (error) {
+				console.error('Error setting up draggable:', error);
+			}
 		}
 	};
 
@@ -112,7 +120,7 @@ export const mercury: Action<HTMLElement, (() => MercuryParams) | undefined, Mer
 			state.removeAnimation(currentAnimation);
 		}
 
-		currentAnimation = animate(node, params);
+		currentAnimation = animate(node, params as AnimationParams);
 		state.addAnimation(currentAnimation);
 	};
 
@@ -122,7 +130,7 @@ export const mercury: Action<HTMLElement, (() => MercuryParams) | undefined, Mer
 	$effect(() => {
 		console.log('updated');
 		try {
-			animationParams = { ...params() };
+			animationParams = { ...(typeof params === 'function' ? params() : params || {}) };
 			updateAnimation(node, animationParams);
 
 			return () => {
@@ -157,19 +165,17 @@ export class ExitAnimationHandler {
 		this.isExiting = false;
 	}
 
-	private async startAnimation(): Promise<void> {
+	private async startAnimation() {
 		const { duration, delay, mode, ...restParams } = this.params;
 		const exitAnimation = animate(this.node, { duration, delay, ...restParams });
 
 		this.state.addAnimation(exitAnimation);
 		this.state.addExitingNode(this.node);
 
-		try {
-			await exitAnimation;
-		} finally {
+		exitAnimation.then(() => {
 			this.state.removeAnimation(exitAnimation);
 			this.state.removeExitingNode(this.node);
-		}
+		});
 	}
 
 	async handleExit(): Promise<void> {
