@@ -82,9 +82,9 @@ class AnimationState {
 }
 
 // Mercury action
-export const mercury: Action<HTMLElement, () => MercuryParams, MercuryAttributes> = (
+export const mercury: Action<HTMLElement, (() => MercuryParams) | undefined, MercuryAttributes> = (
 	node,
-	params = () => ({})
+	params?: () => MercuryParams
 ) => {
 	engine.timeUnit = 's';
 	const state = AnimationState.getInstance();
