@@ -21,7 +21,7 @@ const animator = new LayoutAnimator(
 // Store projection nodes
 export const nodes = new WeakMap<Node, ProjectionNode>();
 
-function createProjectionTree(node: HTMLElement): ProjectionNode {
+function createProjectionTree(node: HTMLElement, layoutId: string | null): ProjectionNode {
 	// First create or get projection node for parent if it exists
 	const parentNode =
 		node.parentNode &&
@@ -38,13 +38,16 @@ function createProjectionTree(node: HTMLElement): ProjectionNode {
 
 	// Attach to parent if exists
 	if (parentNode) {
+		if (layoutId) {
+			projectionNode.identifyAs(layoutId);
+		}
 		projectionNode.attach(parentNode);
 	}
 
 	// Recursively create projection nodes for all child elements
 	Array.from(node.children).forEach((child) => {
 		if (child instanceof HTMLElement) {
-			const childNode = createProjectionTree(child);
+			const childNode = createProjectionTree(child, null);
 			// Child nodes automatically attach to their parent when created
 			// but we make it explicit here for clarity
 			childNode.attach(projectionNode);
@@ -55,33 +58,34 @@ function createProjectionTree(node: HTMLElement): ProjectionNode {
 }
 
 function findRootProjectionNode(node: ProjectionNode): ProjectionNode {
-	console.log('this node is', node);
 	if (!node) return node;
 	return node.parent ? findRootProjectionNode(node.parent) : node;
 }
-export function setupProjection(node: Node) {
-	const thisProjectionNode = createProjectionTree(node as HTMLElement);
+export function setupProjection(node: Node, layoutId: string | null) {
+	const thisProjectionNode = createProjectionTree(node as HTMLElement, layoutId);
+
 	const rootProjectionNode = findRootProjectionNode(thisProjectionNode);
-	console.log('this element', thisProjectionNode);
-	console.log('true root', rootProjectionNode);
+
 	let snapshots = snapper.snapshotTree(rootProjectionNode);
 	// Setup mutation observer
 	const observer = useMutationObserver(
-		() => node.parentNode,
+		() => rootProjectionNode.element,
 		(mutations) => {
+			//TODO: This is done so that the animate doesn't trigger a infinite mutation loop but this doesn't trigger style changes without class changes
 			const shouldUpdate = mutations.some(
 				(mutation) =>
 					(mutation.type === 'attributes' && mutation.attributeName === 'class') ||
 					mutation.type === 'childList'
 			);
-
 			if (shouldUpdate && rootProjectionNode) {
+				console.log('mutatin...');
+
 				animator.animate({ root: rootProjectionNode, from: snapshots }).then(() => {
 					snapshots = snapper.snapshotTree(rootProjectionNode);
 				});
 			}
 		},
-		{ attributes: true, childList: true }
+		{ attributes: true, subtree: true, childList: true }
 	);
 	return {
 		destroy: () => {
