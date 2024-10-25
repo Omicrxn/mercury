@@ -1,45 +1,50 @@
 <script lang="ts">
-	import { mercury } from '$lib/index';
-
-	let show = $state(false);
+	import { mercury, useExit, spring } from '$lib/index';
+	let items = [
+		{ description: 'main page', title: 'house', color: '#f0dcd8' },
+		{ description: 'libraries page', title: 'libraries', color: '#fde58a' },
+		{ description: 'work page', title: 'work', color: '#d9ceff' },
+		{ description: 'alchemy page', title: 'alchemy', color: '#b8fadd' }
+	];
+	let hoveredIndex = $state(0);
 </script>
 
-<div class="wrapper">
-	<button use:mercury layout class="button" onclick={() => (show = !show)}> Animate </button>
-	{#if show}
-		<div layout="rectangle" use:mercury class="second-element" />
-	{:else}
-		<div layout="rectangle" use:mercury class="element" />
-	{/if}
+<div class="flex flex-col justify-center items-center p-32">
+	<div class="flex border rounded-md">
+		{#each items as item, i (item.title)}
+			<button
+				onmouseenter={() => {
+					hoveredIndex = i;
+				}}
+				onclick={() => {}}
+				class="flex items-center p-2 button gap-2"
+				style="--hover-color: {hoveredIndex === i ? item.color : 'grey'};"
+			>
+				<span use:mercury layout>{item.title}</span>
+
+				<span
+					style="opacity: 0;"
+					use:mercury={{ opacity: 0, whileHover: { opacity: 1 } }}
+					layout="desc"
+				>
+					{item.description}
+				</span>
+			</button>
+		{/each}
+	</div>
+	<div
+		class="w-[200px] h-[200px] rounded-md bg-red-400 cursor-pointer"
+		use:mercury={{
+			scale: 1,
+			whileHover: { scale: 1.2, ease: spring(1, 300, 17) },
+			whileTap: { scale: 0.9, ease: spring(1, 300, 17) },
+			ease: spring(1, 300, 17)
+		}}
+	/>
 </div>
 
 <style>
-	.wrapper {
-		display: grid;
-		height: 100vh;
-		width: 100vw;
-		place-items: center;
-		background: #0d0d0d;
-	}
-
-	.element {
-		width: 48px;
-		height: 48px;
-		background: #fad658;
-		border-radius: 12px;
-	}
-
-	.second-element {
-		height: 96px;
-		width: 96px;
-		background: #fad658;
-		border-radius: 12px;
-	}
-
 	.button {
-		background: white;
-		padding: 8px 16px;
-		border-radius: 8px;
-		font-size: 14px;
+		background-color: var(--hover-color);
 	}
 </style>

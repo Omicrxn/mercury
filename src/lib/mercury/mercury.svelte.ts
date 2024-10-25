@@ -8,6 +8,7 @@ import {
 } from '@juliangarnierorg/anime-beta';
 import type { Action } from 'svelte/action';
 import { setupProjection } from './layout.js';
+import { createEventListeners } from './utils.js';
 
 // Constants
 const DEFAULT_DURATION = 1;
@@ -28,6 +29,8 @@ export interface MercuryAttributes {
 
 export type MercuryParams = TargetsParam & {
 	play?: boolean;
+	whileHover?: TargetsParam;
+	whileTap?: TargetsParam;
 };
 
 export type MercuryExitParams = TargetsParam & {
@@ -88,7 +91,7 @@ export const mercury: Action<
 	engine.timeUnit = 's';
 	const state = AnimationState.getInstance();
 	let currentAnimation: Animation | null = null;
-	let animationParams: MercuryParams;
+	let animationParams: TargetsParam;
 	let layoutProjection: {
 		destroy: () => void;
 	} | null = null;
@@ -129,7 +132,12 @@ export const mercury: Action<
 
 	$effect(() => {
 		try {
-			animationParams = { ...(typeof params === 'function' ? params() : params || {}) };
+			const parsedParams = {
+				...(typeof params === 'function' ? params() : params || {})
+			};
+			animationParams = parsedParams as TargetsParam;
+			const eventListeners = createEventListeners(node, parsedParams,updateAnimation)
+
 			updateAnimation(node, animationParams);
 
 			return () => {
@@ -138,6 +146,7 @@ export const mercury: Action<
 					currentAnimation.pause();
 				}
 				layoutProjection?.destroy();
+				eventListeners.remove();
 			};
 		} catch (error) {
 			console.error('Error in mercury animation effect:', error);
