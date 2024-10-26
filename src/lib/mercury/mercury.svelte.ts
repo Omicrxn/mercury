@@ -27,11 +27,43 @@ export interface MercuryAttributes {
 	draggable?: boolean;
 }
 
-export type MercuryParams = TargetsParam & {
+export type MercuryParams = {
+	initial: TargetsParam;
+	animate: TargetsParam;
+	transition: TargetsParam;
 	play?: boolean;
 	whileHover?: TargetsParam;
 	whileTap?: TargetsParam;
 };
+
+function unifyTransition(params: MercuryParams) {
+	const { initial = {}, animate, transition = {} } = params; // Default `initial` to an empty object
+	const propertyKeys = new Set([...Object.keys(initial), ...Object.keys(animate)]);
+	const result = {};
+	for (const key of propertyKeys) {
+		const initialValue = initial[key];
+		const animateValue = animate[key];
+
+	 // If initial value is undefined, use animate value as is
+    if (initialValue === undefined) {
+      result[key] = animateValue;
+    }
+    // If animateValue is an array, prepend initialValue
+    else if (Array.isArray(animateValue)) {
+      result[key] = [initialValue, ...animateValue];
+    }
+    // If animateValue is a single value, create array with initial and animate
+    else {
+      result[key] = [initialValue, animateValue];
+    }
+	}
+
+	// Spread the transition properties
+	return {
+		...result,
+		...transition
+	};
+}
 
 export type MercuryExitParams = TargetsParam & {
 	mode?: ExitMode;
@@ -135,8 +167,12 @@ export const mercury: Action<
 			const parsedParams = {
 				...(typeof params === 'function' ? params() : params || {})
 			};
-			animationParams = parsedParams as TargetsParam;
-			const eventListeners = createEventListeners(node, parsedParams,updateAnimation)
+			console.log("parsedParams",parsedParams)
+			const unifiedParams = unifyTransition(parsedParams);
+			console.log('params:',unifiedParams);
+
+			animationParams = unifiedParams;
+			const eventListeners = createEventListeners(node, unifiedParams,updateAnimation)
 
 			updateAnimation(node, animationParams);
 
@@ -226,7 +262,7 @@ export class ExitAnimationHandler {
 }
 
 // Helper functions
-export function useExit(
+export function animateExit(
 	node: HTMLElement,
 	params: MercuryExitParams = {}
 ): ReturnType<ExitAnimationHandler['getTransition']> {

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { mercury, useExit, spring } from '$lib/index';
+	import { mercury, animateExit, spring } from '$lib/index';
 	let items = [
 		{ description: 'main page', title: 'house', color: '#f0dcd8' },
 		{ description: 'libraries page', title: 'libraries', color: '#fde58a' },
