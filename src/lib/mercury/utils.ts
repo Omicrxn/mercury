@@ -1,24 +1,26 @@
 import type { MercuryParams } from './mercury.svelte.js';
-import type { TargetsParam } from '@juliangarnierorg/anime-beta';
-export function createEventListeners(
+import type { AnimationParams } from '@juliangarnierorg/anime-beta';
+export default function createEventListeners(
 	node: Node,
 	params: MercuryParams,
-	updateAnimation: (node: HTMLElement, params: MercuryParams) => void
+	updateAnimation: (node: HTMLElement, params: AnimationParams) => void
 ) {
-	const { whileHover, whileTap, ...restParams } = params;
+	const { whileHover, whileTap, initial } = params;
+	console.log('mouseOver', whileHover, whileTap, initial)
 	// Store handler functions as named functions
 	const handleEnter = (enterParams: MercuryParams | undefined) => {
+		console.log('mouseOver', enterParams);
 		if (!enterParams) {
 			return;
 		}
-		console.log('mouseOver', enterParams);
 		updateAnimation(node as HTMLElement, enterParams);
 	};
 
 	const handleOut = () => {
-		console.log('mouseOver', restParams);
-
-		updateAnimation(node as HTMLElement, restParams);
+		console.log('mouseOver', initial);
+		if (initial) {
+			updateAnimation(node as HTMLElement, initial);
+		}
 	};
 
 	// Add the listeners

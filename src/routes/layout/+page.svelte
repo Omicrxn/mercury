@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { mercury, useExit } from '$lib/index.js';
+	import { mercury, animateExit } from '$lib/index.js';
 
 	let justify = $state('justify-start');
 	let show = $state(true);
@@ -65,8 +65,8 @@
 				id="box"
 				class="w-24 h-24 rounded-lg bg-blue-400 border items-center justify-center flex border-blue-600"
 				style={justify === 'justify-end' ? 'width:200px;height:200px;' : 'width:96px;height:96px;'}
-				use:mercury={() => ({})}
-				out:useExit
+				use:mercury
+				out:animateExit
 				layout
 			>
 				<p id="text">Projection</p>
@@ -79,7 +79,7 @@
 						? 'width:200px;height:200px;'
 						: 'width:96px;height:96px;'}
 					use:mercury
-					out:useExit={{ opacity: 0, scale: 0.5, rotate: 90 }}
+					out:animateExit={{ opacity: 0, scale: 0.5, rotate: 90 }}
 					layout
 				>
 					<p id="text-2">Projection</p>
@@ -90,8 +90,8 @@
 				id="box-three"
 				class="w-24 h-24 rounded-lg bg-blue-400 border items-center justify-center flex border-blue-600"
 				style={justify === 'justify-end' ? 'width:200px;height:200px;' : 'width:96px;height:96px;'}
-				use:mercury={() => ({})}
-				out:useExit
+				use:mercury
+				out:animateExit
 				layout
 			>
 				<div class="flex flex-col">

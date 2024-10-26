@@ -35,12 +35,11 @@
 	<div
 		class="w-[200px] h-[200px] rounded-md bg-red-400 cursor-pointer"
 		use:mercury={{
-			scale: 1,
+			initial: { scale: 1, ease: spring(1, 300, 17) },
 			whileHover: { scale: 1.2, ease: spring(1, 300, 17) },
-			whileTap: { scale: 0.9, ease: spring(1, 300, 17) },
-			ease: spring(1, 300, 17)
+			whileTap: { scale: 0.9, ease: spring(1, 300, 17) }
 		}}
-	/>
+	></div>
 </div>
 
 <style>

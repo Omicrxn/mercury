@@ -8,237 +8,199 @@ import {
 } from '@juliangarnierorg/anime-beta';
 import type { Action } from 'svelte/action';
 import { setupProjection } from './layout.js';
-import { createEventListeners } from './utils.js';
-
-// Constants
-const DEFAULT_DURATION = 1;
-const DEFAULT_DELAY = 0;
-
-// Enums
+import createEventListeners from './utils.js';
+// Constants and Types
 export enum ExitMode {
 	SYNC = 'sync',
 	WAIT = 'wait',
 	POP_LAYOUT = 'popLayout'
 }
 
-// Interfaces
 export interface MercuryAttributes {
 	layout?: string | boolean;
 	draggable?: boolean;
 }
 
 export type MercuryParams = {
-	initial: TargetsParam;
-	animate: TargetsParam;
-	transition: TargetsParam;
+	initial?: AnimationParams;
+	animate: AnimationParams;
+	transition?: AnimationParams;
 	play?: boolean;
-	whileHover?: TargetsParam;
-	whileTap?: TargetsParam;
+	whileHover?: AnimationParams;
+	whileTap?: AnimationParams;
 };
 
-function unifyTransition(params: MercuryParams) {
-	const { initial = {}, animate, transition = {} } = params; // Default `initial` to an empty object
-	const propertyKeys = new Set([...Object.keys(initial), ...Object.keys(animate)]);
-	const result = {};
-	for (const key of propertyKeys) {
-		const initialValue = initial[key];
-		const animateValue = animate[key];
-
-		// If initial value is undefined, use animate value as is
-		if (initialValue === undefined) {
-			result[key] = animateValue;
-		}
-		// If animateValue is an array, prepend initialValue
-		else if (Array.isArray(animateValue)) {
-			result[key] = [initialValue, ...animateValue];
-		}
-		// If animateValue is a single value, create array with initial and animate
-		else {
-			result[key] = [initialValue, animateValue];
-		}
-	}
-
-	// Spread the transition properties
-	return {
-		...result,
-		...transition
-	};
-}
-
-export type MercuryExitParams = TargetsParam & {
+export type MercuryExitParams = AnimationParams & {
 	mode?: ExitMode;
 	duration?: number;
 	delay?: number;
 };
 
-// State management
-class AnimationState {
-	private static instance: AnimationState;
-	private activeAnimations: Set<Animation>;
-	private exitingNodes: Set<HTMLElement>;
+// Singleton Animation Manager
+class AnimationManager {
+	private static instance: AnimationManager;
+	private animations = new Set<Animation>();
+	private exitingNodes = new Set<HTMLElement>();
 
-	private constructor() {
-		this.activeAnimations = new Set();
-		this.exitingNodes = new Set();
+	static getInstance() {
+		return (this.instance ??= new AnimationManager());
 	}
 
-	static getInstance(): AnimationState {
-		if (!AnimationState.instance) {
-			AnimationState.instance = new AnimationState();
-		}
-		return AnimationState.instance;
+	addAnimation(animation: Animation) {
+		this.animations.add(animation);
+		animation.then(() => this.animations.delete(animation));
 	}
 
-	addAnimation(animation: Animation): void {
-		this.activeAnimations.add(animation);
-	}
-
-	removeAnimation(animation: Animation): void {
-		this.activeAnimations.delete(animation);
-	}
-
-	addExitingNode(node: HTMLElement): void {
+	addExitingNode(node: HTMLElement) {
 		this.exitingNodes.add(node);
 	}
 
-	removeExitingNode(node: HTMLElement): void {
+	removeExitingNode(node: HTMLElement) {
 		this.exitingNodes.delete(node);
 	}
 
-	get hasExitingNodes(): boolean {
-		return this.exitingNodes.size > 0;
+	get activeAnimations() {
+		return Array.from(this.animations);
 	}
 
-	get allActiveAnimations(): Animation[] {
-		return Array.from(this.activeAnimations);
+	get hasExitingNodes() {
+		return this.exitingNodes.size > 0;
 	}
 }
 
-// Mercury action
+// Helper Functions
+function mergeTransitionParams({
+	initial = {},
+	animate,
+	transition = {}
+}: MercuryParams): AnimationParams {
+	const properties = new Set([...Object.keys(initial), ...Object.keys(animate)]);
+	const result = {} as AnimationParams;
+
+	for (const prop of properties) {
+		const initialValue = initial[prop];
+		const animateValue = animate[prop];
+
+		result[prop] =
+			initialValue === undefined
+				? animateValue
+				: Array.isArray(animateValue)
+					? [initialValue, ...animateValue]
+					: [initialValue, animateValue];
+	}
+
+	return { ...result, ...transition };
+}
+
+// Mercury Action
 export const mercury: Action<
 	HTMLElement,
 	(() => MercuryParams) | MercuryParams | undefined,
 	MercuryAttributes
 > = (node, params) => {
 	engine.timeUnit = 's';
-	const state = AnimationState.getInstance();
+	const manager = AnimationManager.getInstance();
 	let currentAnimation: Animation | null = null;
-	let animationParams: TargetsParam;
-	let layoutProjection: {
-		destroy: () => void;
-	} | null = null;
-	const initializeNode = () => {
-		const layout = node.hasAttribute('layout');
+	const cleanup: (() => void) | null = null;
+
+	function initializeNode() {
 		const layoutId = node.getAttribute('layout');
-		const draggable = node.hasAttribute('draggable');
+		let projectionCleanup = null;
 
-		if (layout || layoutId) {
-			try {
-				layoutProjection = setupProjection(node, layoutId);
-			} catch (error) {
-				console.error('Error setting up layout projection:', error);
-			}
+		if (node.hasAttribute('layout') || layoutId) {
+			projectionCleanup = setupProjection(node, layoutId)?.destroy;
 		}
 
-		if (draggable) {
-			try {
-				createDraggable(node);
-			} catch (error) {
-				console.error('Error setting up draggable:', error);
-			}
+		if (node.hasAttribute('draggable')) {
+			createDraggable(node);
 		}
-	};
 
-	const updateAnimation = (node: HTMLElement, params: MercuryParams): void => {
+		return projectionCleanup;
+	}
+
+	function updateAnimation(node: HTMLElement, params: AnimationParams) {
 		if (currentAnimation) {
 			currentAnimation.pause();
-			state.removeAnimation(currentAnimation);
 		}
+		currentAnimation = animate(node, params);
+		manager.addAnimation(currentAnimation);
+	}
 
-		currentAnimation = animate(node, params as AnimationParams);
-		state.addAnimation(currentAnimation);
-	};
-
-	// Initialize
-	initializeNode();
+	const projectionCleanup = initializeNode();
 
 	$effect(() => {
 		try {
-			const parsedParams = {
-				...(typeof params === 'function' ? params() : params || {})
-			};
-			if (!parsedParams.animate && !parsedParams.initial && !parsedParams.transition) {
-				console.error('No animation params provided');
-				return;
+			let eventListeners: { remove: () => void } | undefined;
+			const resolvedParams = typeof params === 'function' ? params() : params;
+			if (resolvedParams) {
+				eventListeners = createEventListeners(node, resolvedParams, updateAnimation);
 			}
-			console.log('parsedParams', parsedParams);
-			const unifiedParams = unifyTransition(parsedParams);
-			console.log('params:', unifiedParams);
 
-			animationParams = unifiedParams;
-			const eventListeners = createEventListeners(node, unifiedParams, updateAnimation);
+			if (!resolvedParams?.animate) {
+				return () => {
+					projectionCleanup?.();
+				};
+			}
 
-			updateAnimation(node, animationParams);
+			const mergedParams = mergeTransitionParams(resolvedParams);
+			updateAnimation(node, mergedParams);
 
 			return () => {
-				if (currentAnimation) {
-					state.removeAnimation(currentAnimation);
-					currentAnimation.pause();
-				}
-				layoutProjection?.destroy();
-				eventListeners.remove();
+				currentAnimation?.pause();
+				projectionCleanup?.();
+				eventListeners?.remove();
 			};
 		} catch (error) {
-			console.error('Error in mercury animation effect:', error);
+			console.error('Mercury animation error:', error);
 		}
 	});
 };
 
-// Exit animation handler
+// Exit Animation Handler
 export class ExitAnimationHandler {
-	private node: HTMLElement;
-	private params: MercuryExitParams;
-	private state: AnimationState;
-	private isExiting: boolean;
+	private static readonly DEFAULT_DURATION = 1;
+	private static readonly DEFAULT_DELAY = 0;
 
-	constructor(node: HTMLElement, params: MercuryExitParams = {}) {
-		this.node = node;
+	constructor(
+		private node: HTMLElement,
+		private params: MercuryExitParams = {}
+	) {
 		this.params = {
-			duration: DEFAULT_DURATION,
-			delay: DEFAULT_DELAY,
+			duration: ExitAnimationHandler.DEFAULT_DURATION,
+			delay: ExitAnimationHandler.DEFAULT_DELAY,
 			mode: ExitMode.SYNC,
 			...params
 		};
-		this.state = AnimationState.getInstance();
-		this.isExiting = false;
 	}
 
 	private async startAnimation() {
-		const { duration, delay, mode, ...restParams } = this.params;
-		const exitAnimation = animate(this.node, { duration, delay, ...restParams });
+		const { duration, delay, mode, ...animationParams } = this.params;
+		const manager = AnimationManager.getInstance();
+		const animation = animate(this.node, { duration, delay, ...animationParams });
 
-		this.state.addAnimation(exitAnimation);
-		this.state.addExitingNode(this.node);
+		manager.addAnimation(animation);
+		manager.addExitingNode(this.node);
 
-		exitAnimation.then(() => {
-			this.state.removeAnimation(exitAnimation);
-			this.state.removeExitingNode(this.node);
+		animation.then(() => {
+			manager.removeExitingNode(this.node);
 		});
 	}
 
-	async handleExit(): Promise<void> {
-		const { mode, duration = DEFAULT_DURATION } = this.params;
+	async handleExit() {
+		const { mode, duration = ExitAnimationHandler.DEFAULT_DURATION } = this.params;
+		const manager = AnimationManager.getInstance();
+
 		switch (mode) {
 			case ExitMode.WAIT:
-				await Promise.all(this.state.allActiveAnimations.map((anim) => anim.completed));
+				await Promise.all(manager.activeAnimations.map((anim) => anim.completed));
 				await this.startAnimation();
 				break;
 
 			case ExitMode.POP_LAYOUT:
-				if (this.node.parentNode) {
-					(this.node.parentNode as HTMLElement).style.position = 'relative';
+				if (this.node.parentElement) {
+					this.node.parentElement.style.position = 'relative';
+					this.node.style.position = 'absolute';
 				}
-				this.node.style.position = 'absolute';
 				await this.startAnimation();
 				await new Promise((resolve) => setTimeout(resolve, duration * 1000));
 				break;
@@ -248,15 +210,19 @@ export class ExitAnimationHandler {
 		}
 	}
 
-	getTransition(): { duration: number; delay: number; css: (t: number, u: number) => string } {
-		const { duration = DEFAULT_DURATION, delay = DEFAULT_DELAY } = this.params;
+	getTransition() {
+		const {
+			duration = ExitAnimationHandler.DEFAULT_DURATION,
+			delay = ExitAnimationHandler.DEFAULT_DELAY
+		} = this.params;
+		let isExiting = false;
 
 		return {
 			duration: duration * 1000,
 			delay: delay * 1000,
 			css: (t: number, u: number) => {
-				if (!this.isExiting && t <= u) {
-					this.isExiting = true;
+				if (!isExiting && t <= u) {
+					isExiting = true;
 					this.handleExit();
 				}
 				return '';
@@ -265,11 +231,5 @@ export class ExitAnimationHandler {
 	}
 }
 
-// Helper functions
-export function animateExit(
-	node: HTMLElement,
-	params: MercuryExitParams = {}
-): ReturnType<ExitAnimationHandler['getTransition']> {
-	const handler = new ExitAnimationHandler(node, params);
-	return handler.getTransition();
-}
+export const animateExit = (node: HTMLElement, params: MercuryExitParams = {}) =>
+	new ExitAnimationHandler(node, params).getTransition();
