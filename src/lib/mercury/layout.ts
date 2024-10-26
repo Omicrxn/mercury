@@ -128,7 +128,8 @@ class MutationHandler {
 		try {
 			await this.services.animator.animate({
 				root: this.rootNode,
-				from: this.snapshots
+				from: this.snapshots,
+				estimation: true
 			});
 			this.snapshots = this.services.snapper.snapshotTree(this.rootNode);
 		} catch (error) {
