@@ -44,18 +44,18 @@ function unifyTransition(params: MercuryParams) {
 		const initialValue = initial[key];
 		const animateValue = animate[key];
 
-	 // If initial value is undefined, use animate value as is
-    if (initialValue === undefined) {
-      result[key] = animateValue;
-    }
-    // If animateValue is an array, prepend initialValue
-    else if (Array.isArray(animateValue)) {
-      result[key] = [initialValue, ...animateValue];
-    }
-    // If animateValue is a single value, create array with initial and animate
-    else {
-      result[key] = [initialValue, animateValue];
-    }
+		// If initial value is undefined, use animate value as is
+		if (initialValue === undefined) {
+			result[key] = animateValue;
+		}
+		// If animateValue is an array, prepend initialValue
+		else if (Array.isArray(animateValue)) {
+			result[key] = [initialValue, ...animateValue];
+		}
+		// If animateValue is a single value, create array with initial and animate
+		else {
+			result[key] = [initialValue, animateValue];
+		}
 	}
 
 	// Spread the transition properties
@@ -167,12 +167,16 @@ export const mercury: Action<
 			const parsedParams = {
 				...(typeof params === 'function' ? params() : params || {})
 			};
-			console.log("parsedParams",parsedParams)
+			if (!parsedParams.animate && !parsedParams.initial && !parsedParams.transition) {
+				console.error('No animation params provided');
+				return;
+			}
+			console.log('parsedParams', parsedParams);
 			const unifiedParams = unifyTransition(parsedParams);
-			console.log('params:',unifiedParams);
+			console.log('params:', unifiedParams);
 
 			animationParams = unifiedParams;
-			const eventListeners = createEventListeners(node, unifiedParams,updateAnimation)
+			const eventListeners = createEventListeners(node, unifiedParams, updateAnimation);
 
 			updateAnimation(node, animationParams);
 
