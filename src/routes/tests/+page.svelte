@@ -1,49 +1,52 @@
 <script lang="ts">
-	import { mercury, animateExit, spring } from '$lib/index';
-	let items = [
-		{ description: 'main page', title: 'house', color: '#f0dcd8' },
-		{ description: 'libraries page', title: 'libraries', color: '#fde58a' },
-		{ description: 'work page', title: 'work', color: '#d9ceff' },
-		{ description: 'alchemy page', title: 'alchemy', color: '#b8fadd' }
-	];
-	let hoveredIndex = $state(0);
+	import { mercury } from '$lib/index.js';
+	import { nodes } from '$lib/mercury/layout.js';
+
+	import { Briefcase, FlaskConical, House, Library } from 'lucide-svelte';
+	// import getRandomTailwindColor from '$lib/utils/random-color';
+	import { onMount, type ComponentType } from 'svelte';
+
+	interface ToolbarItem {
+		link: string;
+		title: string;
+		icon: ComponentType;
+		color?: string;
+	}
+
+	let {
+		items = [
+			{ icon: House, title: 'Home', link: '/', color: '#f0dcd8' }
+			// { icon: Library, title: 'Libraries', link: '/libraries', color: '#fde58a' },
+			// { icon: Briefcase, title: 'Work', link: '/work', color: '#d9ceff' },
+			// { icon: FlaskConical, title: 'Alchemy', link: '/alchemy', color: '#b8fadd' }
+		]
+	}: { items: ToolbarItem[] } = $props();
+	let hoveredIndex = $state(-1);
+	onMount(() => {
+		console.log(nodes);
+	});
 </script>
 
-<div class="flex flex-col justify-center items-center p-32">
-	<div class="flex border rounded-md">
-		{#each items as item, i (item.title)}
+<div class="flex rounded-md border px-4 py-2">
+	{#each items as item, i (item.title)}
+		{@const Icon = item.icon}
+		<div id="parent-flex" class="flex items-center gap-2">
 			<button
-				onmouseenter={() => {
-					hoveredIndex = i;
-				}}
-				onclick={() => {}}
-				class="flex items-center p-2 button gap-2"
-				style="--hover-color: {hoveredIndex === i ? item.color : 'grey'};"
+				id="button-{item.title}"
+				class="flex gap-2 p-4"
+				onmouseenter={() => (hoveredIndex = i)}
+				style="background-color:var(--hover-color)"
+				use:mercury
+				layout="button-{item.title}"
 			>
-				<span use:mercury layout>{item.title}</span>
-
-				<span
-					style="opacity: 0;"
-					use:mercury={{ opacity: 0, whileHover: { opacity: 1 } }}
-					layout="desc"
-				>
-					{item.description}
-				</span>
+				<div id="icon-{item.title}" use:mercury layout="icon-{item.title}">COOOL</div>
+				{#if hoveredIndex === i}
+					{#key item.title}
+						<span id="title-{item.title}" use:mercury layout="title-{item.title}">{item.title}</span
+						>
+					{/key}
+				{/if}
 			</button>
-		{/each}
-	</div>
-	<div
-		class="w-[200px] h-[200px] rounded-md bg-red-400 cursor-pointer"
-		use:mercury={{
-			initial: { scale: 1, ease: spring(1, 300, 17) },
-			whileHover: { scale: 1.2, ease: spring(1, 300, 17) },
-			whileTap: { scale: 0.9, ease: spring(1, 300, 17) }
-		}}
-	></div>
+		</div>
+	{/each}
 </div>
-
-<style>
-	.button {
-		background-color: var(--hover-color);
-	}
-</style>

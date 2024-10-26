@@ -6,171 +6,96 @@ import {
 	ProjectionTreeAnimationEngine,
 	ProjectionNodeAnimationEngine,
 	CssBorderRadiusParser,
-	CssEasingParser,
-	ProjectionNodeSnapshotMap
+	CssEasingParser
 } from '@layout-projection/core';
 
-// Types
-interface ProjectionService {
-	measurer: ElementMeasurer;
-	snapper: ProjectionNodeSnapper;
-	animator: LayoutAnimator;
-}
+// Initialize core services
+const measurer = new ElementMeasurer(new CssBorderRadiusParser());
+const snapper = new ProjectionNodeSnapper(measurer);
+const animator = new LayoutAnimator(
+	new ProjectionTreeAnimationEngine(new ProjectionNodeAnimationEngine()),
+	measurer,
+	new CssEasingParser()
+);
+// Store projection nodes
+export const nodes = new WeakMap<Node, ProjectionNode>();
 
-interface ProjectionCleanup {
-	destroy: () => void;
-}
-
-// Initialize core services as a singleton
-class ProjectionServiceProvider {
-	private static instance: ProjectionService;
-
-	private static initialize(): ProjectionService {
-		const measurer = new ElementMeasurer(new CssBorderRadiusParser());
-		return {
-			measurer,
-			snapper: new ProjectionNodeSnapper(measurer),
-			animator: new LayoutAnimator(
-				new ProjectionTreeAnimationEngine(new ProjectionNodeAnimationEngine()),
-				measurer,
-				new CssEasingParser()
-			)
-		};
-	}
-
-	static getServices(): ProjectionService {
-		if (!ProjectionServiceProvider.instance) {
-			ProjectionServiceProvider.instance = ProjectionServiceProvider.initialize();
-		}
-		return ProjectionServiceProvider.instance;
-	}
-}
-
-// Store projection nodes with type safety
-const nodes = new WeakMap<Node, ProjectionNode>();
-
-class ProjectionTreeBuilder {
-	private services: ProjectionService;
-
-	constructor() {
-		this.services = ProjectionServiceProvider.getServices();
-	}
-
-	private createOrGetParentNode(parentElement: Node | null): ProjectionNode | null {
-		if (!parentElement) return null;
-
-		return (
-			nodes.get(parentElement) ||
+function createProjectionTree(node: HTMLElement, layoutId: string | null): ProjectionNode {
+	// First create or get projection node for parent if it exists
+	const parentNode =
+		node.parentNode &&
+		(nodes.get(node.parentNode) ||
 			(() => {
-				if (!(parentElement instanceof HTMLElement)) return null;
-				const newParent = new ProjectionNode(parentElement, this.services.measurer);
-				nodes.set(parentElement, newParent);
+				const newParent = new ProjectionNode(node.parentElement!, measurer);
+				nodes.set(node.parentNode, newParent);
 				return newParent;
-			})()
-		);
-	}
+			})());
 
-	private processChildNodes(node: HTMLElement, parentProjectionNode: ProjectionNode): void {
-		Array.from(node.children).forEach((child) => {
-			if (child instanceof HTMLElement) {
-				const childNode = this.buildTree(child, null);
-				childNode.attach(parentProjectionNode);
-			}
-		});
-	}
+	// Create and store projection node for current element
+	const projectionNode = new ProjectionNode(node, measurer);
+	nodes.set(node, projectionNode);
 
-	buildTree(node: HTMLElement, layoutId: string | null): ProjectionNode {
-		try {
-			const parentNode = this.createOrGetParentNode(node.parentNode);
-			const projectionNode = new ProjectionNode(node, this.services.measurer);
-
-			nodes.set(node, projectionNode);
-
-			if (parentNode) {
-				if (layoutId) {
-					projectionNode.identifyAs(layoutId);
-				}
-				projectionNode.attach(parentNode);
-			}
-
-			this.processChildNodes(node, projectionNode);
-			return projectionNode;
-		} catch (error) {
-			console.error('Error building projection tree:', error);
-			throw error;
+	// Attach to parent if exists
+	if (parentNode) {
+		if (layoutId) {
+			projectionNode.identifyAs(layoutId);
 		}
+		projectionNode.attach(parentNode);
 	}
+
+	// Recursively create projection nodes for all child elements
+	Array.from(node.children).forEach((child) => {
+		if (child instanceof HTMLElement) {
+			const childNode = createProjectionTree(child, null);
+			// Child nodes automatically attach to their parent when created
+			// but we make it explicit here for clarity
+			childNode.attach(projectionNode);
+		}
+	});
+
+	return projectionNode;
 }
 
 function findRootProjectionNode(node: ProjectionNode): ProjectionNode {
+	if (!node) return node;
 	return node.parent ? findRootProjectionNode(node.parent) : node;
 }
+export function setupProjection(node: Node, layoutId: string | null) {
+	const thisProjectionNode = createProjectionTree(node as HTMLElement, layoutId);
 
-class MutationHandler {
-	private snapshots: ProjectionNodeSnapshotMap;
-	private services: ProjectionService;
-	private rootNode: ProjectionNode;
+	const rootProjectionNode = findRootProjectionNode(thisProjectionNode);
 
-	constructor(rootNode: ProjectionNode) {
-		this.services = ProjectionServiceProvider.getServices();
-		this.rootNode = rootNode;
-		this.snapshots = this.services.snapper.snapshotTree(rootNode);
-	}
-
-	shouldHandleMutation(mutation: MutationRecord): boolean {
-		return (
-			(mutation.type === 'attributes' && mutation.attributeName === 'class') ||
-			mutation.type === 'childList'
+	let snapshots = snapper.snapshotTree(rootProjectionNode);
+	console.log('INITIAL', snapshots);
+	// Setup mutation observer
+	const observer = new MutationObserver((mutations) => {
+		//TODO: This is done so that the animate doesn't trigger a infinite mutation loop but this doesn't trigger style changes without class changes
+		const shouldUpdate = mutations.some(
+			(mutation) =>
+				(mutation.type === 'attributes' && mutation.attributeName === 'class') ||
+				mutation.type === 'childList'
 		);
-	}
+		if (shouldUpdate && rootProjectionNode) {
+			console.log('mutatin...');
 
-	async handleMutation(): Promise<void> {
-		try {
-			await this.services.animator.animate({
-				root: this.rootNode,
-				from: this.snapshots,
-				estimation: true
+			animator.animate({ root: rootProjectionNode, from: snapshots }).then(() => {
+				snapshots = snapper.snapshotTree(rootProjectionNode);
+				console.log('AFTER', snapshots);
 			});
-			this.snapshots = this.services.snapper.snapshotTree(this.rootNode);
-		} catch (error) {
-			console.error('Error handling mutation:', error);
 		}
-	}
-}
+	});
+	observer.observe(rootProjectionNode.element, {
+		attributes: true,
+		subtree: true,
+		childList: true
+	});
 
-export function setupProjection(node: Node, layoutId: string | null): ProjectionCleanup {
-	if (!(node instanceof HTMLElement)) {
-		throw new Error('Node must be an HTMLElement');
-	}
-
-	try {
-		const treeBuilder = new ProjectionTreeBuilder();
-		const projectionNode = treeBuilder.buildTree(node, layoutId);
-		const rootNode = findRootProjectionNode(projectionNode);
-		const mutationHandler = new MutationHandler(rootNode);
-		const observer = new MutationObserver((mutations) => {
-			const shouldUpdate = mutations.some((mutation) =>
-				mutationHandler.shouldHandleMutation(mutation)
-			);
-
-			if (shouldUpdate && rootNode) {
-				mutationHandler.handleMutation();
-			}
-		});
-		observer.observe(rootNode.element, { attributes: true, subtree: true, childList: true });
-
-		return {
-			destroy: () => {
-				observer.disconnect();
-				const nodeToRemove = nodes.get(node);
-				if (nodeToRemove) {
-					nodeToRemove.detach();
-					nodes.delete(node);
-				}
-			}
-		};
-	} catch (error) {
-		console.error('Error setting up projection:', error);
-		throw error;
-	}
+	return {
+		destroy: () => {
+			console.log('destroying');
+			observer.disconnect();
+			nodes.get(node)?.detach();
+			nodes.delete(node);
+		}
+	};
 }
