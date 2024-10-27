@@ -31,6 +31,7 @@ function createProjectionTree(node: HTMLElement, layoutId: string | null): Proje
 		projectionNode.identifyAs(layoutId);
 	}
 	nodes.set(node, projectionNode);
+	//this while loop is to find the parent (if there is any) for new nodes created after the tree is already created
 	while (parentNode) {
 		if (nodes.has(parentNode)) {
 			projectionNode.parent = nodes.get(parentNode);
@@ -53,6 +54,7 @@ function findRootProjectionNode(node: ProjectionNode): ProjectionNode {
 	return node.parent ? findRootProjectionNode(node.parent) : node;
 }
 export function setupProjection(node: Node, layoutId: string | null) {
+	//Creating projection tree for that element
 	const thisProjectionNode = createProjectionTree(node as HTMLElement, layoutId);
 	let rootProjectionNode: ProjectionNode | null = null;
 	let snapshots: ProjectionNodeSnapshotMap | null = null;
@@ -60,6 +62,7 @@ export function setupProjection(node: Node, layoutId: string | null) {
 	watch(
 		() => nodes,
 		() => {
+			//every time a node is added to the nodes map it will recalculate the root node
 			rootProjectionNode = findRootProjectionNode(thisProjectionNode);
 		}
 	);
@@ -67,9 +70,13 @@ export function setupProjection(node: Node, layoutId: string | null) {
 	watch(
 		() => rootProjectionNode,
 		() => {
+			//every time the root node is changed if this node is the root, it will take a snapshot of the tree
+			// and create a mutation observer
 			if (rootProjectionNode?.id === thisProjectionNode.id) {
 				console.log('test', thisProjectionNode);
 				snapshots = snapper.snapshotTree(thisProjectionNode);
+				console.log('snapshot taken');
+				observer?.disconnect();
 				observer = new MutationObserver((mutations) => {
 					//TODO: This is done so that the animate doesn't trigger a infinite mutation loop but this doesn't trigger style changes without class changes
 					const shouldUpdate = mutations.some(
@@ -79,19 +86,20 @@ export function setupProjection(node: Node, layoutId: string | null) {
 					);
 					if (shouldUpdate && rootProjectionNode) {
 						console.log('mutatin...');
-
+						//if there is a mutation, animate the mutation from the previous snapshot to the new one
 						animator
 							.animate({ root: rootProjectionNode, from: snapshots, estimation: true })
 							.then(() => {
 								if (rootProjectionNode) {
 									snapshots = snapper.snapshotTree(rootProjectionNode);
+									console.log('new snapshot taken');
+
 									// 	console.log('snapshot taken on ', rootProjectionNode.id);
 								}
 								// console.log('AFTER', snapshots);
 							});
 					}
 				});
-				observer.disconnect();
 				if (rootProjectionNode) {
 					observer.observe(rootProjectionNode.element, {
 						attributes: true,
