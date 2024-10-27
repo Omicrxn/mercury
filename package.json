@@ -78,6 +78,7 @@
 	},
 	"dependencies": {
 		"@juliangarnierorg/anime-beta": "4.0.0-beta.101",
-		"@layout-projection/core": "^0.12.0"
+		"@layout-projection/core": "^0.12.0",
+		"runed": "^0.15.3"
 	}
 }

@@ -1,8 +1,14 @@
 <script lang="ts">
 	import { mercury, animateExit } from '$lib/index.js';
+	import { nodes } from '$lib/mercury/layout.svelte.js';
+
+	import { onMount } from 'svelte';
 
 	let justify = $state('justify-start');
 	let show = $state(true);
+	onMount(() => {
+		console.log(nodes);
+	});
 </script>
 
 <div class="relative flex flex-col h-full items-center gap-12 p-32 bg-blue-500">
@@ -29,38 +35,12 @@
 		>
 	</div>
 	<div class="flex w-full flex-col gap-3">
-		<!-- <div id="flexWrapper" class="flex gap-2 min-h-16 w-full p-4 items-center bg-gray-200 {justify}">
-			<div
-				id="box"
-				class="w-24 h-24 rounded-lg bg-blue-400 border items-center justify-center flex border-blue-600"
-				style={justify === 'justify-end' ? 'width:200px;height:200px;' : 'width:96px;height:96px;'}
-			>
-				<p id="text">Projection</p>
-			</div>
-			{#if show}
-				<div
-					id="box-two"
-					class="w-24 h-24 rounded-lg bg-blue-400 border items-center justify-center flex border-blue-600"
-					style={justify === 'justify-end'
-						? 'width:200px;height:200px;'
-						: 'width:96px;height:96px;'}
-				>
-					<p id="text-2">Projection</p>
-				</div>
-			{/if}
-
-			<div
-				id="box-three"
-				class="w-24 h-24 rounded-lg bg-blue-400 border items-center justify-center flex border-blue-600"
-				style={justify === 'justify-end' ? 'width:200px;height:200px;' : 'width:96px;height:96px;'}
-			>
-				<div class="flex flex-col">
-					<p id="text-three">Projection</p>
-					<p id="text-three">Projection</p>
-				</div>
-			</div>
-		</div> -->
-		<div id="flexWrapper" class="flex gap-2 min-h-16 w-full p-4 items-center bg-gray-200 {justify}">
+		<div
+			id="flexWrapper"
+			class="flex gap-2 min-h-16 w-full p-4 items-center bg-gray-200 {justify}"
+			use:mercury
+			layout
+		>
 			<div
 				id="box"
 				class="w-24 h-24 rounded-lg bg-blue-400 border items-center justify-center flex border-blue-600"
@@ -69,9 +49,9 @@
 				out:animateExit
 				layout
 			>
-				<p id="text">Projection</p>
+				<p id="text" use:mercury layout>Projection</p>
 			</div>
-			{#if show}
+			<!-- {#if show}
 				<div
 					id="box-two"
 					class="w-24 h-24 rounded-lg bg-blue-400 border items-center justify-center flex border-blue-600"
@@ -82,7 +62,7 @@
 					out:animateExit={{ opacity: 0, scale: 0.5, rotate: 90 }}
 					layout
 				>
-					<p id="text-2">Projection</p>
+					<p id="text-2" use:mercury layout>Projection</p>
 				</div>
 			{/if}
 
@@ -94,11 +74,11 @@
 				out:animateExit
 				layout
 			>
-				<div class="flex flex-col">
-					<p id="text-three">Projection</p>
-					<p id="text-three">Projection</p>
+				<div class="flex flex-col" use:mercury layout>
+					<p id="text-three" use:mercury layout>Projection</p>
+					<p id="text-three" use:mercury layout>Projection</p>
 				</div>
-			</div>
+			</div> -->
 		</div>
 	</div>
 </div>

@@ -7,7 +7,7 @@ import {
 	type AnimationParams
 } from '@juliangarnierorg/anime-beta';
 import type { Action } from 'svelte/action';
-import { setupProjection } from './layout.js';
+import { setupProjection } from './layout.svelte.js';
 import createEventListeners from './utils.js';
 // Constants and Types
 export enum ExitMode {
