@@ -28,22 +28,36 @@
 	});
 </script>
 
-<button onclick={() => console.log(nodes)}>debug</button>
-<div id="parent-flex" class="flex rounded-md border px-4 py-2" use:mercury layout>
-	{#each items as item, i (item.title)}
-		{@const Icon = item.icon}
-		<button
-			id="button-{item.title}"
-			class="flex gap-2 p-4"
-			onmouseenter={() => (hoveredIndex = i)}
-			style="background-color:var(--hover-color)"
-			use:mercury
-			layout="button-{item.title}"
-		>
-			<div id="icon-{item.title}" use:mercury layout><Icon /></div>
-			{#if hoveredIndex === i}
-				<span id="title-{item.title}" use:mercury layout="title">{item.title}</span>
-			{/if}
-		</button>
-	{/each}
+<div class="flex flex-col gap-2 p-32">
+	<button onclick={() => console.log(nodes)}>debug</button>
+	<!-- <div id="parent-flex" class="flex rounded-md border px-4 py-2" use:mercury layout>
+		{#each items as item, i (item.title)}
+			{@const Icon = item.icon}
+			<button
+				id="button-{item.title}"
+				class="flex gap-2 p-4"
+				onmouseenter={() => (hoveredIndex = i)}
+				style="background-color:var(--hover-color)"
+				use:mercury
+				layout="button-{item.title}"
+			>
+				<div id="icon-{item.title}" use:mercury layout><Icon /></div>
+				{#if hoveredIndex === i}
+					<span id="title-{item.title}" use:mercury layout="title">{item.title}</span>
+				{/if}
+			</button>
+		{/each}
+	</div> -->
+	<div class="flex rounded-md border px-4 py-2 gap-3">
+		{#each items as item, i (item.title)}
+			<div class="relative" use:mercury layout>
+				<span onmouseenter={() => (hoveredIndex = i)} id="title-{item.title}" use:mercury
+					>{item.title}</span
+				>
+				{#if hoveredIndex === i}
+					<div class="w-4 h-1 bg-red-500" use:mercury layout="bar"></div>
+				{/if}
+			</div>
+		{/each}
+	</div>
 </div>
