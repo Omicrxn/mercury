@@ -1,14 +1,7 @@
 <script lang="ts">
 	import { mercury, animateExit } from '$lib/index.js';
-	import { nodes } from '$lib/mercury/layout.svelte.js';
-
-	import { onMount } from 'svelte';
-
 	let justify = $state('justify-start');
 	let show = $state(true);
-	onMount(() => {
-		console.log(nodes);
-	});
 </script>
 
 <div class="relative flex flex-col h-full items-center gap-12 p-32 bg-blue-500">

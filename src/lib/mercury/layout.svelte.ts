@@ -7,74 +7,150 @@ import {
 	ProjectionNodeAnimationEngine,
 	CssBorderRadiusParser,
 	CssEasingParser,
-	ProjectionNodeSnapshotMap
+	ProjectionNodeSnapshotMap,
+	ProjectionNodeAnimationRouteMap
 } from '@layout-projection/core';
 import { watch } from 'runed';
-// Initialize core services
+
+/**
+ * Implementation of LayoutAnimator that logs additional information to the
+ * console.
+ */
+class DebuggingLayoutAnimator extends LayoutAnimator {
+	protected getAnimationRouteMap(
+		root: ProjectionNode,
+		snapshots: ProjectionNodeSnapshotMap,
+		estimation: boolean
+	): ProjectionNodeAnimationRouteMap {
+		const result = super.getAnimationRouteMap(root, snapshots, estimation);
+		console.log(result);
+		return result;
+	}
+}
+
+// singleton services from `@layout-projection/core`
 const measurer = new ElementMeasurer(new CssBorderRadiusParser());
 const snapper = new ProjectionNodeSnapper(measurer);
-const animator = new LayoutAnimator(
+const animator = new DebuggingLayoutAnimator(
 	new ProjectionTreeAnimationEngine(new ProjectionNodeAnimationEngine()),
 	measurer,
 	new CssEasingParser()
 );
 
-// Store projection nodes
-export const nodes = $state(new WeakMap<Node, ProjectionNode>());
+/**
+ * Map of DOM elements to their projection nodes.
+ */
+export const nodeMap = $state(new WeakMap<HTMLElement, ProjectionNode>());
 
-function createProjectionTree(node: HTMLElement, layoutId: string | null): ProjectionNode {
-	// First create or get projection node for parent if it exists
-	const projectionNode = new ProjectionNode(node, measurer);
-	let parentNode = node.parentElement;
-	if (layoutId) {
-		projectionNode.identifyAs(layoutId);
-	}
-	nodes.set(node, projectionNode);
-	//this while loop is to find the parent (if there is any) for new nodes created after the tree is already created
-	while (parentNode) {
-		if (nodes.has(parentNode)) {
-			projectionNode.parent = nodes.get(parentNode);
-			break;
-		}
-		parentNode = parentNode.parentElement;
-	}
-	for (const childNode of node.children) {
-		if (nodes.has(childNode)) {
-			const childProjectionNode = nodes.get(childNode);
-			childProjectionNode?.attach(projectionNode);
-		}
-	}
+/**
+ * Build the Projection Tree covering the given element and its child elements.
+ * Create a Projection Node for the given element, and establish the parent-child
+ * relationships with the existing child Projection Nodes without a parent.
+ * This confronts Svelte's rendering mechanism where child elements are created
+ * before the parent element.
+ * @param element
+ * @param layoutId if specified, assign the given ID to the created root Projection Node
+ * @returns the created Projection Node of the given element
+ */
+function buildProjectionTreeDownwards(
+	element: HTMLElement,
+	layoutId: string | null
+): ProjectionNode {
+	if (nodeMap.has(element)) throw new Error('Projection Node already exists for the given element');
+	const projectionNode = new ProjectionNode(element, measurer);
+	if (layoutId) projectionNode.identifyAs(layoutId);
+	nodeMap.set(element, projectionNode);
+
+	traverseDomBreadthFirst(element, (current) => {
+		if (!(current instanceof HTMLElement)) return;
+		if (current === element) return;
+		const childProjectionNode = nodeMap.get(current);
+		if (!childProjectionNode) return;
+		// if found a Projection Node that already has a parent, any deeper
+		// nodes should already be well established
+		if (childProjectionNode.parent) return false;
+		childProjectionNode.attach(projectionNode);
+		return;
+	});
 
 	return projectionNode;
+}
+
+/**
+ * Attempt to find the nearest parent Projection Node for the given Projection
+ * Node by looking upwards through the DOM.
+ * @param projectionNode
+ * @returns true if a parent Projection Node is found and attached
+ */
+function tryAttachToNearestParent(projectionNode: ProjectionNode): boolean {
+	let parentElement = projectionNode.element.parentElement;
+	while (parentElement) {
+		const parentProjectionNode = nodeMap.get(parentElement);
+		if (parentProjectionNode) {
+			projectionNode.attach(parentProjectionNode);
+			return true;
+		}
+		parentElement = parentElement.parentElement;
+	}
+	return false;
+}
+
+/**
+ * Traverse the DOM tree breadth-first starting from the given node.
+ * @param from the node to start traversing from
+ * @param callback invoked for each node traversed, including the given node;
+ * returns false to stop the traversal
+ */
+function traverseDomBreadthFirst(from: Node, callback: (node: Node) => void | boolean) {
+	const queue: Node[] = [from];
+	while (queue.length > 0) {
+		const node = queue.shift()!;
+		if (callback(node) === false) return;
+		for (const child of Array.from(node.childNodes)) {
+			queue.push(child);
+		}
+	}
 }
 
 function findRootProjectionNode(node: ProjectionNode): ProjectionNode {
 	if (!node) return node;
 	return node.parent ? findRootProjectionNode(node.parent) : node;
 }
-export function setupProjection(node: Node, layoutId: string | null) {
-	//Creating projection tree for that element
-	const thisProjectionNode = createProjectionTree(node as HTMLElement, layoutId);
+
+export function setupProjection(currentElement: Node, layoutId: string | null) {
+	if (!(currentElement instanceof HTMLElement))
+		throw new Error('Projection applies only to HTMLElement instances');
+
+	const currentProjectionNode = buildProjectionTreeDownwards(
+		currentElement as HTMLElement,
+		layoutId
+	);
+	// In case called with a new element that was not there during the
+	// initial render:
+	tryAttachToNearestParent(currentProjectionNode);
+
 	let rootProjectionNode: ProjectionNode | null = null;
-	let snapshots: ProjectionNodeSnapshotMap | null = null;
 	let observer: MutationObserver | null = null;
+
+	const snapshots = new ProjectionNodeSnapshotMap();
+
 	watch(
-		() => nodes,
+		() => nodeMap,
 		() => {
-			//every time a node is added to the nodes map it will recalculate the root node
-			rootProjectionNode = findRootProjectionNode(thisProjectionNode);
+			rootProjectionNode = findRootProjectionNode(currentProjectionNode);
 		}
 	);
 
 	watch(
 		() => rootProjectionNode,
 		() => {
-			//every time the root node is changed if this node is the root, it will take a snapshot of the tree
-			// and create a mutation observer
-			console.log('test', thisProjectionNode);
-			snapshots = snapper.snapshotTree(thisProjectionNode);
-			console.log('snapshot taken');
 			observer?.disconnect();
+
+			// Below are root-specific responsibilities
+			if (rootProjectionNode !== currentProjectionNode) return;
+
+			snapshots.merge(snapper.snapshotTree(currentProjectionNode));
+
 			observer = new MutationObserver((mutations) => {
 				//TODO: This is done so that the animate doesn't trigger a infinite mutation loop but this doesn't trigger style changes without class changes
 				const shouldUpdate = mutations.some(
@@ -82,43 +158,30 @@ export function setupProjection(node: Node, layoutId: string | null) {
 						(mutation.type === 'attributes' && mutation.attributeName === 'class') ||
 						mutation.type === 'childList'
 				);
-				if (shouldUpdate && rootProjectionNode) {
-					console.log('mutatin...');
-					//if there is a mutation, animate the mutation from the previous snapshot to the new one
+				if (shouldUpdate && snapshots) {
+					console.log('animate');
 					animator
-						.animate({ root: rootProjectionNode, from: snapshots, estimation: true })
+						.animate({ root: currentProjectionNode, from: snapshots, estimation: true })
 						.then(() => {
-							if (rootProjectionNode) {
-								snapshots = snapper.snapshotTree(rootProjectionNode);
-								console.log('new snapshot taken');
-
-								// 	console.log('snapshot taken on ', rootProjectionNode.id);
-							}
-							// console.log('AFTER', snapshots);
+							snapshots.merge(snapper.snapshotTree(currentProjectionNode));
 						});
 				}
 			});
-			if (rootProjectionNode) {
-				observer.observe(rootProjectionNode.element, {
-					attributes: true,
-					childList: true,
-					subtree: true
-				});
-			}
+
+			observer.observe(rootProjectionNode.element, {
+				attributes: true,
+				childList: true,
+				subtree: true
+			});
 		}
 	);
 
 	return {
 		destroy: () => {
-			console.log('destroying');
-			if (observer) {
-				observer.disconnect();
+			observer?.disconnect();
+			if (currentProjectionNode?.parent) {
+				currentProjectionNode.detach();
 			}
-			const projNode = nodes.get(node);
-			if (projNode?.parent) {
-				projNode?.detach();
-			}
-			if (nodes) nodes.delete(node);
 		}
 	};
 }
