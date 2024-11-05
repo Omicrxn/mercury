@@ -112,11 +112,18 @@ function traverseDomBreadthFirst(from: Node, callback: (node: Node) => void | bo
 	}
 }
 
+/**
+ * Locate furthest ancestor Projection Node of the given Projection Node.
+ * @param node
+ * @returns
+ */
 function findRootProjectionNode(node: ProjectionNode): ProjectionNode {
 	if (!node) return node;
 	return node.parent ? findRootProjectionNode(node.parent) : node;
 }
 
+// TODO: definitely needs some refactor here - root and children have very different responsibilities
+// TODO: switch to another mechanism for animation timing - must be performed after **all** layout changes
 export function setupProjection(currentElement: Node, layoutId: string | null) {
 	if (!(currentElement instanceof HTMLElement))
 		throw new Error('Projection applies only to HTMLElement instances');
@@ -132,12 +139,15 @@ export function setupProjection(currentElement: Node, layoutId: string | null) {
 	let rootProjectionNode: ProjectionNode | null = null;
 	let observer: MutationObserver | null = null;
 
-	const snapshots = new ProjectionNodeSnapshotMap();
+	let snapshots: ProjectionNodeSnapshotMap | null = null;
 
 	watch(
 		() => nodeMap,
 		() => {
 			rootProjectionNode = findRootProjectionNode(currentProjectionNode);
+			// Below are root-specific responsibilities
+			if (rootProjectionNode !== currentProjectionNode) return;
+			snapshots = snapper.snapshotTree(currentProjectionNode);
 		}
 	);
 
@@ -148,8 +158,6 @@ export function setupProjection(currentElement: Node, layoutId: string | null) {
 
 			// Below are root-specific responsibilities
 			if (rootProjectionNode !== currentProjectionNode) return;
-
-			snapshots.merge(snapper.snapshotTree(currentProjectionNode));
 
 			observer = new MutationObserver((mutations) => {
 				//TODO: This is done so that the animate doesn't trigger a infinite mutation loop but this doesn't trigger style changes without class changes
@@ -163,7 +171,7 @@ export function setupProjection(currentElement: Node, layoutId: string | null) {
 					animator
 						.animate({ root: currentProjectionNode, from: snapshots, estimation: true })
 						.then(() => {
-							snapshots.merge(snapper.snapshotTree(currentProjectionNode));
+							snapshots = snapper.snapshotTree(currentProjectionNode);
 						});
 				}
 			});
