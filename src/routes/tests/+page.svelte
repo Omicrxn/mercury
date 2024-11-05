@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { mercury } from '$lib/index.js';
-	import { nodes } from '$lib/mercury/layout.svelte.js';
 
 	import { Briefcase, FlaskConical, House, Library } from 'lucide-svelte';
 	// import getRandomTailwindColor from '$lib/utils/random-color';
@@ -23,13 +22,9 @@
 		]
 	}: { items: ToolbarItem[] } = $props();
 	let hoveredIndex = $state(-1);
-	onMount(() => {
-		console.log(nodes);
-	});
 </script>
 
 <div class="flex flex-col gap-2 p-32">
-	<button onclick={() => console.log(nodes)}>debug</button>
 	<!-- <div id="parent-flex" class="flex rounded-md border px-4 py-2" use:mercury layout>
 		{#each items as item, i (item.title)}
 			{@const Icon = item.icon}
