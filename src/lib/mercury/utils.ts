@@ -6,10 +6,8 @@ export default function createEventListeners(
 	updateAnimation: (node: HTMLElement, params: AnimationParams) => void
 ) {
 	const { whileHover, whileTap, initial } = params;
-	console.log('mouseOver', whileHover, whileTap, initial)
 	// Store handler functions as named functions
 	const handleEnter = (enterParams: MercuryParams | undefined) => {
-		console.log('mouseOver', enterParams);
 		if (!enterParams) {
 			return;
 		}
@@ -17,7 +15,6 @@ export default function createEventListeners(
 	};
 
 	const handleOut = () => {
-		console.log('mouseOver', initial);
 		if (initial) {
 			updateAnimation(node as HTMLElement, initial);
 		}

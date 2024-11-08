@@ -11,7 +11,7 @@ import {
 	ProjectionNodeAnimationRouteMap
 } from '@layout-projection/core';
 import { watch } from 'runed';
-
+import {tick} from 'svelte';
 /**
  * Implementation of LayoutAnimator that logs additional information to the
  * console.
@@ -31,7 +31,7 @@ class DebuggingLayoutAnimator extends LayoutAnimator {
 // singleton services from `@layout-projection/core`
 const measurer = new ElementMeasurer(new CssBorderRadiusParser());
 const snapper = new ProjectionNodeSnapper(measurer);
-const animator = new DebuggingLayoutAnimator(
+const animator = new LayoutAnimator(
 	new ProjectionTreeAnimationEngine(new ProjectionNodeAnimationEngine()),
 	measurer,
 	new CssEasingParser()
@@ -124,7 +124,7 @@ function findRootProjectionNode(node: ProjectionNode): ProjectionNode {
 
 // TODO: definitely needs some refactor here - root and children have very different responsibilities
 // TODO: switch to another mechanism for animation timing - must be performed after **all** layout changes
-export function setupProjection(currentElement: Node, layoutId: string | null) {
+export function setupProjection(currentElement: Node, layoutId: string | null,estimation = false) {
 	if (!(currentElement instanceof HTMLElement))
 		throw new Error('Projection applies only to HTMLElement instances');
 
@@ -167,12 +167,17 @@ export function setupProjection(currentElement: Node, layoutId: string | null) {
 						mutation.type === 'childList'
 				);
 				if (shouldUpdate && snapshots) {
-					console.log('animate');
+					requestAnimationFrame(() =>{
+					tick().then(() => {
 					animator
-						.animate({ root: currentProjectionNode, from: snapshots, estimation: true })
+						.animate({ root: currentProjectionNode, from: snapshots, estimation: estimation })
 						.then(() => {
 							snapshots = snapper.snapshotTree(currentProjectionNode);
 						});
+					});
+					});
+
+
 				}
 			});
 
