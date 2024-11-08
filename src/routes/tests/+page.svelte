@@ -3,6 +3,7 @@
 	import { nodeMap } from '$lib/mercury/layout.svelte.js';
 
 	import { Briefcase, FlaskConical, House, Library } from 'lucide-svelte';
+	import { Debounced } from 'runed';
 	// import getRandomTailwindColor from '$lib/utils/random-color';
 	import { onMount, type ComponentType } from 'svelte';
 
@@ -23,6 +24,8 @@
 		]
 	}: { items: ToolbarItem[] } = $props();
 	let hoveredIndex = $state(0);
+	const debounced = new Debounced(() => hoveredIndex, 120);
+
 	function logTree() {
 		console.log(nodeMap);
 	}
@@ -37,7 +40,7 @@
 				<span id="title-{item.title}" onmouseenter={() => (hoveredIndex = i)} use:mercury
 					>{item.title}</span
 				>
-				{#if hoveredIndex === i}
+				{#if debounced.current === i}
 					<div id="bar-{item.title}" class="w-4 h-1 bg-red-500" use:mercury layout="bar"></div>
 				{/if}
 			</div>
