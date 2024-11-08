@@ -105,17 +105,17 @@ export const mercury: Action<
 
 	function initializeNode() {
 		const layoutId = node.getAttribute('layout');
-		let projectionCleanup = null;
+		let projection = null;
 
 		if (node.hasAttribute('layout') || layoutId) {
-			projectionCleanup = setupProjection(node, layoutId)?.destroy;
+			projection = setupProjection(node, layoutId);
 		}
 
 		if (node.hasAttribute('draggable')) {
 			createDraggable(node);
 		}
 
-		return projectionCleanup;
+		return projection;
 	}
 
 	function updateAnimation(node: HTMLElement, params: AnimationParams) {
@@ -126,19 +126,20 @@ export const mercury: Action<
 		manager.addAnimation(currentAnimation);
 	}
 
-	const projectionCleanup = initializeNode();
-
+	const projection = initializeNode();
 	$effect(() => {
 		try {
+
 			let eventListeners: { remove: () => void } | undefined;
 			const resolvedParams = typeof params === 'function' ? params() : params;
+
 			if (resolvedParams) {
 				eventListeners = createEventListeners(node, resolvedParams, updateAnimation);
 			}
 
 			if (!resolvedParams?.animate) {
 				return () => {
-					projectionCleanup?.();
+					projection?.destroy?.();
 				};
 			}
 
@@ -147,7 +148,7 @@ export const mercury: Action<
 
 			return () => {
 				currentAnimation?.pause();
-				projectionCleanup?.();
+				projection?.destroy?.();
 				eventListeners?.remove();
 			};
 		} catch (error) {

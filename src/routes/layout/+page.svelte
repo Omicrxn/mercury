@@ -1,11 +1,19 @@
 <script lang="ts">
 	import { mercury, animateExit } from '$lib/index.js';
+	import { ElementRect } from 'runed';
 	let justify = $state('justify-start');
 	let show = $state(true);
+	let box = $state<HTMLElement>();
+	const rect = new ElementRect(() => box);
+	$inspect(rect.current);
+	function logBoxRect() {
+		console.log(rect.current);
+	}
 </script>
 
 <div class="relative flex flex-col h-full items-center gap-12 p-32 bg-blue-500">
 	<div class="flex justify-center gap-4">
+		<button onclick={logBoxRect}>Log Box Rect</button>
 		<button
 			onclick={() => {
 				justify = 'justify-start';
@@ -36,13 +44,12 @@
 		>
 			<div
 				id="box"
+				bind:this={box}
 				class="w-24 h-24 rounded-lg bg-blue-400 border items-center justify-center flex border-blue-600"
-				style={justify === 'justify-end' ? 'width:200px;height:200px;' : 'width:96px;height:96px;'}
 				use:mercury
-				out:animateExit
 				layout
 			>
-				<p id="text" use:mercury layout>Projection</p>
+				<!-- <p id="text" use:layoutAction layout>Projection</p> -->
 			</div>
 			<!-- {#if show}
 				<div

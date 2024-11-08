@@ -10,8 +10,8 @@ import {
 	ProjectionNodeSnapshotMap,
 	ProjectionNodeAnimationRouteMap
 } from '@layout-projection/core';
-import { watch } from 'runed';
-import {tick} from 'svelte';
+import { watch, useDebounce } from 'runed';
+import { tick } from 'svelte';
 /**
  * Implementation of LayoutAnimator that logs additional information to the
  * console.
@@ -24,6 +24,7 @@ class DebuggingLayoutAnimator extends LayoutAnimator {
 	): ProjectionNodeAnimationRouteMap {
 		const result = super.getAnimationRouteMap(root, snapshots, estimation);
 		console.log(result);
+
 		return result;
 	}
 }
@@ -36,6 +37,7 @@ const animator = new LayoutAnimator(
 	measurer,
 	new CssEasingParser()
 );
+const abortController = new AbortController();
 
 /**
  * Map of DOM elements to their projection nodes.
@@ -124,7 +126,7 @@ function findRootProjectionNode(node: ProjectionNode): ProjectionNode {
 
 // TODO: definitely needs some refactor here - root and children have very different responsibilities
 // TODO: switch to another mechanism for animation timing - must be performed after **all** layout changes
-export function setupProjection(currentElement: Node, layoutId: string | null,estimation = false) {
+export function setupProjection(currentElement: Node, layoutId: string | null) {
 	if (!(currentElement instanceof HTMLElement))
 		throw new Error('Projection applies only to HTMLElement instances');
 
@@ -140,6 +142,9 @@ export function setupProjection(currentElement: Node, layoutId: string | null,es
 	let observer: MutationObserver | null = null;
 
 	let snapshots: ProjectionNodeSnapshotMap | null = null;
+	const debounceSnapshot = useDebounce(() => {
+		snapshots = snapper.snapshotTree(currentProjectionNode);
+	}, 50);
 
 	watch(
 		() => nodeMap,
@@ -148,6 +153,14 @@ export function setupProjection(currentElement: Node, layoutId: string | null,es
 			// Below are root-specific responsibilities
 			if (rootProjectionNode !== currentProjectionNode) return;
 			snapshots = snapper.snapshotTree(currentProjectionNode);
+			//Todo: Not really optimal, but since I can't snapshot before a document change I have to do this
+			window.addEventListener(
+				'scroll',
+				() => {
+					debounceSnapshot();
+				},
+				{ capture: true, signal: abortController.signal }
+			);
 		}
 	);
 
@@ -158,7 +171,6 @@ export function setupProjection(currentElement: Node, layoutId: string | null,es
 
 			// Below are root-specific responsibilities
 			if (rootProjectionNode !== currentProjectionNode) return;
-
 			observer = new MutationObserver((mutations) => {
 				//TODO: This is done so that the animate doesn't trigger a infinite mutation loop but this doesn't trigger style changes without class changes
 				const shouldUpdate = mutations.some(
@@ -167,17 +179,15 @@ export function setupProjection(currentElement: Node, layoutId: string | null,es
 						mutation.type === 'childList'
 				);
 				if (shouldUpdate && snapshots) {
-					requestAnimationFrame(() =>{
-					tick().then(() => {
-					animator
-						.animate({ root: currentProjectionNode, from: snapshots, estimation: estimation })
-						.then(() => {
-							snapshots = snapper.snapshotTree(currentProjectionNode);
+					requestAnimationFrame(() => {
+						tick().then(() => {
+							animator
+								.animate({ root: currentProjectionNode, from: snapshots, estimation: true })
+								.then(() => {
+									snapshots = snapper.snapshotTree(currentProjectionNode);
+								});
 						});
 					});
-					});
-
-
 				}
 			});
 
@@ -194,6 +204,9 @@ export function setupProjection(currentElement: Node, layoutId: string | null,es
 			observer?.disconnect();
 			if (currentProjectionNode?.parent) {
 				currentProjectionNode.detach();
+			}
+			if (currentProjectionNode === rootProjectionNode) {
+				abortController.abort();
 			}
 		}
 	};
