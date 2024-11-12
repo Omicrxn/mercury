@@ -21,10 +21,14 @@ export default function createEventListeners(
 	};
 
 	// Add the listeners
-	node.addEventListener('mouseover', () => handleEnter(whileHover));
-	node.addEventListener('mouseout', handleOut);
-	node.addEventListener('mousedown', () => handleEnter(whileTap));
-	node.addEventListener('mouseup', handleOut);
+	if (whileHover) {
+		node.addEventListener('mouseover', () => handleEnter(whileHover));
+		node.addEventListener('mouseout', handleOut);
+	}
+	if (whileTap) {
+		node.addEventListener('mousedown', () => handleEnter(whileTap));
+		node.addEventListener('mouseup', handleOut);
+	}
 
 	// Return the handlers so they can be used to remove listeners
 	return {
