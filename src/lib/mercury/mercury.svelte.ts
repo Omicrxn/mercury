@@ -8,7 +8,7 @@ import {
 } from '@juliangarnierorg/anime-beta';
 import type { Action } from 'svelte/action';
 import { setupProjection } from './layout.svelte.js';
-import createEventListeners from './utils.js';
+import createEventListeners from './utils.svelte.js';
 // Constants and Types
 export enum ExitMode {
 	SYNC = 'sync',
@@ -132,7 +132,7 @@ export const mercury: Action<
 
 			let eventListeners: { remove: () => void } | undefined;
 			const resolvedParams = typeof params === 'function' ? params() : params;
-
+			console.log('resolvedParams:', resolvedParams)
 			if (resolvedParams) {
 				eventListeners = createEventListeners(node, resolvedParams, updateAnimation);
 			}
@@ -144,6 +144,8 @@ export const mercury: Action<
 			}
 
 			const mergedParams = mergeTransitionParams(resolvedParams);
+			console.log('mergedParams:', resolvedParams)
+
 			updateAnimation(node, mergedParams);
 
 			return () => {
