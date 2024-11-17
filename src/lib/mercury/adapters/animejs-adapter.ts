@@ -30,6 +30,7 @@ export const AnimeAdapter: AnimationEngine = {
       pause: () => animation.pause(),
       cancel: () => animation.restart(), // Anime.js doesn't have a cancel method, so we can restart
       then: (callback) => animation.then(callback),
+      completed: animation.completed,
     };
   },
 };

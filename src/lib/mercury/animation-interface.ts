@@ -35,5 +35,6 @@ export interface AnimationInstance {
 	pause(): void;
 	then(callback: () => void): void;
 	cancel(): void;
+	completed: boolean;
 	// Add other necessary methods
 }

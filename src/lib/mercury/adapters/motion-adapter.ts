@@ -13,7 +13,8 @@ export const MotionAdapter: AnimationEngine = {
 			play: () => animation.play(),
 			pause: () => animation.pause(),
 			cancel: () => animation.cancel(),
-			then: (callback) => animation.then(callback)
+			then: (callback) => animation.then(callback),
+			completed: animation.then(() => true)
 		};
 	}
 };

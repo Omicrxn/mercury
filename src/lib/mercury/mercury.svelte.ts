@@ -16,7 +16,6 @@ export interface MercuryAttributes {
 	draggable?: boolean;
 }
 
-
 export type MercuryExitParams = AnimationParams & {
 	mode?: ExitMode;
 	duration?: number;
@@ -70,7 +69,7 @@ export const mercury: Action<
 	} else {
 		resolvedParams = params;
 	}
-	const engine:AnimationEngine = resolvedParams?.engine ?? MotionAdapter;
+	const engine: AnimationEngine = resolvedParams?.engine ?? MotionAdapter;
 	function initializeNode() {
 		const layoutId = node.getAttribute('layout');
 		let projection = null;
@@ -130,23 +129,26 @@ export class ExitAnimationHandler {
 	constructor(
 		private node: HTMLElement,
 		private params: MercuryExitParams = {},
-		private engine: AnimationEngine
+		private engine: AnimationEngine = MotionAdapter
 	) {
 		this.params = {
-			duration: ExitAnimationHandler.DEFAULT_DURATION,
-			delay: ExitAnimationHandler.DEFAULT_DELAY,
+
 			mode: ExitMode.SYNC,
-			...params
+			...params,
+			transition: {
+				...{
+					duration: ExitAnimationHandler.DEFAULT_DURATION,
+					delay: ExitAnimationHandler.DEFAULT_DELAY
+				},
+				...params.transition
+			},
 		};
+		console.log('constructor', this.params);
 	}
 
 	private async startAnimation() {
-		const { duration, delay, mode, ...animationParams } = this.params;
 		const manager = AnimationManager.getInstance();
-		const animation = this.engine.animate(this.node, {
-			animate: animationParams,
-			transition: { duration, delay }
-		});
+		const animation = this.engine.animate(this.node, this.params);
 
 		manager.addAnimation(animation);
 		manager.addExitingNode(this.node);
@@ -157,7 +159,7 @@ export class ExitAnimationHandler {
 	}
 
 	async handleExit() {
-		const { mode, duration = ExitAnimationHandler.DEFAULT_DURATION } = this.params;
+		const { mode } = this.params;
 		const manager = AnimationManager.getInstance();
 
 		switch (mode) {
@@ -172,7 +174,10 @@ export class ExitAnimationHandler {
 					this.node.style.position = 'absolute';
 				}
 				await this.startAnimation();
-				await new Promise((resolve) => setTimeout(resolve, duration * 1000));
+				console.log('POP_LAYOUT',this.params.transition!.duration! * 1000);
+				await new Promise((resolve) =>
+					setTimeout(resolve, this.params.transition!.duration! * 1000)
+				);
 				break;
 
 			default:
@@ -181,15 +186,11 @@ export class ExitAnimationHandler {
 	}
 
 	getTransition() {
-		const {
-			duration = ExitAnimationHandler.DEFAULT_DURATION,
-			delay = ExitAnimationHandler.DEFAULT_DELAY
-		} = this.params;
 		let isExiting = false;
-
+		console.log('getTransition', this.params);
 		return {
-			duration: duration * 1000,
-			delay: delay * 1000,
+			duration: this.params.transition!.duration! * 1000,
+			delay: this.params.transition!.delay! * 1000,
 			css: (t: number, u: number) => {
 				if (!isExiting && t <= u) {
 					isExiting = true;
@@ -201,8 +202,5 @@ export class ExitAnimationHandler {
 	}
 }
 
-export const animateExit = (
-	node: HTMLElement,
-	params: MercuryExitParams = {},
-	engine: AnimationEngine
-) => new ExitAnimationHandler(node, params, engine).getTransition();
+export const animateExit = (node: HTMLElement, params: MercuryExitParams = {}) =>
+	new ExitAnimationHandler(node, params).getTransition();
