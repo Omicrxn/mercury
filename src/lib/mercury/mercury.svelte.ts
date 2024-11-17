@@ -1,12 +1,7 @@
-import {
-	engine,
-	animate,
-	type TargetsParam,
-	type Animation,
-	createDraggable,
-	type AnimationParams
-} from '@juliangarnierorg/anime-beta';
 import type { Action } from 'svelte/action';
+import type { AnimationEngine, AnimationParams, AnimationInstance } from './animation-interface.js';
+import { MotionAdapter } from './adapters/motion-adapter.js';
+
 import { setupProjection } from './layout.svelte.js';
 import createEventListeners from './utils.svelte.js';
 // Constants and Types
@@ -21,14 +16,6 @@ export interface MercuryAttributes {
 	draggable?: boolean;
 }
 
-export type MercuryParams = {
-	initial?: AnimationParams;
-	animate: AnimationParams;
-	transition?: AnimationParams;
-	play?: boolean;
-	whileHover?: AnimationParams;
-	whileTap?: AnimationParams;
-};
 
 export type MercuryExitParams = AnimationParams & {
 	mode?: ExitMode;
@@ -39,14 +26,14 @@ export type MercuryExitParams = AnimationParams & {
 // Singleton Animation Manager
 class AnimationManager {
 	private static instance: AnimationManager;
-	private animations = new Set<Animation>();
+	private animations = new Set<AnimationInstance>();
 	private exitingNodes = new Set<HTMLElement>();
 
 	static getInstance() {
 		return (this.instance ??= new AnimationManager());
 	}
 
-	addAnimation(animation: Animation) {
+	addAnimation(animation: AnimationInstance) {
 		this.animations.add(animation);
 		animation.then(() => this.animations.delete(animation));
 	}
@@ -68,41 +55,22 @@ class AnimationManager {
 	}
 }
 
-// Helper Functions
-function mergeTransitionParams({
-	initial = {},
-	animate,
-	transition = {}
-}: MercuryParams): AnimationParams {
-	const properties = new Set([...Object.keys(initial), ...Object.keys(animate)]);
-	const result = {} as AnimationParams;
-
-	for (const prop of properties) {
-		const initialValue = initial[prop];
-		const animateValue = animate[prop];
-
-		result[prop] =
-			initialValue === undefined
-				? animateValue
-				: Array.isArray(animateValue)
-					? [initialValue, ...animateValue]
-					: [initialValue, animateValue];
-	}
-
-	return { ...result, ...transition };
-}
-
 // Mercury Action
 export const mercury: Action<
 	HTMLElement,
-	(() => MercuryParams) | MercuryParams | undefined,
+	(() => AnimationParams) | AnimationParams | undefined,
 	MercuryAttributes
 > = (node, params) => {
-	engine.timeUnit = 's';
 	const manager = AnimationManager.getInstance();
-	let currentAnimation: Animation | null = null;
+	let currentAnimation: AnimationInstance | null = null;
 	const cleanup: (() => void) | null = null;
-
+	let resolvedParams: AnimationParams | undefined;
+	if (typeof params === 'function') {
+		resolvedParams = params();
+	} else {
+		resolvedParams = params;
+	}
+	const engine:AnimationEngine = resolvedParams?.engine ?? MotionAdapter;
 	function initializeNode() {
 		const layoutId = node.getAttribute('layout');
 		let projection = null;
@@ -110,10 +78,10 @@ export const mercury: Action<
 		if (node.hasAttribute('layout') || layoutId) {
 			projection = setupProjection(node, layoutId);
 		}
-
-		if (node.hasAttribute('draggable')) {
-			createDraggable(node);
-		}
+		//TODO: Implement draggable
+		// if (node.hasAttribute('draggable')) {
+		// 	createDraggable(node);
+		// }
 
 		return projection;
 	}
@@ -122,19 +90,17 @@ export const mercury: Action<
 		if (currentAnimation) {
 			currentAnimation.pause();
 		}
-		currentAnimation = animate(node, params);
+		currentAnimation = engine.animate(node, params);
 		manager.addAnimation(currentAnimation);
 	}
 
 	const projection = initializeNode();
 	$effect(() => {
 		try {
-
 			let eventListeners: { remove: () => void } | undefined;
-			const resolvedParams = typeof params === 'function' ? params() : params;
-			console.log('resolvedParams:', resolvedParams)
 			if (resolvedParams) {
-				eventListeners = createEventListeners(node, resolvedParams, updateAnimation);
+				//TODO: Implement event listeners
+				// eventListeners = createEventListeners(node, params, updateAnimation);
 			}
 
 			if (!resolvedParams?.animate) {
@@ -143,10 +109,7 @@ export const mercury: Action<
 				};
 			}
 
-			const mergedParams = mergeTransitionParams(resolvedParams);
-			console.log('mergedParams:', resolvedParams)
-
-			updateAnimation(node, mergedParams);
+			updateAnimation(node, resolvedParams);
 
 			return () => {
 				currentAnimation?.pause();
@@ -166,7 +129,8 @@ export class ExitAnimationHandler {
 
 	constructor(
 		private node: HTMLElement,
-		private params: MercuryExitParams = {}
+		private params: MercuryExitParams = {},
+		private engine: AnimationEngine
 	) {
 		this.params = {
 			duration: ExitAnimationHandler.DEFAULT_DURATION,
@@ -179,7 +143,10 @@ export class ExitAnimationHandler {
 	private async startAnimation() {
 		const { duration, delay, mode, ...animationParams } = this.params;
 		const manager = AnimationManager.getInstance();
-		const animation = animate(this.node, { duration, delay, ...animationParams });
+		const animation = this.engine.animate(this.node, {
+			animate: animationParams,
+			transition: { duration, delay }
+		});
 
 		manager.addAnimation(animation);
 		manager.addExitingNode(this.node);
@@ -234,5 +201,8 @@ export class ExitAnimationHandler {
 	}
 }
 
-export const animateExit = (node: HTMLElement, params: MercuryExitParams = {}) =>
-	new ExitAnimationHandler(node, params).getTransition();
+export const animateExit = (
+	node: HTMLElement,
+	params: MercuryExitParams = {},
+	engine: AnimationEngine
+) => new ExitAnimationHandler(node, params, engine).getTransition();
