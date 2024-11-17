@@ -143,7 +143,6 @@ export class ExitAnimationHandler {
 				...params.transition
 			},
 		};
-		console.log('constructor', this.params);
 	}
 
 	private async startAnimation() {
@@ -174,7 +173,6 @@ export class ExitAnimationHandler {
 					this.node.style.position = 'absolute';
 				}
 				await this.startAnimation();
-				console.log('POP_LAYOUT',this.params.transition!.duration! * 1000);
 				await new Promise((resolve) =>
 					setTimeout(resolve, this.params.transition!.duration! * 1000)
 				);
@@ -187,7 +185,6 @@ export class ExitAnimationHandler {
 
 	getTransition() {
 		let isExiting = false;
-		console.log('getTransition', this.params);
 		return {
 			duration: this.params.transition!.duration! * 1000,
 			delay: this.params.transition!.delay! * 1000,
