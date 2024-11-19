@@ -1,6 +1,6 @@
 {
 	"name": "@omicrxn/mercury",
-	"version": "0.1.27",
+	"version": "0.1.32",
 	"description": "Mercury is a Svelte animation library using AnimeJS under the hood. It simplifies complex animations with Svelte actions, provides layout and exit animations, and integrates seamlessly with Svelte features.",
 	"license": "MIT",
 	"keywords": [
@@ -51,7 +51,6 @@
 	},
 	"peerDependencies": {
 		"svelte": "^5.0.0",
-		"@juliangarnierorg/anime-beta": "^4.0.0-beta.102.1",
 		"motion": "^11.11.17"
 	},
 	"devDependencies": {
