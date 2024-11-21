@@ -3,7 +3,6 @@ import type { AnimationEngine, AnimationParams, AnimationInstance } from './anim
 import { MotionAdapter } from './adapters/motion-adapter.js';
 
 import { setupProjection } from './layout.svelte.js';
-import createEventListeners from './utils.svelte.js';
 // Constants and Types
 export enum ExitMode {
 	SYNC = 'sync',
@@ -21,6 +20,12 @@ export type MercuryExitParams = AnimationParams & {
 	duration?: number;
 	delay?: number;
 };
+interface Interaction {
+	name: string;
+	startEvents: string[];
+	endEvents: string[];
+	params: AnimationParams;
+}
 
 // Singleton Animation Manager
 class AnimationManager {
@@ -62,7 +67,10 @@ export const mercury: Action<
 > = (node, params) => {
 	const manager = AnimationManager.getInstance();
 	let currentAnimation: AnimationInstance | null = null;
+
+	const removeEventListeners: (() => void)[] = [];
 	const cleanup: (() => void) | null = null;
+
 	let resolvedParams: AnimationParams | undefined;
 	if (typeof params === 'function') {
 		resolvedParams = params();
@@ -70,6 +78,7 @@ export const mercury: Action<
 		resolvedParams = params;
 	}
 	const engine: AnimationEngine = resolvedParams?.engine ?? MotionAdapter;
+
 	function initializeNode() {
 		const layoutId = node.getAttribute('layout');
 		let projection = null;
@@ -96,24 +105,109 @@ export const mercury: Action<
 	const projection = initializeNode();
 	$effect(() => {
 		try {
-			let eventListeners: { remove: () => void } | undefined;
-			if (resolvedParams) {
-				//TODO: Implement event listeners
-				// eventListeners = createEventListeners(node, params, updateAnimation);
-			}
-
 			if (!resolvedParams?.animate) {
 				return () => {
 					projection?.destroy?.();
 				};
 			}
+			const interactions: Interaction[] = [];
+
+			if (resolvedParams?.whileHover) {
+				interactions.push({
+					name: 'whileHover',
+					startEvents: ['mouseover'],
+					endEvents: ['mouseout'],
+					params: resolvedParams.whileHover
+				});
+			}
+
+			if (resolvedParams?.whileTap) {
+				interactions.push({
+					name: 'whileTap',
+					startEvents: ['pointerdown'],
+					endEvents: ['pointerup', 'pointercancel', 'pointerleave'],
+					params: resolvedParams.whileTap
+				});
+			}
+
+			if (resolvedParams?.whileFocus) {
+				interactions.push({
+					name: 'whileFocus',
+					startEvents: ['focus'],
+					endEvents: ['blur'],
+					params: resolvedParams.whileFocus
+				});
+			}
+
+			if (resolvedParams?.whileDrag) {
+				interactions.push({
+					name: 'whileDrag',
+					startEvents: ['dragstart'],
+					endEvents: ['dragend'],
+					params: resolvedParams.whileDrag
+				});
+			}
 
 			updateAnimation(node, resolvedParams);
+			//Set Up interactions
+			interactions.forEach((interaction) => {
+				const { startEvents, endEvents, params } = interaction;
+
+				let animationInstance: AnimationInstance | null = null;
+
+				const onStart = () => {
+					if (animationInstance) {
+						animationInstance.pause();
+					}
+					const startInteractionParams = {
+						animate: {
+							...params
+						},
+						transition: {
+							...resolvedParams.transition
+						}
+					};
+
+					animationInstance = engine.animate(node, startInteractionParams);
+					manager.addAnimation(animationInstance);
+				};
+
+				const onEnd = () => {
+					if (animationInstance) {
+						animationInstance.pause();
+					}
+					const endInteractionParams = {
+						animate: {
+							...resolvedParams.animate
+						},
+						transition: {
+							...resolvedParams.transition
+						}
+					};
+
+					animationInstance = engine.animate(node, endInteractionParams);
+					manager.addAnimation(animationInstance);
+				};
+
+				startEvents.forEach((event) => {
+					node.addEventListener(event, onStart);
+					removeEventListeners.push(() => {
+						node.removeEventListener(event, onStart);
+					});
+				});
+
+				endEvents.forEach((event) => {
+					node.addEventListener(event, onEnd);
+					removeEventListeners.push(() => {
+						node.removeEventListener(event, onEnd);
+					});
+				});
+			});
 
 			return () => {
 				currentAnimation?.pause();
 				projection?.destroy?.();
-				eventListeners?.remove();
+				removeEventListeners.forEach((remove) => remove());
 			};
 		} catch (error) {
 			console.error('Mercury animation error:', error);
@@ -132,7 +226,6 @@ export class ExitAnimationHandler {
 		private engine: AnimationEngine = MotionAdapter
 	) {
 		this.params = {
-
 			mode: ExitMode.SYNC,
 			...params,
 			transition: {
@@ -141,7 +234,7 @@ export class ExitAnimationHandler {
 					delay: ExitAnimationHandler.DEFAULT_DELAY
 				},
 				...params.transition
-			},
+			}
 		};
 	}
 

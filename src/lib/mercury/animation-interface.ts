@@ -41,9 +41,12 @@ export interface AnimationParams{
   initial?: AnimationAttributes;
   animate?: AnimationAttributes;
   transition?: AnimationControls;
+  whileHover?: AnimationAttributes;
+  whileTap?: AnimationAttributes;
+  whileFocus?: AnimationAttributes;
+  whileDrag?: AnimationAttributes;
   engine?: AnimationEngine;
 }
-
 export interface AnimationInstance {
 	play(): void;
 	pause(): void;

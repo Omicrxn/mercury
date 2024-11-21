@@ -18,5 +18,18 @@
 		}}
 		class="w-16 h-16 bg-blue-200 rounded-md"
 	></div>
-	<div class="w-16 h-16 bg-green-200 rounded-md"></div>
+	<div
+		class="w-16 h-16 bg-green-200 rounded-md"
+		use:mercury={{
+			animate: {
+				scale: 0.5
+			},
+			whileHover: {
+				scale: 1.5
+			},
+			whileTap: {
+				scale: 2
+			}
+		}}
+	></div>
 </div>
