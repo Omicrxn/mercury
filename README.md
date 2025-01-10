@@ -5,6 +5,9 @@
 # Documentation
 See in-depth documentation and examples at this [site](https://uialchemy.com/mercury/about-mercury)
 
+# Working Demo / Examples
+Check some [examples](https://uialchemy.com/mercury/examples) of how to use **Mercury**
+
 ## Features
 
 - Leverages **AnimeJS** for powerful animations
