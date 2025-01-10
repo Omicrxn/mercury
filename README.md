@@ -2,6 +2,9 @@
 
 **Mercury** is a powerful Svelte animation library built on top of AnimeJS, offering an intuitive, streamlined way to animate DOM elements directly using Svelte actions. Mercury allows for seamless integration with existing Svelte features like transitions, actions, and motion, while eliminating the need for wrapper components. It also introduces layout animations and exit animations inspired by Framer Motion, all while keeping a clean and svelte-friendly syntax.
 
+# Documentation
+See in-depth documentation and examples at this [site](https://uialchemy.com/mercury/about-mercury)
+
 ## Features
 
 - Leverages **AnimeJS** for powerful animations
