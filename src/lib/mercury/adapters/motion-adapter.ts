@@ -22,7 +22,6 @@ export const MotionEngine: AnimationEngine = {
 			damping: mercuryTransition?.damping,
 			...callbacks
 		};
-		console.log(transitionOptions)
 
 		const animation = values? motionAnimate(values.from, values.to, transitionOptions) :motionAnimate(targets, animationOptions, transitionOptions);
 		const instance = {

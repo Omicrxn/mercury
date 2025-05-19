@@ -23,7 +23,6 @@ class DebuggingLayoutAnimator extends LayoutAnimator {
 		estimation: boolean
 	): ProjectionNodeAnimationRouteMap {
 		const result = super.getAnimationRouteMap(root, snapshots, estimation);
-		console.log(result);
 
 		return result;
 	}
