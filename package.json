@@ -50,7 +50,7 @@
 		}
 	},
 	"peerDependencies": {
-		"motion": "^11.11.17",
+		"motion": "^12.12.1",
 		"svelte": "^5.0.0"
 	},
 	"devDependencies": {
@@ -79,6 +79,8 @@
 	},
 	"dependencies": {
 		"@layout-projection/core": "^0.12.0",
+		"popmotion": "^11.0.5",
+		"popmotion-pose": "^3.4.11",
 		"runed": "^0.28.0"
 	}
 }
