@@ -134,7 +134,7 @@ export const mercury: Action<
 				interactions.push({
 					name: 'whileFocus',
 					startEvents: ['focus'],
-					endEvents: ['blur'],
+					endEvents: ['blur-sm'],
 					params: resolvedParams.whileFocus
 				});
 			}
