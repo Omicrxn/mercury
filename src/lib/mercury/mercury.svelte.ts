@@ -5,7 +5,8 @@ export const mercury = (options: AnimationParams) => {
 
 	return (element: HTMLElement) => {
 		if (options) {
-			engine.animate(element, options);
+			let animation = engine.animate(element, options);
+			options.instance?.(animation)
 		}
 		return () => {};
 	};

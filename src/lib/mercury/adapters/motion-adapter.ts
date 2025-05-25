@@ -25,9 +25,9 @@ export const MotionEngine: AnimationEngine = {
 		const animation = values? motionAnimate(values.from, values.to, transitionOptions) :motionAnimate(targets, animationOptions, transitionOptions);
 		const instance = {
 			completed: false,
-			play: animation.play,
-			pause: animation.pause,
-			cancel: animation.cancel,
+			play: ()=> animation.play(),
+			pause: ()=>animation.pause(),
+			cancel: ()=>animation.cancel(),
 			then: (onResolve: VoidFunction, onReject?: VoidFunction) => {
 				return animation.then(() => {
 					onResolve();

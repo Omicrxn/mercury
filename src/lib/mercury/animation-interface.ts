@@ -41,6 +41,7 @@ export interface AnimationAttributes {
 }
 export interface AnimationParams {
 	values?: { from: any; to: any };
+	instance?: (instance:AnimationInstance)=>void;
 	layoutId?: string;
 	layout?: boolean;
 	animate?: AnimationAttributes;

@@ -1,5 +1,7 @@
 <script lang="ts">
+	import { type AnimationInstance } from '$lib/mercury/animation-interface.js';
 	import { mercury } from '$lib/mercury/mercury.svelte.js';
+	let animation = $state<AnimationInstance>();
 </script>
 
 <div class="flex flex-col gap-4">
@@ -9,7 +11,17 @@
 		style="transform: scale(0.4);"
 		{@attach mercury({
 			animate: { scale: 1 },
+			instance: (instance) => {
+				animation = instance;
+			},
 			transition: { ease: 'circInOut', duration: 1 }
 		})}
 	></div>
+
+	<button
+		onclick={() => {
+			console.log(animation);
+			animation?.play();
+		}}>Play</button
+	>
 </div>
