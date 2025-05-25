@@ -31,7 +31,7 @@ export interface AnimationTransition {
 export interface AnimationCallbacks {
 	onBegin?: () => void;
 	onComplete?: () => void;
-	onUpdate?: (value:any) => void;
+	onUpdate?: (value: any) => void;
 	onRender?: () => void;
 	onLoop?: () => void;
 }
@@ -40,7 +40,9 @@ export interface AnimationAttributes {
 	[key: string]: any;
 }
 export interface AnimationParams {
-  values: {from:any, to:any},
+	values?: { from: any; to: any };
+	layoutId?: string;
+	layout?: boolean;
 	animate?: AnimationAttributes;
 	transition?: AnimationTransition;
 	whileHover?: AnimationAttributes;
@@ -48,7 +50,7 @@ export interface AnimationParams {
 	whileFocus?: AnimationAttributes;
 	whileDrag?: AnimationAttributes;
 	engine?: AnimationEngine;
-	callbacks: AnimationCallbacks
+	callbacks?: AnimationCallbacks;
 }
 export interface AnimationInstance {
 	play(): void;

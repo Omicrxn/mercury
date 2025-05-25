@@ -30,7 +30,6 @@
 	};
 
 	let isOn = $state(true);
-	$inspect(isOn);
 	// 	animate(ball, { y: isOn ? 0 : 120 }, isOn ? spring : bounce);
 	// });
 </script>

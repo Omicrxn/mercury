@@ -1,7 +1,6 @@
 // src/adapters/motionOneAdapter.ts
-import type { AnimationEngine, EasingFunction} from '../animation-interface.js';
+import type { AnimationEngine} from '../animation-interface.js';
 import { animate as motionAnimate } from 'motion';
-import { mergeParams } from '../utils.svelte.js';
 
 export const MotionEngine: AnimationEngine = {
 	animate(targets, params) {
