@@ -20,7 +20,6 @@
 
 	<button
 		onclick={() => {
-			console.log(animation);
 			animation?.play();
 		}}>Play</button
 	>

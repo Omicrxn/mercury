@@ -10,7 +10,6 @@ export const AnimeEngine: AnimationEngine = {
 		const animationOptions = mercuryAnimation;
 		//Mapping transition to motion
 		const transitionOptions = mapTransitionToAnimeJS(mercuryTransition, callbacks);
-		console.log({ ...animationOptions, ...transitionOptions });
 		const animation = animeAnimate(element, { ...animationOptions, ...transitionOptions });
 
 		const instance = {

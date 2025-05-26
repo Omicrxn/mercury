@@ -41,7 +41,6 @@ export const handleGestures = (element: HTMLElement, params: AnimationParams) =>
 			inView(
 				element,
 				(element) => {
-					console.log('enter');
 					motionAnimate(
 						element,
 						params.scroll?.enter,

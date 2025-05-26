@@ -16,7 +16,7 @@ export type EasingFunction =
 	| 'backIn'
 	| 'backOut'
 	| 'backInOut'
-	| 'anticipate';
+	| 'anticipate' | string;
 
 export interface AnimationTransition {
 	duration?: number;
@@ -68,10 +68,10 @@ export interface AnimationParams {
 	callbacks?: AnimationCallbacks;
 }
 export interface AnimationInstance {
-	play(): void;
-	pause(): void;
-	cancel(): void;
-	then: (onResolve: VoidFunction, onReject?: VoidFunction) => Promise<void>;
+	play: (()=>any | void);
+	pause: (()=>any | void);
+	cancel: (()=>any | void);
+	then: (onResolve: VoidFunction, onReject?: VoidFunction) => Promise<any>;
 	completed: boolean;
 	// Add other necessary methods
 }

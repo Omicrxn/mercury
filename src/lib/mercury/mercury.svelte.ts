@@ -1,9 +1,9 @@
-import {  MotionEngine } from './adapters/index.js';
+import {  AnimeEngine, GSAPEngine, MotionEngine } from './adapters/index.js';
 import type { AnimationEngine, AnimationParams } from './animation-interface.js';
 import { handleGestures } from './gestures.js';
 
 export const mercury = (options?: AnimationParams) => {
-	const engine: AnimationEngine = options?.engine ?? MotionEngine;
+	const engine: AnimationEngine = options?.engine ?? AnimeEngine;
 
 	return (element: HTMLElement) => {
 		if (options) {
