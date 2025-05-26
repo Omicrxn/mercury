@@ -28,13 +28,6 @@ export interface AnimationTransition {
 	stiffness: number;
 	damping: number;
 }
-export interface AnimationCallbacks {
-	onBegin?: () => void;
-	onComplete?: () => void;
-	onUpdate?: (value: any) => void;
-	onRender?: () => void;
-	onLoop?: () => void;
-}
 export interface AnimationAttributes {
 	// Add other common animation parameters
 	[key: string]: any;
@@ -60,7 +53,6 @@ export interface AnimationParams {
 	whileTap?: InteractionAnimation;
 	scroll?: ScrollInteractionAnimation;
 	engine?: AnimationEngine;
-	callbacks?: AnimationCallbacks;
 }
 export interface AnimationInstance {
 	play(): void;
