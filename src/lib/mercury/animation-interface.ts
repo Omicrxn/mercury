@@ -1,6 +1,8 @@
+import type { DraggableParams } from "animejs";
+
 // src/animationInterface.ts
 export interface AnimationEngine {
-	animate(targets: HTMLElement | HTMLElement[], params: AnimationParams): AnimationInstance;
+	animate(element: HTMLElement, params: AnimationParams): AnimationInstance;
 }
 export type EasingFunction =
 	| readonly [number, number, number, number]
@@ -24,9 +26,18 @@ export interface AnimationTransition {
 	repeat?: number;
 	repeatType?: 'loop' | 'reverse' | 'mirror';
 	repeatDelay?: number;
-	type: 'decay' | 'spring' | 'keyframes' | 'tween' | 'inertia';
-	stiffness: number;
-	damping: number;
+	type?: 'decay' | 'spring' | 'keyframes' | 'tween' | 'inertia';
+	stiffness?: number;
+	damping?: number;
+	velocity?: number;
+	mass?: number;
+}
+export interface AnimationCallbacks {
+	onBegin?: () => void;
+	onComplete?: () => void;
+	onUpdate?: (value: any) => void;
+	onRender?: () => void;
+	onLoop?: () => void;
 }
 export interface AnimationAttributes {
 	// Add other common animation parameters
@@ -40,10 +51,10 @@ export interface InteractionAnimation {
 export interface ScrollInteractionAnimation extends InteractionAnimation {
 	root?: HTMLElement;
 	margin?: string;
-	amount?:  number | "all" | "some" | undefined;
+	amount?: number | 'all' | 'some' | undefined;
 }
+
 export interface AnimationParams {
-	values?: { from: any; to: any };
 	instance?: (instance: AnimationInstance) => void;
 	layoutId?: string;
 	layout?: boolean;
@@ -51,8 +62,10 @@ export interface AnimationParams {
 	transition?: AnimationTransition;
 	whileHover?: InteractionAnimation;
 	whileTap?: InteractionAnimation;
+	drag?: DraggableParams;
 	scroll?: ScrollInteractionAnimation;
 	engine?: AnimationEngine;
+	callbacks?: AnimationCallbacks;
 }
 export interface AnimationInstance {
 	play(): void;

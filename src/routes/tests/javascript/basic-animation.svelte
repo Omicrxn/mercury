@@ -14,7 +14,7 @@
 			instance: (instance) => {
 				animation = instance;
 			},
-			transition: { ease: 'circInOut', duration: 1 }
+			transition: { ease: 'circInOut', duration: 1, autoplay: true }
 		})}
 	></div>
 

@@ -8,7 +8,7 @@
 		class="box w-16 h-16 bg-blue-200 rounded-md border border-slate-500"
 		{@attach mercury({
 			animate: { rotate: 90 },
-			transition: { type: 'spring', repeat: Infinity, repeatDelay: 0.2 }
+			transition: { repeat: Infinity, repeatDelay: 0.2, type: 'spring' }
 		})}
 	></div>
 </div>

@@ -1,7 +1,5 @@
 <script lang="ts">
-	import { type AnimationInstance } from '$lib/mercury/animation-interface.js';
-	import { mercury } from '$lib/mercury/mercury.svelte.js';
-	let animation = $state<AnimationInstance>();
+	import { mercury } from '$lib/index.js';
 </script>
 
 <div class="flex flex-col gap-4">
@@ -12,7 +10,8 @@
 			scroll: {
 				enter: { x: 150, rotate: 180 },
 				exit: { x: 0, rotate: 0 },
-				transition: { duration: 1, type: 'spring' }
+				transition: { duration: 1 },
+				root: document.querySelector('.scroll-test')
 			},
 			transition: { ease: 'circInOut', duration: 1 }
 		})}
