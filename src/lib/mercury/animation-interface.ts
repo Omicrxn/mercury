@@ -39,17 +39,26 @@ export interface AnimationAttributes {
 	// Add other common animation parameters
 	[key: string]: any;
 }
+export interface InteractionAnimation {
+	enter?: AnimationAttributes;
+	exit?: AnimationAttributes;
+	transition?: AnimationTransition;
+}
+export interface ScrollInteractionAnimation extends InteractionAnimation {
+	root?: HTMLElement;
+	margin?: string;
+	amount?:  number | "all" | "some" | undefined;
+}
 export interface AnimationParams {
 	values?: { from: any; to: any };
-	instance?: (instance:AnimationInstance)=>void;
+	instance?: (instance: AnimationInstance) => void;
 	layoutId?: string;
 	layout?: boolean;
 	animate?: AnimationAttributes;
 	transition?: AnimationTransition;
-	whileHover?: AnimationAttributes;
-	whileTap?: AnimationAttributes;
-	whileFocus?: AnimationAttributes;
-	whileDrag?: AnimationAttributes;
+	whileHover?: InteractionAnimation;
+	whileTap?: InteractionAnimation;
+	scroll?: ScrollInteractionAnimation;
 	engine?: AnimationEngine;
 	callbacks?: AnimationCallbacks;
 }
