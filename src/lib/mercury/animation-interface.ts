@@ -1,4 +1,4 @@
-import type { DraggableParams } from "animejs";
+import type { DraggableParams } from 'animejs';
 
 // src/animationInterface.ts
 export interface AnimationEngine {
@@ -16,7 +16,8 @@ export type EasingFunction =
 	| 'backIn'
 	| 'backOut'
 	| 'backInOut'
-	| 'anticipate' | string;
+	| 'anticipate'
+	| string;
 
 export interface AnimationTransition {
 	duration?: number;
@@ -43,15 +44,15 @@ export interface AnimationAttributes {
 	// Add other common animation parameters
 	[key: string]: any;
 }
-export interface InteractionAnimation {
-	enter?: AnimationAttributes;
-	exit?: AnimationAttributes;
+export interface InteractionAnimation extends AnimationAttributes {
 	transition?: AnimationTransition;
 }
 export interface ScrollInteractionAnimation extends InteractionAnimation {
 	root?: HTMLElement;
 	margin?: string;
 	amount?: number | 'all' | 'some' | undefined;
+	enter?: AnimationAttributes;
+	exit?: AnimationAttributes;
 }
 
 export interface AnimationParams {
@@ -60,7 +61,11 @@ export interface AnimationParams {
 	layout?: boolean;
 	animate?: AnimationAttributes;
 	transition?: AnimationTransition;
+	onHoverStart?: (event: PointerEvent) => void;
+	onHoverEnd?: (event: PointerEvent) => void;
 	whileHover?: InteractionAnimation;
+	onTapStart?: (event: PointerEvent) => void;
+	onTapEnd?: (event: PointerEvent) => void;
 	whileTap?: InteractionAnimation;
 	drag?: DraggableParams;
 	scroll?: ScrollInteractionAnimation;
@@ -68,9 +73,9 @@ export interface AnimationParams {
 	callbacks?: AnimationCallbacks;
 }
 export interface AnimationInstance {
-	play: (()=>any | void);
-	pause: (()=>any | void);
-	cancel: (()=>any | void);
+	play: () => any | void;
+	pause: () => any | void;
+	cancel: () => any | void;
 	then: (onResolve: VoidFunction, onReject?: VoidFunction) => Promise<any>;
 	completed: boolean;
 	// Add other necessary methods

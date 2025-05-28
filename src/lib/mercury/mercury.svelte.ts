@@ -10,9 +10,7 @@ export const mercury = (options?: AnimationParams) => {
 			let animation = engine.animate(element, options);
 			options.instance?.(animation);
 		}
-		if (options?.whileTap || options?.whileHover || options?.scroll || options?.drag) {
-			handleGestures(element,options);
-		}
+		handleGestures(element, options);
 
 		return () => {};
 	};

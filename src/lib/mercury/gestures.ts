@@ -1,59 +1,77 @@
 import type { AnimationParams } from './animation-interface.js';
-import { hover, animate as motionAnimate, press, inView } from 'motion';
-import {createDraggable} from 'animejs'
+import {
+	hover,
+	animate as motionAnimate,
+	press,
+	inView,
+	type AnimationPlaybackControlsWithThen
+} from 'motion';
+import { createDraggable } from 'animejs';
 import { mapTransitionToMotion } from './utils.js';
 
 export const handleGestures = (element: HTMLElement, params: AnimationParams) => {
-  if(params.drag){
-    createDraggable(element, params.drag);
-  }
-  if (params.whileTap) {
-			press(element, () => {
-				motionAnimate(
+	if (params.drag) {
+		createDraggable(element, params.drag);
+	}
+	if (params.whileTap || params.onTapStart || params.onTapEnd) {
+		press(element, (element, startEvent) => {
+			params.onTapStart?.(startEvent);
+			let animation: AnimationPlaybackControlsWithThen | undefined;
+			if (params.whileTap) {
+				animation = motionAnimate(
 					element,
-					params.whileTap?.enter,
+					params.whileTap,
 					mapTransitionToMotion(params.whileTap?.transition)
 				);
-				return () =>
-					motionAnimate(
-						element,
-						params.whileTap?.exit ?? params.animate,
-						mapTransitionToMotion(params.whileTap?.transition)
-					);
-			});
-		}
-		if (params.whileHover) {
-			hover(element, () => {
+			}
+
+			return (endEvent) => {
+				params.onTapEnd?.(endEvent);
+				if (params.whileTap && animation) {
+					animation.speed = -1;
+					animation.play();
+				}
+			};
+		});
+	}
+	if (params.whileHover || params.onHoverStart || params.onHoverEnd) {
+		hover(element, (element, startEvent) => {
+			params.onHoverStart?.(startEvent);
+			let animation: AnimationPlaybackControlsWithThen | undefined;
+			if (params.whileHover) {
+				animation = motionAnimate(
+					element,
+					params.whileHover,
+					mapTransitionToMotion(params.whileHover?.transition)
+				);
+			}
+
+			return (endEvent) => {
+				params.onHoverEnd?.(endEvent);
+				if (params.whileHover && animation) {
+					animation.speed = -1;
+					animation.play();
+				}
+			};
+		});
+	}
+	if (params.scroll) {
+		inView(
+			element,
+			(element) => {
 				motionAnimate(
 					element,
-					params.whileHover?.enter,
-					mapTransitionToMotion(params.whileHover?.transition)
+					params.scroll?.enter,
+					mapTransitionToMotion(params.scroll?.transition)
 				);
 				return () =>
 					motionAnimate(
 						element,
-						params.whileHover?.exit ?? params.animate,
-						mapTransitionToMotion(params.whileHover?.transition)
-					);
-			});
-		}
-		if (params.scroll) {
-			inView(
-				element,
-				(element) => {
-					motionAnimate(
-						element,
-						params.scroll?.enter,
+						params.scroll?.exit ?? params.animate,
 						mapTransitionToMotion(params.scroll?.transition)
 					);
-					return () =>
-						motionAnimate(
-							element,
-							params.scroll?.exit ?? params.animate,
-							mapTransitionToMotion(params.scroll?.transition)
-						);
-				},
-				{ root: params.scroll.root, amount: params.scroll.amount }
-			);
-		}
+			},
+			{ root: params.scroll.root, amount: params.scroll.amount }
+		);
+	}
 };
