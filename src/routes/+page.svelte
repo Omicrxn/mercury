@@ -5,11 +5,11 @@
 	import Rotate from './tests/javascript/rotate.svelte';
 	import Spring from './tests/javascript/spring.svelte';
 	import Stagger from './tests/javascript/stagger.svelte';
-	import CssSpring from './tests/react/css-spring.svelte';
-	import Drag from './tests/react/drag.svelte';
-	import FlipSize from './tests/react/flip-size.svelte';
-	import Flip from './tests/react/flip.svelte';
-	import LayoutId from './tests/react/layout-id.svelte';
+	import CssSpring from './tests/advanced/css-spring.svelte';
+	import Drag from './tests/advanced/drag.svelte';
+	import FlipSize from './tests/advanced/flip-size.svelte';
+	import Flip from './tests/advanced/flip.svelte';
+	import LayoutId from './tests/advanced/layout-id.svelte';
 </script>
 
 <div class="flex">
