@@ -2,7 +2,7 @@ import type { DraggableParams } from 'animejs';
 
 // src/animationInterface.ts
 export interface AnimationEngine {
-	animate(element: HTMLElement, params: AnimationParams): AnimationInstance;
+	animate(target: HTMLElement | any, params: AnimationParams): AnimationInstance;
 }
 export type EasingFunction =
 	| readonly [number, number, number, number]
