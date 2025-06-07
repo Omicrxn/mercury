@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { layout } from '$lib/mercury/layout.svelte.js';
 	let showSecond = $state(false);
-	$inspect(showSecond);
 </script>
 
 <div class="wrapper">
@@ -10,9 +9,19 @@
 		<div
 			{@attach layout({ layoutId: 'rectangle', track: () => showSecond })}
 			class="second-element"
-		/>
+		>
+			<div
+				class="size-4 bg-blue-200 rounded-md"
+				{@attach layout({ layoutId: 'rectangle-text', track: () => showSecond })}
+			></div>
+		</div>
 	{:else}
-		<div {@attach layout({ layoutId: 'rectangle', track: () => showSecond })} class="element" />
+		<div {@attach layout({ layoutId: 'rectangle', track: () => showSecond })} class="element">
+			<div
+				class="size-4 bg-red-500 rounded-md m-4"
+				{@attach layout({ layoutId: 'rectangle-text', track: () => showSecond })}
+			></div>
+		</div>
 	{/if}
 </div>
 

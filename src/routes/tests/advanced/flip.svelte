@@ -19,11 +19,13 @@
 		<div
 			{@attach layout({ layoutId: 'test-1', track: () => justify })}
 			class="box w-16 h-16 bg-blue-200 rounded-md border border-slate-500"
-		></div>
-		<!-- <div
+		>
+			Test
+		</div>
+		<div
 			{@attach layout({ layoutId: 'test-2', track: () => justify })}
 			class="box w-16 h-16 bg-blue-200 rounded-md border border-slate-500"
-		></div> -->
+		></div>
 	</div>
 	<button
 		onclick={() => {
