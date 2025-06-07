@@ -156,8 +156,6 @@ export const layout = ({
 					sharedSnapshots.set(node.identity(), snap);
 				});
 			}
-
-			tick().then(() => {});
 		});
 
 		$effect(() => {
