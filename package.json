@@ -75,6 +75,7 @@
 		"prettier": "^3.5.3",
 		"prettier-plugin-svelte": "^3.4.0",
 		"publint": "^0.3.12",
+		"runed": "^0.28.0",
 		"svelte": "^5.33.4",
 		"svelte-check": "^4.2.1",
 		"tailwind-variants": "^1.0.0",

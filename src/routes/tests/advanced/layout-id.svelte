@@ -12,14 +12,14 @@
 		>
 			<div
 				class="size-4 bg-blue-200 rounded-md"
-				{@attach layout({ layoutId: 'rectangle-text', track: () => showSecond })}
+				{@attach layout({ layoutId: 'rectangle-square', track: () => showSecond })}
 			></div>
 		</div>
 	{:else}
 		<div {@attach layout({ layoutId: 'rectangle', track: () => showSecond })} class="element">
 			<div
 				class="size-4 bg-red-500 rounded-md m-4"
-				{@attach layout({ layoutId: 'rectangle-text', track: () => showSecond })}
+				{@attach layout({ layoutId: 'rectangle-square', track: () => showSecond })}
 			></div>
 		</div>
 	{/if}

@@ -72,14 +72,23 @@
 	{#each cards as card (card.title)}
 		{card.title !== activeCard?.title}
 		{#if card.title !== activeCard?.title}
-			<div
-				{@attach layout({ layoutId: 'card', track: () => activeCard })}
-				onclick={() => (activeCard = card)}
-				class="border bg-white rounded-md p-4 flex gap-2"
-			>
-				<img class="rounded-lg" src={card.image} alt="" height={56} width={56} />
-				<!-- <p>{card.title}</p> -->
-			</div>
+			{#key card.title}
+				<div
+					{@attach layout({ layoutId: 'card', track: () => activeCard })}
+					onclick={() => (activeCard = card)}
+					class="border bg-white rounded-md p-4 flex gap-2"
+				>
+					<img
+						{@attach layout({ layoutId: 'card-image', track: () => activeCard })}
+						class="rounded-lg"
+						src={card.image}
+						alt=""
+						height={56}
+						width={56}
+					/>
+					<p {@attach layout({ layoutId: 'card-text', track: () => activeCard })}>{card.title}</p>
+				</div>
+			{/key}
 		{/if}
 	{/each}
 	{#if activeCard}
@@ -87,10 +96,17 @@
 			{@attach layout({ layoutId: 'card', track: () => activeCard })}
 			class="border bg-white rounded-md p-4 flex gap-2 fixed top-[50%] left-[50%]"
 		>
-			<img class="rounded-lg" src={activeCard.image} alt="" height={56} width={56} />
-			<!-- <p>
+			<img
+				{@attach layout({ layoutId: 'card-image', track: () => activeCard })}
+				class="rounded-lg"
+				src={activeCard.image}
+				alt=""
+				height={56}
+				width={56}
+			/>
+			<p {@attach layout({ layoutId: 'card-text', track: () => activeCard })}>
 				{activeCard.title}
-			</p> -->
+			</p>
 		</div>
 	{/if}
 </div>

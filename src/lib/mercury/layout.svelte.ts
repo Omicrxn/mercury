@@ -17,8 +17,7 @@ import {
 } from '@layout-projection/animation/handlers';
 
 // Global registry for shared layout snapshots
-const sharedSnapshots = new Map<string, ProjectionNodeSnapshot>();
-const currentSnapshots = new Map<string, ProjectionNodeSnapshot>();
+const snapshots = new Map<string, ProjectionNodeSnapshot>();
 
 /**
  * Map of DOM elements to their projection nodes.
@@ -110,11 +109,11 @@ function tryAttachToNearestParent(projectionNode: ProjectionNode): boolean {
 export const layout = ({
 	layoutId,
 	track,
-	animation = { duration: 300, easing: (progress) => progress }
+	animationConfig = { duration: 500, easing: (progress) => progress }
 }: {
 	layoutId?: string;
 	track: () => any;
-	animation: AnimationConfig;
+	animationConfig: AnimationConfig;
 }) => {
 	//This function runs when an element is mounted, it runs on every element that has layout attribute
 	return (element: HTMLElement) => {
@@ -136,72 +135,68 @@ export const layout = ({
 		// In case called with a new element that was not there during the
 		// initial render:
 		tryAttachToNearestParent(projectionNode);
-		// Check if we have a previous snapshot from a shared layout element
-		//2. if there is no previous shared snapshot (eg. if another element with the same layoutId was removed) then we take an initial snapshot.
-		//if there is no previous snapshot create an initial one
-		projectionNode.traverse((node) => {
-			if (!sharedSnapshots.has(node.identity())) {
-				let snap = snapshot(node);
-				sharedSnapshots.set(node.identity(), snap);
-			}
-		});
-		let isInitialized = false; // Prevents overriding prev snapshot on shared layouts, but still allows capturing effect.pre when switching elements. Also avoids scroll offset issues in non-shared layouts.
-
-		$effect.pre(() => {
-			track();
-			//this runs before DOM renders
-			if (isInitialized) {
-				projectionNode.traverse((node) => {
-					let snap = snapshot(node);
-					sharedSnapshots.set(node.identity(), snap);
-				});
-			}
-		});
 
 		$effect(() => {
 			track();
-			//This runs after DOM renders
-			// 3. If there is a previous snapshot we take a current one now that the element has moved and animate it
-			if (sharedSnapshots.has(layoutId!) && !projectionNode.parent()) {
-				projectionNode.traverse((node) => {
-					let snapCurr = snapshot(node);
-					currentSnapshots.set(node.identity(), snapCurr);
-				});
-
-				projectionNode.traverse((node) => {
-					animator.animate({
-						node: node,
-						from: sharedSnapshots.get(node.identity())!,
-						to: currentSnapshots.get(node.identity())!,
-						duration: animation.duration,
-						easing: animation.easing
-					});
-				});
-
-				//4. Take a snapshot of the final state to be used as the next initial snapshot
-				projectionNode.traverse((node) => {
-					let snap = snapshot(node);
-					sharedSnapshots.set(node.identity(), snap);
-					currentSnapshots.clear();
-				});
-				isInitialized = true;
-			}
+			resetAndMeasure(projectionNode);
+			snapAndAnimate(projectionNode, animator, animationConfig);
 		});
 		return () => {
-			if (!isShared) {
-				sharedSnapshots.delete(layoutId!);
-			}
-			nodeMap.delete(element);
-			projectionNode.dispose();
+			projectionNode.traverse((n) => {
+				const snapshot = snapshots.get(n.identity());
+				console.log('deleting', n.identity(), snapshot);
+
+				if (!snapshot) return;
+				//delete the snapshot after the next tick in case there is a shared element animation
+				tick().then(() => {
+					if (snapshots.get(n.identity()) !== snapshot) return;
+					console.log(n.identity(), 'deleted');
+					snapshots.delete(n.identity());
+				});
+			});
 		};
 	};
 };
 
 //utility function for creating a snapshot of a projection node
-const snapshot = (projectionNode: ProjectionNode) => {
-	if (projectionNode.measurement()) {
-		projectionNode.reset();
-	}
-	projectionNode.measure();
-	return createSnapshot(projectionNode);
+const resetAndMeasure = (projectionNode: ProjectionNode) => {
+	const isRoot = projectionNode.parent() === null;
+	if (!isRoot) return;
+
+	console.log('resetAndMeasure');
+	projectionNode.traverse((n) => {
+		console.log('resetted:', n.identity());
+		n.reset();
+	});
+	projectionNode.traverse((n) => {
+		console.log('measured:', n.identity());
+		n.measure();
+	});
+};
+
+const snapAndAnimate = (
+	projectionNode: ProjectionNode,
+	animator: ProjectionAnimator,
+	animationConfig: AnimationConfig
+) => {
+ 	const isRoot = projectionNode.parent() === null;
+	if (!isRoot) return;
+	projectionNode.traverse((node) => {
+		console.log('snapshotting:', node.identity());
+		let previous = snapshots.get(node.identity());
+		console.log('previous:', node.identity(), previous?.measurement?.layout);
+		let current = createSnapshot(node);
+		console.log('current:', node.identity(), current?.measurement?.layout);
+		snapshots.set(node.identity(), current);
+		if (!previous) return;
+		if (previous.equals(current)) return;
+		console.log('animating:', node.identity());
+		animator.animate({
+			node: node,
+			from: previous,
+			to: current,
+			duration: animationConfig.duration,
+			easing: animationConfig.easing
+		});
+	});
 };
