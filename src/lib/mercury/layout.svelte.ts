@@ -104,19 +104,6 @@ function buildTreeRecursive(
 	}
 }
 
-function tryAttachToNearestParent(projectionNode: ProjectionNode): boolean {
-	let parentElement = projectionNode.element().parentElement;
-	while (parentElement) {
-		const parentProjectionNode = nodeMap.get(parentElement);
-		if (parentProjectionNode) {
-			projectionNode.attach(parentProjectionNode);
-			return true;
-		}
-		parentElement = parentElement.parentElement;
-	}
-	return false;
-}
-
 export const layout = ({
 	layoutId,
 	track,
@@ -145,7 +132,6 @@ export const layout = ({
 		const projectionNode = buildProjectionTreeDownwards(element, layoutId, metadataManager);
 		// In case called with a new element that was not there during the
 		// initial render:
-		// tryAttachToNearestParent(projectionNode);
 
 		$effect(() => {
 			track();
@@ -172,13 +158,10 @@ const resetAndMeasure = (projectionNode: ProjectionNode) => {
 	const isRoot = projectionNode.parent() === null;
 	if (!isRoot) return;
 
-	console.log('resetAndMeasure');
 	projectionNode.traverse((n) => {
-		console.log('resetted:', n.identity());
 		n.reset();
 	});
 	projectionNode.traverse((n) => {
-		console.log('measured:', n.identity());
 		n.measure();
 	});
 };
@@ -192,7 +175,6 @@ const snapAndAnimate = (
 	if (!isRoot) return;
 	const previousSnapshots = new Map<string, ProjectionNodeSnapshot>();
 	projectionNode.traverse((node) => {
-		console.log('snapshotting:', node.identity());
 		let previous = snapshots.get(node.identity());
 		let current = createSnapshot(node);
 		if (!previous && !current) return;
@@ -205,7 +187,6 @@ const snapAndAnimate = (
 		let current = snapshots.get(node.identity());
 		if (!previous || !current) return;
 		if (current && previous?.equals(current)) return;
-		console.log('animating:', node.identity(), previous?.measurement?.layout, current?.measurement?.layout);
 		animator.animate({
 			node: node,
 			from: previous!,
