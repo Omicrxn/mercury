@@ -1,12 +1,10 @@
 <script lang="ts">
 	import { mercury, layout } from '$lib/index.js';
-	import { createSpring } from 'animejs';
 	import { springValue, spring } from 'motion';
 	import { onMount } from 'svelte';
 	const { duration, ease } = spring.applyToOptions({
 		bounce: 0
 	});
-	const animeSpring = createSpring();
 	let dialog = $state<HTMLDivElement | null>(null);
 	let modal = $state<HTMLDivElement | null>(null);
 	let isModalOpened = $state(false);

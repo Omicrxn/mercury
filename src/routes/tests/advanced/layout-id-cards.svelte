@@ -74,7 +74,7 @@
 		<div
 			{@attach layout({ layoutId: `card-${activeGame.title}`, track: () => activeGame })}
 			class="inner"
-			style="border-radius: 12"
+			style="border-radius: 12px"
 		>
 			<div class="header">
 				<img
@@ -83,7 +83,7 @@
 					width={56}
 					alt="Game"
 					src={activeGame.image}
-					style="border-radius: 12"
+					style="border-radius: 12px"
 				/>
 				<div class="header-inner">
 					<div class="content-wrapper">

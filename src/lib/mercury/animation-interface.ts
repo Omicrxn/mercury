@@ -47,6 +47,10 @@ export interface AnimationAttributes {
 export interface InteractionAnimation extends AnimationAttributes {
 	transition?: AnimationTransition;
 }
+export interface PresenceAnimation extends AnimationAttributes {
+	transition?: AnimationTransition;
+	mode?: 'sync' | 'popLayout';
+}
 export interface ScrollInteractionAnimation extends InteractionAnimation {
 	root?: HTMLElement;
 	margin?: string;
