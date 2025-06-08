@@ -1,13 +1,13 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { layout } from '$lib/mercury/layout.svelte.js';
-	let activeCard = $state<{
+	import { layout, mercury } from '$lib/index.js';
+	let activeGame = $state<{
 		title: string;
 		description: string;
 		longDescription: string;
 		image: string;
 	} | null>();
-	let cards = [
+	let GAMES = [
 		{
 			title: 'The Oddysey',
 			description: 'Explore unknown galaxies.',
@@ -16,48 +16,48 @@
 			image:
 				'https://animations-on-the-web-git-how-i-use-3066e1-emilkowalski-s-team.vercel.app/how-i-use-framer-motion/how-i-code-animations/space.png',
 			selected: false
-		}
-		// {
-		// 	title: 'Angry Rabbits',
-		// 	description: 'They are coming for you.',
-		// 	longDescription:
-		// 		'The rabbits are angry and they are coming for you. You have to defend yourself with your carrot gun. The game is not simple, you have to be fast and accurate to survive.',
-		// 	image:
-		// 		'https://animations-on-the-web-git-how-i-use-3066e1-emilkowalski-s-team.vercel.app/how-i-use-framer-motion/how-i-code-animations/rabbit.png',
-		// 	selected: false
-		// },
-		// {
-		// 	title: 'Ghost town',
-		// 	description: 'Find the ghosts.',
-		// 	longDescription:
-		// 		'You are in a ghost town and you have to find the ghosts. But be careful, they are dangerous.',
-		// 	image:
-		// 		'https://animations-on-the-web-git-how-i-use-3066e1-emilkowalski-s-team.vercel.app/how-i-use-framer-motion/how-i-code-animations/ghost.webp',
-		// 	selected: false
-		// },
-		// {
-		// 	title: 'Pirates in the jungle',
-		// 	description: 'Find the treasure.',
-		// 	longDescription:
-		// 		'You are a pirate and you have to find the treasure in the jungle. But be careful, there are traps and wild animals.',
-		// 	image:
-		// 		'https://animations-on-the-web-git-how-i-use-3066e1-emilkowalski-s-team.vercel.app/how-i-use-framer-motion/how-i-code-animations/pirate.png',
-		// 	selected: false
-		// },
+		},
+		{
+			title: 'Angry Rabbits',
+			description: 'They are coming for you.',
+			longDescription:
+				'The rabbits are angry and they are coming for you. You have to defend yourself with your carrot gun. The game is not simple, you have to be fast and accurate to survive.',
+			image:
+				'https://animations-on-the-web-git-how-i-use-3066e1-emilkowalski-s-team.vercel.app/how-i-use-framer-motion/how-i-code-animations/rabbit.png',
+			selected: false
+		},
+		{
+			title: 'Ghost town',
+			description: 'Find the ghosts.',
+			longDescription:
+				'You are in a ghost town and you have to find the ghosts. But be careful, they are dangerous.',
+			image:
+				'https://animations-on-the-web-git-how-i-use-3066e1-emilkowalski-s-team.vercel.app/how-i-use-framer-motion/how-i-code-animations/ghost.webp',
+			selected: false
+		},
+		{
+			title: 'Pirates in the jungle',
+			description: 'Find the treasure.',
+			longDescription:
+				'You are a pirate and you have to find the treasure in the jungle. But be careful, there are traps and wild animals.',
+			image:
+				'https://animations-on-the-web-git-how-i-use-3066e1-emilkowalski-s-team.vercel.app/how-i-use-framer-motion/how-i-code-animations/pirate.png',
+			selected: false
+		},
 
-		// {
-		// 	title: 'Lost in the mountains',
-		// 	description: 'Find your way home.',
-		// 	longDescription:
-		// 		'You are lost in the mountains and you have to find your way home. But be careful, there are dangerous animals and you can get lost.',
-		// 	image:
-		// 		'https://animations-on-the-web-git-how-i-use-3066e1-emilkowalski-s-team.vercel.app/how-i-use-framer-motion/how-i-code-animations/boy.webp',
-		// 	selected: false
-		// }
+		{
+			title: 'Lost in the mountains',
+			description: 'Find your way home.',
+			longDescription:
+				'You are lost in the mountains and you have to find your way home. But be careful, there are dangerous animals and you can get lost.',
+			image:
+				'https://animations-on-the-web-git-how-i-use-3066e1-emilkowalski-s-team.vercel.app/how-i-use-framer-motion/how-i-code-animations/boy.webp',
+			selected: false
+		}
 	];
 	function onKeyDown(event) {
 		if (event.key === 'Escape') {
-			activeCard = null;
+			activeGame = null;
 		}
 	}
 
@@ -68,48 +68,108 @@
 	});
 </script>
 
-<div class="bg-black flex flex-col h-full">
-	{#each cards as card (card.title)}
-		{card.title !== activeCard?.title}
-		{#if card.title !== activeCard?.title}
-			{#key card.title}
-				<div
-					{@attach layout({ layoutId: 'card', track: () => activeCard })}
-					onclick={() => (activeCard = card)}
-					class="border bg-white rounded-md p-4 flex gap-2"
+{#if activeGame}
+	<div class="overlay" />
+	<div class="active-game">
+		<div
+			{@attach layout({ layoutId: `card-${activeGame.title}`, track: () => activeGame })}
+			class="inner"
+			style="border-radius: 12"
+		>
+			<div class="header">
+				<img
+					{@attach layout({ layoutId: `image-${activeGame.title}`, track: () => activeGame })}
+					height={56}
+					width={56}
+					alt="Game"
+					src={activeGame.image}
+					style="border-radius: 12"
+				/>
+				<div class="header-inner">
+					<div class="content-wrapper">
+						<h2
+							{@attach layout({ layoutId: `title-${activeGame.title}`, track: () => activeGame })}
+							class="game-title"
+						>
+							{activeGame.title}
+						</h2>
+						<p
+							{@attach layout({
+								layoutId: `description-${activeGame.title}`,
+								track: () => activeGame
+							})}
+							class="game-description"
+						>
+							{activeGame.description}
+						</p>
+					</div>
+					<button
+						{@attach layout({ layoutId: `button-${activeGame.title}`, track: () => activeGame })}
+						class="button">Get</button
+					>
+				</div>
+			</div>
+			<p
+				{@attach mercury({
+					animate: {
+						opacity: 1
+					},
+					transition: {
+						duration: 0.1,
+						delay: 0.3
+					}
+				})}
+				{@attach layout({ track: () => activeGame })}
+				class="long-description"
+			>
+				{activeGame.longDescription}
+			</p>
+		</div>
+	</div>
+{/if}
+
+<ul class="list">
+	{#each GAMES as game (game.title)}
+		{#if activeGame?.title !== game.title}
+			{#key game.title}
+				<li
+					{@attach layout({ layoutId: `card-${game.title}`, track: () => activeGame })}
+					onclick={() => (activeGame = game)}
+					style="border-radius: 8px;"
 				>
 					<img
-						{@attach layout({ layoutId: 'card-image', track: () => activeCard })}
-						class="rounded-lg"
-						src={card.image}
-						alt=""
+						{@attach layout({ layoutId: `image-${game.title}`, track: () => activeGame })}
 						height={56}
 						width={56}
+						alt="Game"
+						src={game.image}
+						style="border-radius: 12px;"
 					/>
-					<p {@attach layout({ layoutId: 'card-text', track: () => activeCard })}>{card.title}</p>
-				</div>
+					<div class="game-wrapper">
+						<div class="content-wrapper">
+							<h2
+								{@attach layout({ layoutId: `title-${game.title}`, track: () => activeGame })}
+								class="game-title"
+							>
+								{game.title}
+							</h2>
+							<p
+								{@attach layout({ layoutId: `description-${game.title}`, track: () => activeGame })}
+								class="game-description"
+							>
+								{game.description}
+							</p>
+						</div>
+						<button
+							{@attach layout({ layoutId: `button-${game.title}`, track: () => activeGame })}
+							class="button">Get</button
+						>
+					</div>
+				</li>
 			{/key}
 		{/if}
 	{/each}
-	{#if activeCard}
-		<div
-			{@attach layout({ layoutId: 'card', track: () => activeCard })}
-			class="border bg-white rounded-md p-4 flex gap-2 fixed top-[50%] left-[50%]"
-		>
-			<img
-				{@attach layout({ layoutId: 'card-image', track: () => activeCard })}
-				class="rounded-lg"
-				src={activeCard.image}
-				alt=""
-				height={56}
-				width={56}
-			/>
-			<p {@attach layout({ layoutId: 'card-text', track: () => activeCard })}>
-				{activeCard.title}
-			</p>
-		</div>
-	{/if}
-</div>
+</ul>
 
 <style>
 	.list {
@@ -210,6 +270,7 @@
 	.long-description {
 		font-size: 14px;
 		color: #63635d;
+		opacity: 0;
 	}
 
 	.overlay {

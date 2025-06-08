@@ -2,12 +2,17 @@
 	import { layout, nodeMap } from '$lib/mercury/layout.svelte.js';
 
 	let width = $state('40px');
+	let root = $state<HTMLElement>();
+	const showTree = () => {
+		console.log(nodeMap.get(root));
+	};
 </script>
 
 <div class="flex flex-col gap-4">
 	<h2 class="text-xl font-bold">Layout Animation: Size</h2>
 	<div class="bg-slate-200 flex w-64" style="justify-content: center;">
 		<div
+			bind:this={root}
 			{@attach layout({
 				layoutId: 'test-size',
 				track: () => width
@@ -25,4 +30,5 @@
 		}}
 		class="bg-slate-200">Flip</button
 	>
+	<button onclick={showTree}>Debug Map</button>
 </div>

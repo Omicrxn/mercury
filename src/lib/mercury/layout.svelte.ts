@@ -29,16 +29,16 @@ export const nodeMap = new WeakMap<HTMLElement, ProjectionNode>();
  * @param {HTMLElement} element - The element to check
  * @returns {boolean} - True if element has a direct text node child, false otherwise
  */
-function hasTextChild(element:HTMLElement) {
-  // Check if the element is valid
-    if (!element || !(element instanceof HTMLElement)) {
-      return false;
-    }
+function hasTextChild(element: HTMLElement) {
+	// Check if the element is valid
+	if (!element || !(element instanceof HTMLElement)) {
+		return false;
+	}
 
-    // Convert NodeList to array and check if any child is a non-empty text node
-    return Array.from(element.childNodes).some(
-      node => node.nodeType === Node.TEXT_NODE && node.textContent.trim().length > 0
-    );
+	// Convert NodeList to array and check if any child is a non-empty text node
+	return Array.from(element.childNodes).some(
+		(node) => node.nodeType === Node.TEXT_NODE && node.textContent.trim().length > 0
+	);
 }
 
 /**
@@ -57,61 +57,53 @@ function buildProjectionTreeDownwards(
 	metadataManager: InPlaceMetadataManager
 ): ProjectionNode {
 	if (nodeMap.has(element)) throw new Error('Projection Node already exists for the given element');
+
 	const projectionNode = new BasicProjectionNode(element, layoutId);
 	nodeMap.set(element, projectionNode);
+
 	if (hasTextChild(element)) {
-		console.log(element, hasTextChild(element));
 		metadataManager.define(projectionNode, SKIP_SIZE, true);
 	}
-	traverseDomBreadthFirst(element, (current) => {
-		if (!(current instanceof HTMLElement)) return;
 
-		if (current === element) return;
-		let childProjectionNode = nodeMap.get(current);
-		if (!childProjectionNode) {
-			childProjectionNode = new BasicProjectionNode(current, uuid());
-			childProjectionNode.attach(projectionNode);
-			if (hasTextChild(current)) {
-				console.log(current, hasTextChild(current));
-				metadataManager.define(childProjectionNode, SKIP_SIZE, true);
-			}
-			nodeMap.set(current, childProjectionNode);
-			return;
-		} else {
-			// if found a Projection Node that already has a parent, any deeper
-			// nodes should already be well established
-			if (childProjectionNode.parent()) return false;
-			childProjectionNode.attach(projectionNode);
-			return;
-		}
-	});
+	// Recursively build the tree with correct parent-child relationships
+	buildTreeRecursive(element, projectionNode, metadataManager);
 
 	return projectionNode;
 }
 
 /**
- * Traverse the DOM tree breadth-first starting from the given node.
- * @param from the node to start traversing from
- * @param callback invoked for each node traversed, including the given node;
- * returns false to stop the traversal
+ * Recursively build projection tree ensuring correct parent-child relationships
  */
-function traverseDomBreadthFirst(from: Node, callback: (node: Node) => void | boolean) {
-	const queue: Node[] = [from];
-	while (queue.length > 0) {
-		const node = queue.shift()!;
-		if (callback(node) === false) return;
-		for (const child of Array.from(node.childNodes)) {
-			queue.push(child);
+function buildTreeRecursive(
+	element: HTMLElement,
+	parentProjectionNode: ProjectionNode,
+	metadataManager: InPlaceMetadataManager
+): void {
+	for (const child of Array.from(element.children)) {
+		if (!(child instanceof HTMLElement)) continue;
+
+		let childProjectionNode = nodeMap.get(child);
+
+		if (!childProjectionNode) {
+			// Create new projection node
+			childProjectionNode = new BasicProjectionNode(child, uuid());
+			nodeMap.set(child, childProjectionNode);
+
+			if (hasTextChild(child)) {
+				metadataManager.define(childProjectionNode, SKIP_SIZE, true);
+			}
 		}
+
+		// Attach to correct parent if not already attached
+		if (!childProjectionNode.parent()) {
+			childProjectionNode.attach(parentProjectionNode);
+		}
+
+		// Recursively process children
+		buildTreeRecursive(child, childProjectionNode, metadataManager);
 	}
 }
 
-/**
- * Attempt to find the nearest parent Projection Node for the given Projection
- * Node by looking upwards through the DOM.
- * @param projectionNode
- * @returns true if a parent Projection Node is found and attached
- */
 function tryAttachToNearestParent(projectionNode: ProjectionNode): boolean {
 	let parentElement = projectionNode.element().parentElement;
 	while (parentElement) {
@@ -128,7 +120,7 @@ function tryAttachToNearestParent(projectionNode: ProjectionNode): boolean {
 export const layout = ({
 	layoutId,
 	track,
-	animationConfig = { duration: 500, easing: (progress) => progress }
+	animationConfig = { duration: 300, easing: (progress) => progress }
 }: {
 	layoutId?: string;
 	track: () => any;
@@ -153,7 +145,7 @@ export const layout = ({
 		const projectionNode = buildProjectionTreeDownwards(element, layoutId, metadataManager);
 		// In case called with a new element that was not there during the
 		// initial render:
-		tryAttachToNearestParent(projectionNode);
+		// tryAttachToNearestParent(projectionNode);
 
 		$effect(() => {
 			track();
@@ -163,13 +155,11 @@ export const layout = ({
 		return () => {
 			projectionNode.traverse((n) => {
 				const snapshot = snapshots.get(n.identity());
-				console.log('deleting', n.identity(), snapshot);
 
 				if (!snapshot) return;
 				//delete the snapshot after the next tick in case there is a shared element animation
 				tick().then(() => {
 					if (snapshots.get(n.identity()) !== snapshot) return;
-					console.log(n.identity(), 'deleted');
 					snapshots.delete(n.identity());
 				});
 			});
@@ -200,20 +190,26 @@ const snapAndAnimate = (
 ) => {
 	const isRoot = projectionNode.parent() === null;
 	if (!isRoot) return;
+	const previousSnapshots = new Map<string, ProjectionNodeSnapshot>();
 	projectionNode.traverse((node) => {
 		console.log('snapshotting:', node.identity());
 		let previous = snapshots.get(node.identity());
-		console.log('previous:', node.identity(), previous?.measurement?.layout);
 		let current = createSnapshot(node);
-		console.log('current:', node.identity(), current?.measurement?.layout);
+		if (!previous && !current) return;
+		if (current && previous?.equals(current)) return;
 		snapshots.set(node.identity(), current);
-		if (!previous) return;
-		if (previous.equals(current)) return;
-		console.log('animating:', node.identity());
+		previousSnapshots.set(node.identity(), previous);
+	});
+	projectionNode.traverse((node) => {
+		let previous = previousSnapshots.get(node.identity());
+		let current = snapshots.get(node.identity());
+		if (!previous || !current) return;
+		if (current && previous?.equals(current)) return;
+		console.log('animating:', node.identity(), previous?.measurement?.layout, current?.measurement?.layout);
 		animator.animate({
 			node: node,
-			from: previous,
-			to: current,
+			from: previous!,
+			to: current!,
 			duration: animationConfig.duration,
 			easing: animationConfig.easing
 		});
