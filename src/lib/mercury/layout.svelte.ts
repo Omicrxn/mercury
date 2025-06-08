@@ -25,6 +25,23 @@ const snapshots = new Map<string, ProjectionNodeSnapshot>();
 export const nodeMap = new WeakMap<HTMLElement, ProjectionNode>();
 
 /**
+ * Checks if an HTMLElement has a direct text node child
+ * @param {HTMLElement} element - The element to check
+ * @returns {boolean} - True if element has a direct text node child, false otherwise
+ */
+function hasTextChild(element:HTMLElement) {
+  // Check if the element is valid
+    if (!element || !(element instanceof HTMLElement)) {
+      return false;
+    }
+
+    // Convert NodeList to array and check if any child is a non-empty text node
+    return Array.from(element.childNodes).some(
+      node => node.nodeType === Node.TEXT_NODE && node.textContent.trim().length > 0
+    );
+}
+
+/**
  * Build the Projection Tree covering the given element and its child elements.
  * Create a Projection Node for the given element, and establish the parent-child
  * relationships with the existing child Projection Nodes without a parent.
@@ -42,7 +59,8 @@ function buildProjectionTreeDownwards(
 	if (nodeMap.has(element)) throw new Error('Projection Node already exists for the given element');
 	const projectionNode = new BasicProjectionNode(element, layoutId);
 	nodeMap.set(element, projectionNode);
-	if (element.textContent) {
+	if (hasTextChild(element)) {
+		console.log(element, hasTextChild(element));
 		metadataManager.define(projectionNode, SKIP_SIZE, true);
 	}
 	traverseDomBreadthFirst(element, (current) => {
@@ -53,7 +71,8 @@ function buildProjectionTreeDownwards(
 		if (!childProjectionNode) {
 			childProjectionNode = new BasicProjectionNode(current, uuid());
 			childProjectionNode.attach(projectionNode);
-			if (current.textContent) {
+			if (hasTextChild(current)) {
+				console.log(current, hasTextChild(current));
 				metadataManager.define(childProjectionNode, SKIP_SIZE, true);
 			}
 			nodeMap.set(current, childProjectionNode);
@@ -179,7 +198,7 @@ const snapAndAnimate = (
 	animator: ProjectionAnimator,
 	animationConfig: AnimationConfig
 ) => {
- 	const isRoot = projectionNode.parent() === null;
+	const isRoot = projectionNode.parent() === null;
 	if (!isRoot) return;
 	projectionNode.traverse((node) => {
 		console.log('snapshotting:', node.identity());
