@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { presence, mercury } from '$lib/index.js';
 	import { Loader } from '@lucide/svelte';
+	import { onMount, tick, untrack } from 'svelte';
 	const buttonCopy = {
 		idle: 'Send me a login link',
 		loading: Loader,
@@ -8,15 +9,25 @@
 	};
 
 	let buttonState = $state('idle');
+	let initial = $state(false);
+	onMount(() => {
+		initial = true;
+	});
 </script>
 
 {#snippet buttonContent(state)}
 	{#if state === 'loading'}
-		<Loader />
+		<Loader
+			{@attach mercury({
+				animate: { rotate: 360 },
+				transition: { repeat: Infinity, duration: 2.5, ease: 'linear' }
+			})}
+		/>
 	{:else}
 		{buttonCopy[state]}
 	{/if}
 {/snippet}
+
 <div class="outer-wrapper">
 	<button
 		class="blue-button"
@@ -38,7 +49,7 @@
 		{#key buttonState}
 			<span
 				class="opacity-0"
-				style="transform:translateY(-25px)"
+				style={untrack(() => initial) ? 'transform:translateY(-25px)' : ''}
 				{@attach mercury({
 					animate: { opacity: 1, y: 0 },
 					transition: { type: 'spring', duration: 1, bounce: 0 }
