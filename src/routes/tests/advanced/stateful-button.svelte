@@ -2,21 +2,26 @@
 	import { presence, mercury } from '$lib/index.js';
 	import { Loader } from '@lucide/svelte';
 	import { onMount, tick, untrack } from 'svelte';
+	let {
+		buttonState = $bindable(),
+		idleLabel = 'Send me a login link',
+		successLabel = 'Login link sent',
+		...props
+	} = $props();
 	const buttonCopy = {
-		idle: 'Send me a login link',
+		idle: idleLabel,
 		loading: Loader,
-		success: 'Login link sent!'
+		success: successLabel
 	};
 
-	let buttonState = $state('idle');
 	let initial = $state(false);
 	onMount(() => {
 		initial = true;
 	});
 </script>
 
-{#snippet buttonContent(state)}
-	{#if state === 'loading'}
+{#snippet buttonContent(buttonState)}
+	{#if buttonState === 'loading'}
 		<Loader
 			{@attach mercury({
 				animate: { rotate: 360 },
@@ -24,43 +29,25 @@
 			})}
 		/>
 	{:else}
-		{buttonCopy[state]}
+		{buttonCopy[buttonState]}
 	{/if}
 {/snippet}
 
-<div class="outer-wrapper">
-	<button
-		class="blue-button"
-		disabled={buttonState === 'loading'}
-		onclick={() => {
-			if (buttonState === 'success') return;
-
-			buttonState = 'loading';
-
-			setTimeout(() => {
-				buttonState = 'success';
-			}, 1750);
-
-			setTimeout(() => {
-				buttonState = 'idle';
-			}, 3500);
-		}}
-	>
-		{#key buttonState}
-			<span
-				class="opacity-0"
-				style={untrack(() => initial) ? 'transform:translateY(-25px)' : ''}
-				{@attach mercury({
-					animate: { opacity: 1, y: 0 },
-					transition: { type: 'spring', duration: 1, bounce: 0 }
-				})}
-				out:presence={{ opacity: 0, y: 25, mode: 'popLayout', transition: { duration: 0.15 } }}
-			>
-				{@render buttonContent(buttonState)}
-			</span>
-		{/key}
-	</button>
-</div>
+<button type="submit" class="blue-button" disabled={buttonState === 'loading'} {...props}>
+	{#key buttonState}
+		<span
+			class="opacity-0"
+			style={untrack(() => initial) ? 'transform:translateY(-25px)' : ''}
+			{@attach mercury({
+				animate: { opacity: 1, y: 0 },
+				transition: { type: 'spring', duration: 1, bounce: 0 }
+			})}
+			out:presence={{ opacity: 0, y: 25, mode: 'popLayout', transition: { duration: 0.15 } }}
+		>
+			{@render buttonContent(buttonState)}
+		</span>
+	{/key}
+</button>
 
 <style>
 	.blue-button {
@@ -96,93 +83,5 @@
 	.wrapper {
 		height: var(--spinner-size, 20px);
 		width: var(--spinner-size, 20px);
-	}
-
-	.spinner {
-		position: relative;
-		top: 50%;
-		left: 50%;
-		height: var(--spinner-size, 20px);
-		width: var(--spinner-size, 20px);
-	}
-
-	.bar {
-		animation: spin 1.2s linear infinite;
-		background: var(--spinner-color);
-		border-radius: 6px;
-		height: 8%;
-		left: -10%;
-		position: absolute;
-		top: -3.9%;
-		width: 24%;
-	}
-
-	.bar:nth-child(1) {
-		animation-delay: -1.2s;
-		transform: rotate(0.0001deg) translate(146%);
-	}
-
-	.bar:nth-child(2) {
-		animation-delay: -1.1s;
-		transform: rotate(30deg) translate(146%);
-	}
-
-	.bar:nth-child(3) {
-		animation-delay: -1s;
-		transform: rotate(60deg) translate(146%);
-	}
-
-	.bar:nth-child(4) {
-		animation-delay: -0.9s;
-		transform: rotate(90deg) translate(146%);
-	}
-
-	.bar:nth-child(5) {
-		animation-delay: -0.8s;
-		transform: rotate(120deg) translate(146%);
-	}
-
-	.bar:nth-child(6) {
-		animation-delay: -0.7s;
-		transform: rotate(150deg) translate(146%);
-	}
-
-	.bar:nth-child(7) {
-		animation-delay: -0.6s;
-		transform: rotate(180deg) translate(146%);
-	}
-
-	.bar:nth-child(8) {
-		animation-delay: -0.5s;
-		transform: rotate(210deg) translate(146%);
-	}
-
-	.bar:nth-child(9) {
-		animation-delay: -0.4s;
-		transform: rotate(240deg) translate(146%);
-	}
-
-	.bar:nth-child(10) {
-		animation-delay: -0.3s;
-		transform: rotate(270deg) translate(146%);
-	}
-
-	.bar:nth-child(11) {
-		animation-delay: -0.2s;
-		transform: rotate(300deg) translate(146%);
-	}
-
-	.bar:nth-child(12) {
-		animation-delay: -0.1s;
-		transform: rotate(330deg) translate(146%);
-	}
-
-	@keyframes spin {
-		0% {
-			opacity: 1;
-		}
-		100% {
-			opacity: 0.15;
-		}
 	}
 </style>

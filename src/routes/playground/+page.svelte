@@ -10,6 +10,7 @@
 	import LayoutId from '../tests/advanced/layout-id.svelte';
 	import CopyButton from '../tests/advanced/copy-button.svelte';
 	import StatefulButton from '../tests/advanced/stateful-button.svelte';
+	import FeedbackPopover from '../tests/advanced/feedback-popover.svelte';
 </script>
 
 <div class=" flex h-dvh w-full">
@@ -20,9 +21,10 @@
 		<LayoutId /> -->
 		<!-- <LayoutIdCards /> -->
 		<!-- <AdvancedDialogue /> -->
-		<AnimatedNavbar />
+		<!-- <AnimatedNavbar /> -->
 		<!-- <ExitAnimation /> -->
 		<!-- <CopyButton /> -->
 		<!-- <StatefulButton /> -->
+		<FeedbackPopover/>
 	</div>
 </div>
