@@ -104,6 +104,25 @@ function buildTreeRecursive(
 	}
 }
 
+/**
+ * Attempt to find the nearest parent Projection Node for the given Projection
+ * Node by looking upwards through the DOM.
+ * @param projectionNode
+ * @returns true if a parent Projection Node is found and attached
+ */
+function tryAttachToNearestParent(projectionNode: ProjectionNode): boolean {
+	let parentElement = projectionNode.element().parentElement;
+	while (parentElement) {
+		const parentProjectionNode = nodeMap.get(parentElement);
+		if (parentProjectionNode) {
+			projectionNode.attach(parentProjectionNode);
+			return true;
+		}
+		parentElement = parentElement.parentElement;
+	}
+	return false;
+}
+
 export const layout = ({
 	layoutId,
 	track,
@@ -130,6 +149,7 @@ export const layout = ({
 		const animator: ProjectionAnimator = new CompositeProjectionAnimator(handlers);
 		// 1. Build the projection tree downwards from the element that has the layout attribute
 		const projectionNode = buildProjectionTreeDownwards(element, layoutId, metadataManager);
+		tryAttachToNearestParent(projectionNode);
 		// In case called with a new element that was not there during the
 		// initial render:
 
@@ -142,6 +162,7 @@ export const layout = ({
 			projectionNode.traverse((n) => {
 				const snapshot = snapshots.get(n.identity());
 
+
 				if (!snapshot) return;
 				//delete the snapshot after the next tick in case there is a shared element animation
 				tick().then(() => {
@@ -149,6 +170,9 @@ export const layout = ({
 					snapshots.delete(n.identity());
 				});
 			});
+			nodeMap.delete(element)
+			projectionNode.dispose();
+
 		};
 	};
 };

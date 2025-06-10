@@ -20,9 +20,9 @@
 		<LayoutId /> -->
 		<!-- <LayoutIdCards /> -->
 		<!-- <AdvancedDialogue /> -->
-		<!-- <AnimatedNavbar /> -->
+		<AnimatedNavbar />
 		<!-- <ExitAnimation /> -->
 		<!-- <CopyButton /> -->
-		<StatefulButton />
+		<!-- <StatefulButton /> -->
 	</div>
 </div>

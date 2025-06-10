@@ -1,7 +1,10 @@
 <script lang="ts">
 	import { mercury, layout } from '$lib/index.js';
+	import { ArrowBigDown, ArrowBigRight } from '@lucide/svelte';
 	import type { AnimationConfig } from '@layout-projection/animation';
 	import { spring } from 'motion';
+	import { onMount, tick } from 'svelte';
+	import { nodeMap } from '$lib/mercury/layout.svelte.js';
 	const tabs = ['Home', 'React', 'Vue', 'Svelte'];
 	let selectedTab = $state<number>(0);
 	const { duration, ease } = spring.applyToOptions({
@@ -13,10 +16,25 @@
 		duration: 300,
 		easing: ease
 	};
+	let horizontal = $state(true);
+	let ref = $state<HTMLElement>();
+	function logTree() {
+		let root = nodeMap.get(ref);
+		console.log(nodeMap);
+		root?.traverse((n) => console.log(n.identity()));
+	}
 </script>
 
-<nav class="container">
-	<ul>
+<nav
+	class="container"
+	bind:this={ref}
+	{@attach layout({
+		layoutId: 'nav',
+		track: () => selectedTab & horizontal,
+		animationConfig: { duration: 350 }
+	})}
+>
+	<ul class={horizontal ? 'flex-row' : 'flex-col'}>
 		{#each tabs as tab, index (index)}
 			{@const isSelected = selectedTab === index}
 			<li class={isSelected ? 'selected' : ''} role="tab" aria-selected={isSelected}>
@@ -24,7 +42,7 @@
 					<div
 						{@attach layout({
 							layoutId: 'selected-indicator',
-							track: () => selectedTab,
+							track: () => selectedTab & horizontal,
 							animationConfig
 						})}
 						class="selected-indicator"
@@ -32,9 +50,11 @@
 				{/if}
 
 				<button
-					{@attach mercury({
-						onTapStart: () => (selectedTab = index),
-						whileTap: { scale: 0.9 }
+					onclick={() => (selectedTab = index)}
+					{@attach layout({
+						layoutId: `button-${index}`,
+						track: () => selectedTab & horizontal,
+						animationConfig: { duration: 350 }
 					})}
 				>
 					{tab}
@@ -43,6 +63,23 @@
 		{/each}
 	</ul>
 </nav>
+<button
+	onclick={() => {
+		horizontal = !horizontal;
+	}}
+>
+	{#if horizontal}
+		<ArrowBigRight />
+	{:else}<ArrowBigDown />
+	{/if}
+</button>
+<button
+	onclick={() => {
+		logTree();
+	}}
+>
+	Log Tree
+</button>
 
 <style>
 	.container {
@@ -55,7 +92,6 @@
 	.container ul {
 		display: flex;
 		gap: 5px;
-		flex-direction: row;
 		align-items: center;
 		justify-content: center;
 	}
