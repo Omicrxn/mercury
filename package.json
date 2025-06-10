@@ -1,6 +1,6 @@
 {
 	"name": "@omicrxn/mercury",
-	"version": "0.1.47",
+	"version": "0.1.51",
 	"description": "Mercury is a Svelte animation library using AnimeJS under the hood. It simplifies complex animations with Svelte actions, provides layout and exit animations, and integrates seamlessly with Svelte features.",
 	"license": "MIT",
 	"keywords": [
@@ -68,6 +68,7 @@
 		"@tailwindcss/postcss": "^4.1.7",
 		"@tailwindcss/typography": "^0.5.16",
 		"@types/eslint": "^9.6.1",
+		"@types/node": "^24.0.0",
 		"eslint": "^9.27.0",
 		"eslint-config-prettier": "^10.1.5",
 		"eslint-plugin-svelte": "^3.9.0",
