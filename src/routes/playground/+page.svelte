@@ -11,10 +11,12 @@
 	import CopyButton from '../tests/advanced/copy-button.svelte';
 	import StatefulButton from '../tests/advanced/stateful-button.svelte';
 	import FeedbackPopover from '../tests/advanced/feedback-popover.svelte';
+	import BasicAnimation from '../tests/javascript/basic-animation.svelte';
 </script>
 
 <div class=" flex h-dvh w-full">
 	<div class="scroll-test flex flex-col gap-16 p-12 w-full h-full overflow-auto">
+		<BasicAnimation />
 		<!-- <InteractiveTextarea /> -->
 		<!-- <Flip />
 		<FlipSize />
@@ -25,6 +27,6 @@
 		<!-- <ExitAnimation /> -->
 		<!-- <CopyButton /> -->
 		<!-- <StatefulButton /> -->
-		<FeedbackPopover/>
+		<!-- <FeedbackPopover/> -->
 	</div>
 </div>
