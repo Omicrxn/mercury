@@ -61,8 +61,6 @@ export interface ScrollInteractionAnimation extends InteractionAnimation {
 
 export interface AnimationParams {
 	instance?: (instance: AnimationInstance) => void;
-	layoutId?: string;
-	layout?: boolean;
 	animate?: AnimationAttributes;
 	transition?: AnimationTransition;
 	onHoverStart?: (event: PointerEvent) => void;
