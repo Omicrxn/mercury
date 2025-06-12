@@ -6,46 +6,37 @@ import { getAllDocs } from "./utils.js";
 
 const allDocs = getAllDocs();
 
-const components = allDocs
-	.filter((doc) => doc.section === "Components")
+const api = allDocs
+	.filter((doc) => doc.section === "API")
 	.map((doc) => ({
 		title: doc.title,
 		href: `/docs/${doc.slug}`,
 	}));
 
-const configuration = allDocs
-	.filter((doc) => doc.section === "Configuration")
-	.map((doc) => ({
-		title: doc.title,
-		href: `/docs/${doc.slug}`,
-	}));
+
 
 export const navigation = defineNavigation({
 	anchors: [
-		{
-			title: "Introduction",
-			href: "/docs",
-			icon: ChalkboardTeacher,
-		},
+		// {
+		// 	title: "Introduction",
+		// 	href: "/docs",
+		// 	icon: ChalkboardTeacher,
+		// },
 		{
 			title: "Getting Started",
 			href: "/docs/getting-started",
 			icon: RocketLaunch,
 		},
-		{
-			title: "Releases",
-			href: "https://github.com/svecosystem/svecodocs/releases",
-			icon: Tag,
-		},
+		// {
+		// 	title: "Releases",
+		// 	href: "https://github.com/svecosystem/svecodocs/releases",
+		// 	icon: Tag,
+		// },
 	],
 	sections: [
 		{
-			title: "Configuration",
-			items: configuration,
-		},
-		{
-			title: "Components",
-			items: components,
+			title: "API",
+			items: api,
 		},
 	],
 });

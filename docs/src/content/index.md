@@ -1,6 +1,6 @@
 ---
 title: Introduction
-description: What exactly is Svecodocs?
+description: What is Mercury?
 section: Overview
 ---
 
