@@ -1,7 +1,7 @@
 import { defineNavigation } from "@svecodocs/kit";
 import ChalkboardTeacher from "phosphor-svelte/lib/ChalkboardTeacher";
 import RocketLaunch from "phosphor-svelte/lib/RocketLaunch";
-import Tag from "phosphor-svelte/lib/Tag";
+import TestTube from "phosphor-svelte/lib/TestTube";
 import { getAllDocs } from "./utils.js";
 
 const allDocs = getAllDocs();
@@ -25,11 +25,11 @@ export const navigation = defineNavigation({
       href: "/docs/getting-started",
       icon: RocketLaunch,
     },
-    // {
-    // 	title: "Releases",
-    // 	href: "https://github.com/svecosystem/svecodocs/releases",
-    // 	icon: Tag,
-    // },
+    {
+    	title: "Examples",
+    	href: "/examples",
+    	icon: TestTube,
+    },
   ],
   sections: [
     {

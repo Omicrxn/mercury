@@ -43,5 +43,9 @@
 		"velite": "^0.2.4",
 		"vite": "^6.3.5",
 		"wrangler": "^4.20.0"
+	},
+	"dependencies": {
+		"@omicrxn/mercury": "^0.1.52",
+		"motion": "^12.17.3"
 	}
 }

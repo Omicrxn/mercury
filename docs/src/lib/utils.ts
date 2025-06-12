@@ -52,3 +52,11 @@ export async function getDoc(slug: string = "index") {
 		metadata,
 	};
 }
+
+
+export function snakeToTitleCase(snake: string): string {
+	return snake
+		.split('-')
+		.map(word => word.charAt(0).toUpperCase() + word.slice(1))
+		.join(' ');
+}
