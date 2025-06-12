@@ -1,9 +1,13 @@
 <script lang="ts">
-	import type { SVGAttributes } from "svelte/elements";
-	let restProps: SVGAttributes<SVGElement> = $props();
+    import { cn } from "$lib/utils";
+	import type { HTMLAttributes, SVGAttributes } from "svelte/elements";
+	let {class:className,...restProps}: HTMLAttributes<HTMLElement> = $props();
 </script>
 
-<svg
+<h1 class="{cn("text-3xl font-sarina mx-auto ",className)}" {...restProps}>
+    Mercury
+</h1>
+<!-- <svg
 	width="502"
 	height="66"
 	viewBox="0 0 502 66"
@@ -68,4 +72,4 @@
 		d="M498.37 21.4601C496.22 18.7401 492.66 17.3901 487.68 17.3901H486.85C481.77 17.5401 477.93 19.6001 475.34 23.5901C473.25 19.4501 469.19 17.3901 463.15 17.3901H462.48C457.95 17.5401 454.61 19.3801 452.46 22.9201V18.1301H443.19V51.7701H452.84V36.3701C452.84 32.4901 453.47 29.6201 454.74 27.7801C456.02 25.9301 458.17 25.0101 461.21 25.0101C463.2 25.0101 464.76 25.7301 465.88 27.1801C467.01 28.6201 467.57 30.7401 467.57 33.5301V51.7701H477.21V36.3701C477.21 32.4901 477.85 29.6201 479.12 27.7801C480.39 25.9301 482.54 25.0101 485.58 25.0101C487.58 25.0101 489.13 25.7301 490.26 27.1801C491.38 28.6201 491.94 30.7401 491.94 33.5301V51.7701H501.58V33.5301C501.58 28.2001 500.51 24.1801 498.37 21.4601Z"
 		fill="white"
 	/>
-</svg>
+</svg> -->

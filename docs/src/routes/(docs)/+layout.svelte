@@ -11,7 +11,7 @@
 	{#snippet logo()}
 		<SvecosystemDark class="hidden max-h-6 dark:block" />
 		<SvecosystemLight class="block max-h-6 dark:hidden" />
-		<span class="sr-only">Svecodocs</span>
+		<span class="sr-only">Mercury</span>
 	{/snippet}
 
 	{@render children?.()}

@@ -1,22 +1,22 @@
 import { defineSiteConfig } from "@svecodocs/kit";
 
 export const siteConfig = defineSiteConfig({
-	name: "Svecodocs",
-	url: "https://docs.sveco.dev",
+	name: "Mercury",
+	url: "https://mercury.uialchemy.com",
 	ogImage: {
-		url: "https://docs.sveco.dev/og.png",
+		url: "https://mercury.uialchemy.com/og.png",
 		height: "630",
 		width: "1200",
 	},
-	description: "Documentation toolkit for Svecosystem Projects.",
-	author: "Huntabyte",
-	keywords: ["svecosystem", "sveltekit", "documentation", "docs"],
+	description: "Documentation for Mercury, a Svelte UI animation library.",
+	author: "Omicrxn",
+	keywords: ["mercury", "sveltekit", "motion", "animation", "svelte", "ui"],
 	license: {
 		name: "MIT",
-		url: "https://github.com/svecosystem/svecodocs/blob/main/LICENSE",
+		url: "https://github.com/Omicrxn/mercury/blob/master/LICENSE",
 	},
 	links: {
-		x: "https://x.com/huntabyte",
-		github: "https://github.com/svecosystem/svecodocs",
+		x: "https://x.com/OmicrxnDev",
+		github: "https://github.com/Omicrxn/mercury",
 	},
 });
