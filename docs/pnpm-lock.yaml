@@ -12,38 +12,41 @@ devDependencies:
     specifier: ^7.0.4
     version: 7.0.4(@sveltejs/kit@2.21.4)(wrangler@4.20.0)
   '@sveltejs/kit':
-    specifier: ^2.20.3
+    specifier: ^2.21.4
     version: 2.21.4(@sveltejs/vite-plugin-svelte@5.1.0)(svelte@5.34.1)(vite@6.3.5)
   '@sveltejs/vite-plugin-svelte':
-    specifier: ^5.0.3
+    specifier: ^5.1.0
     version: 5.1.0(svelte@5.34.1)(vite@6.3.5)
   '@tailwindcss/vite':
-    specifier: ^4.1.1
+    specifier: ^4.1.10
     version: 4.1.10(vite@6.3.5)
   mdsx:
-    specifier: ^0.0.6
-    version: 0.0.6(svelte@5.34.1)
+    specifier: ^0.0.7
+    version: 0.0.7(svelte@5.34.1)
   phosphor-svelte:
     specifier: ^3.0.1
     version: 3.0.1(svelte@5.34.1)(vite@6.3.5)
   svelte:
-    specifier: ^5.25.6
+    specifier: ^5.34.1
     version: 5.34.1
   svelte-check:
-    specifier: ^4.1.5
+    specifier: ^4.2.1
     version: 4.2.1(svelte@5.34.1)(typescript@5.8.3)
   tailwindcss:
-    specifier: ^4.1.1
+    specifier: ^4.1.10
     version: 4.1.10
   typescript:
-    specifier: ^5.0.0
+    specifier: ^5.8.3
     version: 5.8.3
   velite:
-    specifier: ^0.2.1
+    specifier: ^0.2.4
     version: 0.2.4(acorn@8.15.0)
   vite:
-    specifier: ^6.2.4
+    specifier: ^6.3.5
     version: 6.3.5
+  wrangler:
+    specifier: ^4.20.0
+    version: 4.20.0
 
 packages:
 
@@ -2561,10 +2564,10 @@ packages:
       '@types/mdast': 4.0.4
     dev: true
 
-  /mdsx@0.0.6(svelte@5.34.1):
-    resolution: {integrity: sha512-hfIlNzOlT153M37ZzbjuGSN8ZFNqlyEWaPnGr9L92Ty/dkZdIfgyDeFrsJDuQ77oY1bf3jeNCycR19ocD/BpfA==}
+  /mdsx@0.0.7(svelte@5.34.1):
+    resolution: {integrity: sha512-Ftgb6Yq47WMaYoFznJ+jNxnn82sDUvot9Nw2uSaolbkghUV6Le1stDzEVHClaKA1hMJnc+jbMagK/HM7nT6FJg==}
     peerDependencies:
-      svelte: ^4.0.0 || ^5.0.0-next.1
+      svelte: ^5.0.0
     dependencies:
       esrap: 1.4.9
       hast-util-to-html: 9.0.5
