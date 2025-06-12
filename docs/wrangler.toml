@@ -1,5 +1,7 @@
 name = "mercury"
 compatibility_date = "2025-04-01"
+main = ".svelte-kit/cloudflare/_worker.js"
 
 [assets]
-directory = "./dist"
+binding = "ASSETS"
+directory = ".svelte-kit/cloudflare"
