@@ -9,8 +9,8 @@ devDependencies:
     specifier: ^3.8.2
     version: 3.8.2
   '@lucide/svelte':
-    specifier: ^0.513.0
-    version: 0.513.0(svelte@5.34.1)
+    specifier: ^0.514.0
+    version: 0.514.0(svelte@5.34.1)
   '@svecodocs/kit':
     specifier: latest
     version: 0.2.2(@sveltejs/kit@2.21.4)(bits-ui@2.6.0)(svelte@5.34.1)(tailwindcss@4.1.10)(vite@6.3.5)
@@ -27,10 +27,10 @@ devDependencies:
     specifier: ^4.1.10
     version: 4.1.10(vite@6.3.5)
   '@tanstack/table-core':
-    specifier: ^8.20.5
+    specifier: ^8.21.3
     version: 8.21.3
   bits-ui:
-    specifier: ^2.5.0
+    specifier: ^2.6.0
     version: 2.6.0(@internationalized/date@3.8.2)(svelte@5.34.1)
   clsx:
     specifier: ^2.1.1
@@ -69,7 +69,7 @@ devDependencies:
     specifier: ^2.26.1
     version: 2.26.1(@sveltejs/kit@2.21.4)(svelte@5.34.1)(typescript@5.8.3)
   tailwind-merge:
-    specifier: ^3.0.2
+    specifier: ^3.3.1
     version: 3.3.1
   tailwind-variants:
     specifier: ^1.0.0
@@ -1198,8 +1198,8 @@ packages:
       lodash-es: 4.17.21
     dev: true
 
-  /@lucide/svelte@0.513.0(svelte@5.34.1):
-    resolution: {integrity: sha512-XwBQMQkMlr9qp9yVg+epx5MzhBBrqul8atO00y/ZfhlKRJuQZVmq3ELibApqyBtj9ys0Ai4FH/SZcODTUFYXig==}
+  /@lucide/svelte@0.514.0(svelte@5.34.1):
+    resolution: {integrity: sha512-vK6oevxN1CdIWiiCtHKUUlZE/wRVFCtxD+Lj14hbYb5lt+kmU4pBHWjcWhTJL5bJfE1JwCM/pWr+MVzew6JrVg==}
     peerDependencies:
       svelte: ^5
     dependencies:
