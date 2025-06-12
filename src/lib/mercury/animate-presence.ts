@@ -1,15 +1,15 @@
 import { animate } from 'motion';
 import type { PresenceAnimation } from './animation-interface.js';
-import { tick } from 'svelte';
 
 export const presence = (
 	element: HTMLElement,
 	params: PresenceAnimation,
 	options: { direction: 'in' | 'out' | 'both' }
 ) => {
-	const { transition, mode, ...rest } = params;
-
-	let animationMode = mode ?? 'sync';
+	if (options.direction !== 'out') {
+		throw new Error('presence must be used as out transition');
+	}
+	const { transition, popLayout, ...rest } = params;
 
 	animate(element, rest, transition);
 	let setMode = false;
@@ -18,8 +18,7 @@ export const presence = (
 		delay: (params.transition?.delay ?? 0) * 1000,
 		tick: (t) => {
 			if (t < 1 && !setMode) {
-				console.log('switch');
-				if (mode === 'popLayout') {
+				if (popLayout) {
 					if (element.parentElement) {
 						element.parentElement.style.position = 'relative';
 						element.style.position = 'absolute';
