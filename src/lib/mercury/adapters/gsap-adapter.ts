@@ -29,7 +29,7 @@ export const GSAPEngine: AnimationEngine = {
         gsap = module.default || module;
         return createAnimation(element, params);
       },
-      (error) => {
+      () => {
         gsapLoadError = new Error(
           'GSAP is not installed. Please install it: npm install gsap'
         );
@@ -43,7 +43,7 @@ export const GSAPEngine: AnimationEngine = {
       play: () => pendingAnimation.then(anim => anim.play()),
       pause: () => pendingAnimation.then(anim => anim.pause()),
       cancel: () => pendingAnimation.then(anim => anim.cancel()),
-      then: (onResolve: VoidFunction) =>
+      onComplete: (onResolve: VoidFunction) =>
         pendingAnimation.then(anim => anim.then(onResolve))
     };
 
@@ -62,7 +62,7 @@ export const GSAPEngine: AnimationEngine = {
         play: () => animation.restart(),
         pause: () => animation.pause(),
         cancel: () => animation.kill(),
-        then: (onResolve: VoidFunction) => {
+        onComplete: (onResolve: VoidFunction) => {
           return animation.then(() => {
             onResolve();
             instance.completed = true;

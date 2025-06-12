@@ -17,7 +17,7 @@ export const AnimeEngine: AnimationEngine = {
 			play: () => animation.restart(),
 			pause: () => animation.pause(),
 			cancel: () => animation.cancel(),
-			then: (onResolve: VoidFunction) => {
+			onComplete: (onResolve: VoidFunction) => {
 				return animation.then(() => {
 					onResolve();
 					// Update the completed flag on THIS instance

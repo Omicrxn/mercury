@@ -78,7 +78,7 @@ export interface AnimationInstance {
 	play: () => any | void;
 	pause: () => any | void;
 	cancel: () => any | void;
-	then: (onResolve: VoidFunction, onReject?: VoidFunction) => Promise<any>;
+	onComplete: (onResolve: VoidFunction, onReject?: VoidFunction) => Promise<any>;
 	completed: boolean;
 	// Add other necessary methods
 }
