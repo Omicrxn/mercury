@@ -14,7 +14,7 @@
 	},
 	"devDependencies": {
 		"@svecodocs/kit": "latest",
-		"@sveltejs/adapter-cloudflare": "^4.8.0",
+		"@sveltejs/adapter-cloudflare": "^7.0.4",
 		"@sveltejs/kit": "^2.20.3",
 		"@sveltejs/vite-plugin-svelte": "^5.0.3",
 		"@tailwindcss/vite": "^4.1.1",
