@@ -62,7 +62,7 @@ Mercury provides smooth exit animations through its custom `presence` transition
 			animate: { opacity: 1, y: 0 },
 			transition: { type: 'spring', duration: 1, bounce: 0 }
 		})}
-		out:presence={{ opacity: 0, y: 25, mode: 'popLayout', transition: { duration: 0.15 } }}
+		out:presence={{ opacity: 0, y: 25, popLayout: true, transition: { duration: 0.15 } }}
 	>
 		Example
 	</span>
@@ -77,9 +77,8 @@ Mercury provides smooth exit animations through its custom `presence` transition
 - The `transition` parameter customizes duration and easing behavior.
 
 ### Exit Modes (`sync`, `wait` and `popLayout`)
-As you can see in the above example you are to apply the styles directly in the transition, and you can also define a transition configuration like in `animate` or `gestures` but it also includes a `mode` parameter which allow you to chose between `sync` and `popLayout`.
 
-If you are familiar with Motion, you will notice that the modes are the same ones. And that is because, while not as advanced as Motion’s, Mercury’s presence handles those modes too, but with subtle differences.
+If you are familiar with Motion, you will know that it has 3 main exit modes. While not as advanced as Motion’s.
 
 Quoting [Motion’s documentation](https://motion.dev/docs/react-animate-presence#mode)
 
@@ -87,4 +86,4 @@ Quoting [Motion’s documentation](https://motion.dev/docs/react-animate-presenc
 > - “wait”: The entering child will wait until the exiting child has animated out. Note: Currently only renders a single child at a time.
 > - “popLayout”: Exiting children will be “popped” out of the page layout. This allows surrounding elements to move to their new layout immediately.
 
-`sync` is the default in Mercury, but as you will notice, `mode` only allows `popLayout` or `sync`. So what happens with `wait`? Well as per Svelte documentation that behaviour is accomplished by default by wrapping the element in a `{#key }` block. So by leaving mode in the default value `sync`. If the element is wrapped by a `{#key }` block the behaviour will be Motion’s `wait`, but if it isn’t the behaviour will be Motion’s `sync`.
+`sync` is the default behaviour in Mercury, but as you will notice. As you can see in the example above `popLayout` is a boolean parameter in the transition. So what happens with `wait`? Well as per Svelte documentation that behaviour is accomplished by default by wrapping the element in a `{#key }` block. So by leaving the transition by default, iff the element is wrapped by a `{#key }` block the behaviour will be Motion’s `wait`, but if it isn’t the behaviour will be Motion’s `sync`.
