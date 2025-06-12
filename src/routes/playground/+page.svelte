@@ -12,11 +12,13 @@
 	import StatefulButton from '../tests/advanced/stateful-button.svelte';
 	import FeedbackPopover from '../tests/advanced/feedback-popover.svelte';
 	import BasicAnimation from '../tests/javascript/basic-animation.svelte';
+	import InteractiveGraph from '../tests/advanced/interactive-graph.svelte';
+	import GooeyButton from '../tests/advanced/gooey-button.svelte';
 </script>
 
 <div class=" flex h-dvh w-full">
 	<div class="scroll-test flex flex-col gap-16 p-12 w-full h-full overflow-auto">
-		<BasicAnimation />
+		<!-- <BasicAnimation /> -->
 		<!-- <InteractiveTextarea /> -->
 		<!-- <Flip />
 		<FlipSize />
@@ -28,5 +30,7 @@
 		<!-- <CopyButton /> -->
 		<!-- <StatefulButton /> -->
 		<!-- <FeedbackPopover/> -->
+		<!-- <InteractiveGraph /> -->
+		<GooeyButton />
 	</div>
 </div>
