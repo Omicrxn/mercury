@@ -15,11 +15,11 @@ const api = allDocs
 
 export const navigation = defineNavigation({
   anchors: [
-    // {
-    // 	title: "Introduction",
-    // 	href: "/docs",
-    // 	icon: ChalkboardTeacher,
-    // },
+    {
+    	title: "Introduction",
+    	href: "/docs",
+    	icon: ChalkboardTeacher,
+    },
     {
       title: "Getting Started",
       href: "/docs/getting-started",

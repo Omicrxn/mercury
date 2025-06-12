@@ -8,19 +8,29 @@ section: Overview
 	import { Callout } from '@svecodocs/kit'
 </script>
 
-After spending countless hours building documentation sites for various projects, we decided to build a docs package/starter template that we can use for future projects. This project is a result of that effort.
+Mercury is an animation library designed specifically for Svelte, created to bring powerful, expressive motion into modern Svelte applications—without adding unnecessary complexity or breaking away from Svelte’s core principles.
 
-Svecodocs is a starting point/utility library for building documentation sites under the [Svecosystem](https://github.com/svecosystem) umbrella. The code is open source, but it's built and maintained for our own specific needs, so we won't be accepting any public feature requests.
+Many existing animation solutions for Svelte either offer limited functionality, are deprecated or introduce awkward abstractions. Libraries like Framer Motion set a high bar for motion design in React, but adapting those patterns to Svelte often results in unexpected results and bloated code.
 
-You are more than welcome to fork the project and customize it to your own needs.
+Mercury was built to solve this gap.
 
-## Features
+## Purpose
 
-- **Markdown-based docs**. Write docs using Markdown and Svelte components
-- **Light and dark mode**. Toggle between light and dark mode
-- **Syntax highlighting**. Code blocks are automatically highlighted
-- **SEO-friendly**. Meta tags and Open Graph support out of the box
-- **Pre-built components**. Tabs, callouts, and more to use within the documentation
-- **Custom unified plugins**. Custom remark and rehype plugins to give more flexibility over the rendered HTML
-- **shadcn-svelte**. Beautifully designed Svelte components
-- **Tailwind v4**. Tailwind CSS v4 is used for styling
+Mercury aims to bring layout-aware, fine-grained animations to Svelte in a way that feels native. It focuses on:
+
+- **Attachment-based control** – Animations are declared using Svelte attachments, allowing direct manipulation of DOM elements without extra components or wrappers.
+- **Shared layout transitions** – Mercury enables elements to animate seamlessly across layouts using `layoutId`s, making complex interactions feel effortless.
+- **Presence animations** – Full support for presence animations brings component mount/unmount animations similar to what Framer Motion offers, but in a Svelte-native way.
+- **Minimal friction** – The API is designed to be declarative, composable, and minimal. It scales from simple transitions to advanced UI flows without boilerplate.
+- **Compatibility** - Mercury is engine-agnostic. Whether you prefer AnimeJS, Motion, or GSAP, Mercury lets you plug in your preferred animation engine while handling the coordination logic. This means you can continue using utilities, motion values, and other features from those libraries seamlessly alongside Mercury.
+
+## Philosophy
+
+The core philosophy behind Mercury is to enable expressive animation without compromising the clarity or structure of Svelte code. It builds upon Svelte’s strengths rather than abstracting them away, offering a motion system that is:
+
+- **Predictable** – Built on motion values, transitions, and layout projections that behave consistently.
+- **Flexible** – Easily integrated into existing components and layouts.
+- **Performant** – Lightweight and optimized for UI responsiveness.
+- **Made the Svelte Way** - Mercury is built with Svelte’s philosophy at its core. Instead of mimicking patterns from other frameworks, it embraces Svelte’s strengths—reactivity, attachments, and transitions—without forcing external abstractions or workarounds that don't apply in the Svelte ecosystem.
+
+Mercury makes advanced animations accessible to Svelte developers—without introducing unnecessary overhead or breaking the mental model of how Svelte works.
