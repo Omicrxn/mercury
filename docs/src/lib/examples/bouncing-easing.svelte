@@ -36,12 +36,12 @@
 
 <div class="flex flex-col h-full w-full items-center justify-center gap-4">
 	<div
-		class="w-[80px] h-[200px] bg-slate-200 flex items-start justify-center rounded-full p-3 cursor-pointer"
+		class="w-[60px] h-[150px] bg-slate-200 flex items-start justify-center rounded-full p-3 cursor-pointer"
 		onclick={() => (isOn = !isOn)}
 	>
 		<div
-			class="rounded-full size-16 shrink-0 bg-blue-200 border border-slate-500 will-change-transform"
-			{@attach mercury({ animate: { y: isOn ? 0 : 120 }, transition: isOn ? spring : bounce })}
+			class="rounded-full size-12 shrink-0 bg-blue-200 border border-slate-500 will-change-transform"
+			{@attach mercury({ animate: { y: isOn ? 0 : 80 }, transition: isOn ? spring : bounce })}
 		></div>
 	</div>
 </div>

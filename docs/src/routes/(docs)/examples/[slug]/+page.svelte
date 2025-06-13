@@ -12,7 +12,7 @@
     } = page;
 </script>
 
-<div class="flex flex-col h-full w-full place-content-center px-8">
+<div class="flex flex-col h-full w-full place-content-center px-8 relative">
     <div class="flex justify-between">
         <div>
             <Button size="icon" href="/examples"><ArrowLeft /></Button>
