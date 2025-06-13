@@ -70,6 +70,7 @@
 	});
 </script>
 
+<div class="flex-1 flex flex-col w-full overflow-hidden">
 {#if activeGame}
 	<div  class="overlay" />
 	<div  class="active-game">
@@ -173,6 +174,7 @@
 		{/if}
 	{/each}
 </ul>
+</div>
 
 <style>
 	.list {

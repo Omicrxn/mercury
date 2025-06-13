@@ -5,7 +5,7 @@
     import { Callout, Card, CardGrid } from "@svecodocs/kit";
 </script>
 
-<main class="flex flex-col h-dvh">
+<main class="flex flex-col h-full">
     <div class="flex flex-col m-8 gap-2">
         <h1 class="text-5xl font-semibold">Examples</h1>
         <p class="text-lg">
