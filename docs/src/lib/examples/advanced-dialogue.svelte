@@ -52,7 +52,7 @@
 					track: () => isModalOpened,
 					animation: animationConfig
 				})}
-				class="openButton"
+				class="openButton bg-indigo-200 dark:bg-indigo-400 "
 				data-primary-action><span>Receive</span></button
 			>
 		{/if}
@@ -66,12 +66,12 @@
 					<div>
 						<h2 class="title text-2xl">
 							<svg
+							class="stroke-indigo-200 dark:stroke-indigo-400"
 								xmlns="http://www.w3.org/2000/svg"
 								width="24"
 								height="24"
 								viewBox="0 0 24 24"
 								fill="none"
-								stroke="#8df0cc"
 								stroke-width="2"
 								stroke-linecap="round"
 								stroke-linejoin="round"
@@ -87,7 +87,7 @@
 							<button class="cancel" style="border-radius: 50px"> Cancel </button>
 							{#if isModalOpened}
 								<button
-									class="save"
+									class="save bg-indigo-200  dark:bg-indigo-400"
 									style="border-radius: 50px"
 									{@attach layout({
 										layoutId: 'openButton',
@@ -162,7 +162,6 @@
 	.controls button {
 		width: 100%;
 		max-width: 300px;
-		background-color: #8df0cc;
 		color: #0f1115;
 		font-size: 16px;
 		padding: 10px 20px;

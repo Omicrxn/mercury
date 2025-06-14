@@ -6,7 +6,7 @@
 </script>
 
 <div class="flex flex-col gap-4">
-	<div class="bg-slate-200 flex w-64" style="justify-content: center;">
+	<div class="container flex w-64 gap-2" style="justify-content: center;">
 	<div
 		{@attach layout({  track: () => width })}
 		class="box w-16 h-16 bg-blue-200 rounded-md border border-slate-500"
@@ -29,6 +29,7 @@
 		onclick={() => {
 			width = width === '40px' ? '100px' : '40px';
 		}}
-		class="bg-slate-200">Flip</button
+		class="rounded-md px-2 py-1 dark:bg-indigo-400 bg-indigo-200 dark:border-slate-50 border-slate-500 dark:hover:bg-indigo-500 hover:bg-indigo-300">Flip</button
 	>
+
 </div>

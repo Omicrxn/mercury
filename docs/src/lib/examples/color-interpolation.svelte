@@ -7,13 +7,13 @@
 
 	<div class="flex gap-4">
 		<div
-			class="box w-16 h-16 bg-blue-200 rounded-md border border-slate-500"
+			class="box"
 			{@attach mercury({
 				animate: {
-					backgroundColor: ['#ff0088', '#0d63f8']
+					backgroundColor: ['oklch(88.2% 0.059 254.128)', 'oklch(82.3% 0.12 346.018)','oklch(87.1% 0.15 154.449)']
 				},
 				transition: {
-					duration: 2,
+					duration: 5,
 					repeat: Infinity,
 					repeatType: 'reverse',
 					easing: 'linear'

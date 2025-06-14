@@ -36,11 +36,11 @@
 
 <div class="flex flex-col h-full w-full items-center justify-center gap-4">
 	<div
-		class="w-[60px] h-[150px] bg-slate-200 flex items-start justify-center rounded-full p-3 cursor-pointer"
+		class="w-[60px] h-[150px] dark:bg-slate-400 border-2 dark:border-slate-50 border-slate-500 bg-slate-200 flex items-start justify-center rounded-full p-3 cursor-pointer"
 		onclick={() => (isOn = !isOn)}
 	>
 		<div
-			class="rounded-full size-12 shrink-0 bg-blue-200 border border-slate-500 will-change-transform"
+			class="box rounded-full! size-12! shrink-0 will-change-transform"
 			{@attach mercury({ animate: { y: isOn ? 0 : 80 }, transition: isOn ? spring : bounce })}
 		></div>
 	</div>

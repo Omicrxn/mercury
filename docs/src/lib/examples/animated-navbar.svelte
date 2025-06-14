@@ -3,7 +3,7 @@
 	import { ArrowBigDown, ArrowBigRight } from '@lucide/svelte';
 	import { spring } from 'motion';
 	import { onMount, tick } from 'svelte';
-	const tabs = ['Home', 'React', 'Vue', 'Svelte'];
+	const tabs = ['Home', 'React',  'Svelte'];
 	let selectedTab = $state<number>(0);
 	const { duration, ease } = spring.applyToOptions({
 		bounce: 0,
@@ -19,7 +19,7 @@
 </script>
 
 <nav
-	class="container"
+	class="container dark:bg-slate-400 border dark:border-slate-50 border-slate-500 bg-slate-200"
 	{@attach layout({
 		layoutId: 'nav',
 		track: () => selectedTab & horizontal,
@@ -37,12 +37,13 @@
 							track: () => selectedTab & horizontal,
 							animationConfig
 						})}
-						class="selected-indicator"
+						class="selected-indicator bg-indigo-200 dark:bg-indigo-400 border dark:border-slate-50 border-slate-500"
 					/>
 				{/if}
 
 				<button
 					onclick={() => (selectedTab = index)}
+					class="dark:text-white text-black"
 					{@attach layout({
 						layoutId: `button-${index}`,
 						track: () => selectedTab & horizontal,
@@ -69,9 +70,7 @@
 
 <style>
 	.container {
-		background-color: #0b1011;
-		border-radius: 10px;
-		border: 1px solid #1d2628;
+	    border-radius: 10px;
 		padding: 5px;
 	}
 
@@ -88,7 +87,6 @@
 	}
 
 	.container .selected-indicator {
-		background-color: #ff0088;
 		position: absolute;
 		top: 0;
 		left: 0;
@@ -102,7 +100,7 @@
 		z-index: 2;
 		position: relative;
 		cursor: pointer;
-		padding: 10px 14px;
+		padding: 6px 8px;
 		border-radius: 5px;
 	}
 </style>

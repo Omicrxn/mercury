@@ -10,7 +10,7 @@
 </script>
 
 
-<div class="flex flex-col items-center justify-center gap-2">
+<div class="flex flex-col items-center justify-center gap-4">
     <div>
 	{#if show}
 		<div
@@ -19,11 +19,11 @@
 				opacity: 0,
 				mode: 'sync'
 			}}
-			class="size-16 bg-blue-200 rounded-md border border-slate-500 opacity-0"
+			class="box opacity-0"
 		></div>
 	{/if}
     </div>
-    <Button onclick={() => (show = !show)}>
+    <Button size="sm" onclick={() => (show = !show)}>
         {#if show}
             Hide
         {:else}

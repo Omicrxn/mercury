@@ -13,18 +13,16 @@
 
 <div class="flex flex-col gap-4">
 
-	<div class="bg-slate-200 flex w-32" style="justify-content: {justify};">
+	<div class="rounded-full dark:bg-slate-400 border-2 px-3 py-2 dark:border-slate-50 border-slate-500 bg-slate-200 flex w-36" style="justify-content: {justify};">
 		<div
+		onclick={() => {
+			flip();
+		}}
 			{@attach layout({ layoutId: 'test-1', track: () => justify })}
-			class="box w-16 h-16 bg-blue-200 rounded-md border border-slate-500"
+			class="circle cursor-pointer"
 		>
 
 		</div>
 	</div>
-	<button
-		onclick={() => {
-			flip();
-		}}
-		class="bg-slate-200">Flip</button
-	>
+
 </div>

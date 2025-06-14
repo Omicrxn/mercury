@@ -11,7 +11,7 @@
 	};
 </script>
 
-<button onclick={copy} class="border rounded-md size-9 flex justify-center items-center">
+<button onclick={copy} class="dark:bg-slate-400 border dark:border-slate-50 border-slate-500 bg-slate-200 rounded-md size-9 flex justify-center items-center">
 	{#key copied}
 		{#if copied}
 			<span

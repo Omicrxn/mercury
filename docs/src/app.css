@@ -8,3 +8,13 @@
 @theme inline {
     --font-sarina: "Sarina", cursive;
 }
+
+.box {
+    @apply w-16 h-16 dark:bg-indigo-400 bg-indigo-200 rounded-md border-2 dark:border-slate-50 border-slate-500;
+}
+.circle {
+    @apply w-16 h-16 dark:bg-indigo-400 bg-indigo-200 rounded-full border-2 dark:border-slate-50 border-slate-500;
+}
+.container {
+    @apply p-2 rounded-md dark:bg-slate-400 border-2 dark:border-slate-50 border-slate-500 bg-slate-200;
+}
