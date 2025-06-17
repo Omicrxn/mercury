@@ -7,5 +7,4 @@
         <div class="flex justify-center items-center flex-col w-full overflow-hidden  flex-1 gap-8 relative pointer-events-none">
             {@render children?.()}
         </div>
-
     </a>

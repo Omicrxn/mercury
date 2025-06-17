@@ -1,6 +1,7 @@
 <script lang="ts">
     import { page } from "$app/state";
     import Code from "phosphor-svelte/lib/Code";
+    import Lock from "phosphor-svelte/lib/Lock";
     import ArrowClockwise from "phosphor-svelte/lib/ArrowClockwise";
     import ArrowLeft from "phosphor-svelte/lib/ArrowLeft";
     import { Button, code } from "@svecodocs/kit";
@@ -15,6 +16,7 @@
         params: { slug },
     } = page;
     let animation = $state<AnimationInstance>();
+    let isPremium = $derived(examples[slug].isPremium);
     let sourceCode = $state<string>();
     onMount(() => {
         loadComponent();
@@ -45,9 +47,15 @@
         </div>
         <div class="flex gap-2">
             <Dialog.Root>
-                <Dialog.Trigger
-                    ><Button><Code /> Show Code</Button></Dialog.Trigger
-                >
+                <Dialog.Trigger>
+                    <Button>
+                        {#if isPremium}
+                            <Lock />
+                        {:else}
+                            <Code />
+                        {/if} Show Code</Button
+                    >
+                </Dialog.Trigger>
                 <Dialog.Content>
                     <Dialog.Header>
                         <Dialog.Title>
@@ -56,9 +64,20 @@
                             </span>
                         </Dialog.Title>
                     </Dialog.Header>
-                    <div class="code-container">
-                        {@html sourceCode}
-                    </div>
+                    {#if isPremium}
+                        <div class="code-container">
+                            This example is part of the premium content on the
+                            original creator's site. Out of respect for their
+                            work, we’re not sharing the source code here—but
+                            we’ve recreated it with Mercury to demonstrate
+                            what’s possible. If you like it, consider supporting
+                            the author by subscribing to their website.
+                        </div>
+                    {:else}
+                        <div class="code-container">
+                            {@html sourceCode}
+                        </div>
+                    {/if}
                 </Dialog.Content>
             </Dialog.Root>
 
@@ -77,7 +96,7 @@
         </div>
     </div>
     {#if slug}
-        {@const Example = examples[slug]}
+        {@const Example = examples[slug].component}
         <div class="h-full w-full flex flex-col items-center justify-center">
             <Example bind:animation />
         </div>

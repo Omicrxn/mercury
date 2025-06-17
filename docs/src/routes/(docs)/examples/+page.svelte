@@ -26,12 +26,13 @@
             Mercury for practice. Subscribe at Motion.
         </Callout>
         <CardGrid cols={4}>
-            {#each Object.entries(examples) as [key, Example] (key)}
+            {#each Object.entries(examples) as [key, example] (key)}
+                {@const ExampleComponent = example.component}
                 <ExampleCard
                     title={snakeToTitleCase(key)}
                     href="/examples/{key}"
                 >
-                    <Example />
+                    <ExampleComponent />
                 </ExampleCard>
             {/each}
         </CardGrid>
