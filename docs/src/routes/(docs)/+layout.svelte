@@ -1,6 +1,7 @@
 <script lang="ts">
-	import SvecosystemDark from "$lib/components/logos/svecosystem-dark.svelte";
-	import SvecosystemLight from "$lib/components/logos/svecosystem-light.svelte";
+	import Logo from "$lib/components/logos/logo.svelte";
+	import LogoDark from "$lib/components/logos/logo-dark.svelte";
+	// import SvecosystemLight from "$lib/components/logos/svecosystem-light.svelte";
 	import { DocsLayout } from "@svecodocs/kit";
 	import { navigation } from "$lib/navigation";
 
@@ -9,8 +10,8 @@
 
 <DocsLayout {navigation}>
 	{#snippet logo()}
-		<SvecosystemDark class="hidden max-h-6 dark:block" />
-		<SvecosystemLight class="block max-h-6 dark:hidden" />
+		<LogoDark class="hidden p-8  dark:flex" />
+		<Logo class="flex p-8  dark:hidden " />
 		<span class="sr-only">Mercury</span>
 	{/snippet}
 
