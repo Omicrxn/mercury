@@ -5,7 +5,7 @@ export const siteConfig = defineSiteConfig({
 	url: "https://mercury.uialchemy.com",
 	ogImage: {
 		url: "https://mercury.uialchemy.com/og.png",
-		height: "630",
+		height: "600",
 		width: "1200",
 	},
 	description: "Documentation for Mercury, a Svelte UI animation library.",

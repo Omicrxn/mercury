@@ -7,5 +7,7 @@
 
 	useSiteConfig(() => siteConfig);
 </script>
-
+<svelte:head>
+    <meta name="twitter:card" content={siteConfig.ogImage?.url}  />
+</svelte:head>
 {@render children?.()}
