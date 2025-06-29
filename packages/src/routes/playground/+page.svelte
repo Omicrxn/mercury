@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { nodeMap } from '$lib/mercury/layout.svelte.js';
 	import AdvancedDialogue from '../tests/advanced/advanced-dialogue.svelte';
 	import AnimatedNavbar from '../tests/advanced/animated-navbar.svelte';
 	import ExitAnimation from '../tests/javascript/exit-animation.svelte';
@@ -14,15 +13,19 @@
 	import BasicAnimation from '../tests/javascript/basic-animation.svelte';
 	import InteractiveGraph from '../tests/advanced/interactive-graph.svelte';
 	import GooeyButton from '../tests/advanced/gooey-button.svelte';
+	import FlipArray from '../tests/advanced/flip-array.svelte';
+	import ReorderingLayout from '../tests/advanced/reordering-layout.svelte';
 </script>
 
 <div class=" flex h-dvh w-full">
 	<div class="scroll-test flex flex-col gap-16 p-12 w-full h-full overflow-auto">
 		<!-- <BasicAnimation /> -->
-		<!-- <InteractiveTextarea /> -->
-		<!-- <Flip />
-		<FlipSize />
-		<LayoutId /> -->
+		<!-- <InteractiveTextarea />  -->
+		<Flip />
+		<!-- <FlipArray /> -->
+		<!-- <ReorderingLayout /> -->
+		<!-- <FlipSize /> -->
+		<!-- <LayoutId /> -->
 		<!-- <LayoutIdCards /> -->
 		<!-- <AdvancedDialogue /> -->
 		<!-- <AnimatedNavbar /> -->
@@ -31,6 +34,6 @@
 		<!-- <StatefulButton /> -->
 		<!-- <FeedbackPopover/> -->
 		<!-- <InteractiveGraph /> -->
-		<GooeyButton />
+		<!-- <GooeyButton /> -->
 	</div>
 </div>
