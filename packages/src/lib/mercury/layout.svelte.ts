@@ -268,12 +268,10 @@ export const layout = ({
 			track();
 
 			// Reset, measure, and animate from this root
-			console.log("Before", projectionNode.measurement()?.layout)
 			resetAndMeasure(projectionNode);
 			if(!isScrolling){
 			snapAndAnimate(projectionNode, animator, animationConfig);
 			}
-			console.log("After", projectionNode.measurement()?.layout)
 
 		});
 
