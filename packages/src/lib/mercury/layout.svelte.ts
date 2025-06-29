@@ -1,5 +1,6 @@
 import { v4 as uuid } from 'uuid';
 import { tick } from 'svelte';
+import { useDebounce, useEventListener, watch } from "runed";
 import { BasicProjectionNode, ProjectionNode } from '@layout-projection/core';
 import {
 	CompositeProjectionAnimator,
@@ -29,36 +30,138 @@ export const nodeMap = new WeakMap<HTMLElement, ProjectionNode>();
  * @param {HTMLElement} element - The element to check
  * @returns {boolean} - True if element has a direct text node child, false otherwise
  */
-function hasTextChild(element: HTMLElement) {
-	// Check if the element is valid
+function hasTextChild(element: HTMLElement): boolean {
 	if (!element || !(element instanceof HTMLElement)) {
 		return false;
 	}
 
-	// Convert NodeList to array and check if any child is a non-empty text node
 	return Array.from(element.childNodes).some(
-		(node) => node.nodeType === Node.TEXT_NODE && node.textContent.trim().length > 0
+		(node) => node.nodeType === Node.TEXT_NODE && node.textContent?.trim().length > 0
 	);
+}
+
+
+
+/**
+ * Attempt to find the nearest parent Projection Node for the given Projection
+ * Node by looking upwards through the DOM.
+ * @param projectionNode
+ * @returns true if a parent Projection Node is found and attached
+ */
+function tryAttachToNearestParent(projectionNode: ProjectionNode): boolean {
+	let parentElement = projectionNode.element().parentElement;
+	while (parentElement) {
+		const parentProjectionNode = nodeMap.get(parentElement);
+		if (parentProjectionNode) {
+			projectionNode.attach(parentProjectionNode);
+			return true;
+		}
+		parentElement = parentElement.parentElement;
+	}
+	return false;
+}
+
+/**
+ * Utility function for creating a snapshot of a projection node
+ */
+function resetAndMeasure(projectionNode: ProjectionNode): void {
+	const isRoot = projectionNode.parent() === null;
+	if (!isRoot) return;
+
+	projectionNode.traverse((n) => {
+		n.reset();
+	});
+	projectionNode.traverse((n) => {
+		n.measure();
+	});
+}
+
+/**
+ * Handle snapshotting and animation for the projection tree
+ */
+function snapAndAnimate(
+	projectionNode: ProjectionNode,
+	animator: ProjectionAnimator,
+	animationConfig: AnimationConfig
+): void {
+	const isRoot = projectionNode.parent() === null;
+	if (!isRoot) return;
+
+	const previousSnapshots = new Map<string, ProjectionNodeSnapshot>();
+
+	// Create snapshots and store previous ones
+	projectionNode.traverse((node) => {
+		const previous = snapshots.get(node.identity());
+		const current = createSnapshot(node);
+
+		if (!previous && !current) return;
+		if (current && previous?.equals(current)) return;
+
+		snapshots.set(node.identity(), current);
+		previousSnapshots.set(node.identity(), previous);
+	});
+
+	// Animate from previous to current snapshots
+	projectionNode.traverse((node) => {
+		const previous = previousSnapshots.get(node.identity());
+		const current = snapshots.get(node.identity());
+
+		if (!previous || !current) return;
+		if (current && previous.equals(current)) return;
+
+		animator.animate({
+			node: node,
+			from: previous,
+			to: current,
+			duration: animationConfig.duration,
+			easing: animationConfig.easing
+		});
+	});
+}
+function snap(
+	projectionNode: ProjectionNode
+): void {
+	const isRoot = projectionNode.parent() === null;
+	if (!isRoot) return;
+
+	const previousSnapshots = new Map<string, ProjectionNodeSnapshot>();
+
+	// Create snapshots and store previous ones
+	projectionNode.traverse((node) => {
+		const previous = snapshots.get(node.identity());
+		const current = createSnapshot(node);
+
+		if (!previous && !current) return;
+		if (current && previous?.equals(current)) return;
+
+		snapshots.set(node.identity(), current);
+		previousSnapshots.set(node.identity(), previous);
+	});
 }
 
 /**
  * Build the Projection Tree covering the given element and its child elements.
  * Create a Projection Node for the given element, and establish the parent-child
  * relationships with the existing child Projection Nodes without a parent.
- * This confronts Svelte's rendering mechanism where child elements are created
- * before the parent element.
- * @param element
- * @param layoutId if specified, assign the given ID to the created root Projection Node
- * @returns the created Projection Node of the given element
+ * This handles the case where child elements already have projection nodes from their own attachments.
  */
 function buildProjectionTreeDownwards(
 	element: HTMLElement,
-	layoutId: string = uuid(),
+	layoutId: string,
 	metadataManager: InPlaceMetadataManager
 ): ProjectionNode {
-	if (nodeMap.has(element)) throw new Error('Projection Node already exists for the given element');
+	// Check if projection node already exists (from another attachment)
+	let projectionNode = nodeMap.get(element);
 
-	const projectionNode = new BasicProjectionNode(element, layoutId);
+	if (projectionNode) {
+		// If this element already has a projection node, just use it
+		// This happens when multiple attachments are on the same element
+		// or when a child attachment runs before a parent attachment
+		return projectionNode;
+	}
+
+	// Create new projection node
+	projectionNode = new BasicProjectionNode(element, layoutId);
 	nodeMap.set(element, projectionNode);
 
 	if (hasTextChild(element)) {
@@ -85,7 +188,7 @@ function buildTreeRecursive(
 		let childProjectionNode = nodeMap.get(child);
 
 		if (!childProjectionNode) {
-			// Create new projection node
+			// Create new projection node for children without attachments
 			childProjectionNode = new BasicProjectionNode(child, uuid());
 			nodeMap.set(child, childProjectionNode);
 
@@ -105,24 +208,9 @@ function buildTreeRecursive(
 }
 
 /**
- * Attempt to find the nearest parent Projection Node for the given Projection
- * Node by looking upwards through the DOM.
- * @param projectionNode
- * @returns true if a parent Projection Node is found and attached
+ * Layout projection attachment factory
+ * Returns an attachment function that handles layout animations
  */
-function tryAttachToNearestParent(projectionNode: ProjectionNode): boolean {
-	let parentElement = projectionNode.element().parentElement;
-	while (parentElement) {
-		const parentProjectionNode = nodeMap.get(parentElement);
-		if (parentProjectionNode) {
-			projectionNode.attach(parentProjectionNode);
-			return true;
-		}
-		parentElement = parentElement.parentElement;
-	}
-	return false;
-}
-
 export const layout = ({
 	layoutId,
 	track,
@@ -130,15 +218,17 @@ export const layout = ({
 }: {
 	layoutId?: string;
 	track: () => any;
-	animationConfig: AnimationConfig;
+	animationConfig?: AnimationConfig;
 }) => {
-	//This function runs when an element is mounted, it runs on every element that has layout attribute
+	/**
+	 * Attachment function - called when element mounts
+	 * Recreated when dependencies (layoutId, track, animationConfig) change
+	 */
 	return (element: HTMLElement) => {
-		//This part runs only once when the element is mounted
-		let isShared = layoutId !== undefined;
-		if (!isShared) {
-			layoutId = uuid();
-		}
+		// Determine if this is a shared layout
+		const finalLayoutId = layoutId ?? uuid();
+
+		// Set up animation infrastructure (shared among all nodes that might animate together)
 		const layoutFramer = new LayoutAnimationFramer();
 		const metadataManager = new InPlaceMetadataManager();
 		const layoutHandler: ProjectionAnimationHandler = new LayoutProjectionAnimationHandler(
@@ -147,76 +237,67 @@ export const layout = ({
 		);
 		const handlers: ProjectionAnimationHandler[] = [layoutHandler];
 		const animator: ProjectionAnimator = new CompositeProjectionAnimator(handlers);
-		// 1. Build the projection tree downwards from the element that has the layout attribute
-		const projectionNode = buildProjectionTreeDownwards(element, layoutId, metadataManager);
-		tryAttachToNearestParent(projectionNode);
-		// In case called with a new element that was not there during the
-		// initial render:
 
+		// Build the projection tree downwards from this element
+		const projectionNode = buildProjectionTreeDownwards(element, finalLayoutId, metadataManager);
+
+		// Try to attach to nearest parent in the projection tree
+		tryAttachToNearestParent(projectionNode);
+		let isScrolling = $state(false)
+		// wrap our “end scroll” logic
+    const onScrollEnd = useDebounce(() => {
+      isScrolling = false;
+      // final animate when scroll stops
+      snapAndAnimate(projectionNode, animator, animationConfig);
+    }, 200);
+		useEventListener(
+					() => document,
+					"scroll",
+					() => {
+					isScrolling = true
+					resetAndMeasure(projectionNode);
+					snap(projectionNode);
+     onScrollEnd();
+
+},
+					{capture:true,passive:true}
+				);
+	// Set up reactive tracking for layout changes
 		$effect(() => {
+			// Call the tracking function to establish dependencies
 			track();
+
+			// Reset, measure, and animate from this root
+			console.log("Before", projectionNode.measurement()?.layout)
 			resetAndMeasure(projectionNode);
+			if(!isScrolling){
 			snapAndAnimate(projectionNode, animator, animationConfig);
+			}
+			console.log("After", projectionNode.measurement()?.layout)
+
 		});
+
+		// Return cleanup function
 		return () => {
+
+			// Clean up snapshots for this subtree only if this is the root of the attachment
 			projectionNode.traverse((n) => {
 				const snapshot = snapshots.get(n.identity());
-
-
 				if (!snapshot) return;
-				//delete the snapshot after the next tick in case there is a shared element animation
+
+				// Delete snapshot after next tick in case there's a shared element animation
 				tick().then(() => {
-					if (snapshots.get(n.identity()) !== snapshot) return;
-					snapshots.delete(n.identity());
+					// Only delete if it's still the same snapshot (hasn't been replaced by shared animation)
+					if (snapshots.get(n.identity()) === snapshot) {
+						snapshots.delete(n.identity());
+					}
 				});
 			});
-			nodeMap.delete(element)
-			projectionNode.dispose();
 
+			// Simple cleanup: just remove our main element from nodeMap and dispose the projection node
+			// The projection node will handle cleaning up its children appropriately
+			nodeMap.delete(element);
+			projectionNode.dispose();
 		};
 	};
-};
-
-//utility function for creating a snapshot of a projection node
-const resetAndMeasure = (projectionNode: ProjectionNode) => {
-	const isRoot = projectionNode.parent() === null;
-	if (!isRoot) return;
-
-	projectionNode.traverse((n) => {
-		n.reset();
-	});
-	projectionNode.traverse((n) => {
-		n.measure();
-	});
-};
-
-const snapAndAnimate = (
-	projectionNode: ProjectionNode,
-	animator: ProjectionAnimator,
-	animationConfig: AnimationConfig
-) => {
-	const isRoot = projectionNode.parent() === null;
-	if (!isRoot) return;
-	const previousSnapshots = new Map<string, ProjectionNodeSnapshot>();
-	projectionNode.traverse((node) => {
-		let previous = snapshots.get(node.identity());
-		let current = createSnapshot(node);
-		if (!previous && !current) return;
-		if (current && previous?.equals(current)) return;
-		snapshots.set(node.identity(), current);
-		previousSnapshots.set(node.identity(), previous);
-	});
-	projectionNode.traverse((node) => {
-		let previous = previousSnapshots.get(node.identity());
-		let current = snapshots.get(node.identity());
-		if (!previous || !current) return;
-		if (current && previous?.equals(current)) return;
-		animator.animate({
-			node: node,
-			from: previous!,
-			to: current!,
-			duration: animationConfig.duration,
-			easing: animationConfig.easing
-		});
-	});
 };
