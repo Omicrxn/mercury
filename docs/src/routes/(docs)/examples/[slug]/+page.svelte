@@ -5,7 +5,6 @@
     import ArrowClockwise from "phosphor-svelte/lib/ArrowClockwise";
     import ArrowLeft from "phosphor-svelte/lib/ArrowLeft";
     import { Button, code } from "@svecodocs/kit";
-    import { examples } from "$lib/examples";
     import type { AnimationInstance } from "@omicrxn/mercury";
     import { onMount } from "svelte";
     import * as Dialog from "$lib/components/ui/dialog/index.js";
@@ -13,26 +12,17 @@
     import { codeToHtml } from "shiki";
     import * as CodeComponent from "$lib/components/ui/code";
 
+    let { data } = $props();
+    let { slug, example, source: initialSource } = data;
+
     let {
-        params: { slug },
         url: { searchParams },
     } = page;
+
     let animation = $state<AnimationInstance>();
-    let example = $derived(examples[slug]);
-    let isPremium = $derived(example?.isPremium ?? false);
-    let source = $state<string>();
+    let source = $state(initialSource);
     let isEmbedded = $derived(searchParams.get("utm_source") === "embed");
-    onMount(() => {
-        loadComponent();
-    });
-    async function loadComponent() {
-        try {
-            // Import both the component and its source
-            source = (await import(`$lib/examples/${slug}.svelte?raw`)).default;
-        } catch (error) {
-            console.error("Component not found:", error);
-        }
-    }
+    let isPremium = $derived(example?.isPremium ?? false);
 </script>
 
 <div
