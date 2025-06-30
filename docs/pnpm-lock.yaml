@@ -14,6 +14,9 @@ importers:
       motion:
         specifier: ^12.19.3
         version: 12.20.1
+      runed:
+        specifier: ^0.28.0
+        version: 0.28.0(svelte@5.34.9)
     devDependencies:
       '@internationalized/date':
         specifier: ^3.8.2
@@ -78,9 +81,6 @@ importers:
       phosphor-svelte:
         specifier: ^3.0.1
         version: 3.0.1(svelte@5.34.9)(vite@6.3.5(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.43.1)(yaml@2.8.0))
-      runed:
-        specifier: ^0.29.1
-        version: 0.29.1(svelte@5.34.9)
       shiki:
         specifier: ^3.7.0
         version: 3.7.0
