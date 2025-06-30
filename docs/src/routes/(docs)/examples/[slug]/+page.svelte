@@ -14,10 +14,12 @@
 
     let {
         params: { slug },
+        url: { searchParams },
     } = page;
     let animation = $state<AnimationInstance>();
     let isPremium = $derived(examples[slug].isPremium);
     let sourceCode = $state<string>();
+    let isEmbedded = $derived(searchParams.get("utm_source") === "embed");
     onMount(() => {
         loadComponent();
     });
@@ -40,11 +42,18 @@
     }
 </script>
 
-<div class="flex flex-col h-full w-full place-content-center px-8 relative">
+<div
+    class={[
+        "flex flex-col h-full w-full place-content-center px-8 relative",
+        isEmbedded &&
+            "fixed! w-full h-full top-0 left-0 right-0 bottom-0 z-10 bg-background py-12 px-12",
+    ]}
+>
     <div class="flex justify-between">
         <div>
             <Button size="icon" href="/examples"><ArrowLeft /></Button>
         </div>
+
         <div class="flex gap-2">
             <Dialog.Root>
                 <Dialog.Trigger>
