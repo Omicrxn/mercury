@@ -48,6 +48,6 @@
   "dependencies": {
     "@omicrxn/mercury": "^0.5.2",
     "motion": "^12.19.3",
-    "runed": "^0.29.1"
+    "runed": "^0.28.0"
   }
 }
