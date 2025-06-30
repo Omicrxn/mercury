@@ -18,7 +18,8 @@
         url: { searchParams },
     } = page;
     let animation = $state<AnimationInstance>();
-    let isPremium = $derived(examples[slug].isPremium);
+    let example = $derived(examples[slug]);
+    let isPremium = $derived(example?.isPremium ?? false);
     let source = $state<string>();
     let isEmbedded = $derived(searchParams.get("utm_source") === "embed");
     onMount(() => {
@@ -27,11 +28,9 @@
     async function loadComponent() {
         try {
             // Import both the component and its source
-             source = (await import(`$lib/examples/${slug}.svelte?raw`)).default;
-
+            source = (await import(`$lib/examples/${slug}.svelte?raw`)).default;
         } catch (error) {
             console.error("Component not found:", error);
-
         }
     }
 </script>
@@ -70,25 +69,25 @@
                     <div class="flex-1 min-h-0 overflow-auto">
                         {#if isPremium}
                             <div class="code-container">
-                                This example is part of the premium content on the
-                                original creator's site. Out of respect for their
-                                work, we're not sharing the source code here—but
-                                we've recreated it with Mercury to demonstrate
-                                what's possible. If you like it, consider supporting
-                                the author by subscribing to their website.
+                                This example is part of the premium content on
+                                the original creator's site. Out of respect for
+                                their work, we're not sharing the source code
+                                here—but we've recreated it with Mercury to
+                                demonstrate what's possible. If you like it,
+                                consider supporting the author by subscribing to
+                                their website.
                             </div>
-                        {:else}
+                        {:else if source}
                             <CodeComponent.Root
                                 lang="svelte"
                                 class="w-full"
-                                code={source!}
+                                code={source}
                             >
                                 <CodeComponent.CopyButton />
                             </CodeComponent.Root>
                         {/if}
                     </div>
                 </Dialog.Content>
-
             </Dialog.Root>
 
             {#if animation}
@@ -106,7 +105,7 @@
         </div>
     </div>
     {#if slug}
-        {@const Example = examples[slug].component}
+        {@const Example = example.component}
         <div class="h-full w-full flex flex-col items-center justify-center">
             <Example bind:animation />
         </div>
