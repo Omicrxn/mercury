@@ -12,6 +12,12 @@
 	<h2 class="text-xl font-bold">Layout Animation: Size</h2>
 	<div class="bg-slate-200 flex w-64" style="justify-content: center;">
 		<div
+			class="box"
+			{@attach layout({
+				track: () => width
+			})}
+		></div>
+		<div
 			bind:this={root}
 			{@attach layout({
 				layoutId: 'test-size',
@@ -23,6 +29,12 @@
 			<div>Test</div>
 			<div class="bg-green-200 size-4"></div>
 		</div>
+		<div
+			class="box"
+			{@attach layout({
+				track: () => width
+			})}
+		></div>
 	</div>
 	<button
 		onclick={() => {
