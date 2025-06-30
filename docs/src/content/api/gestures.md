@@ -4,6 +4,46 @@ description: Learn how to easily implement interactive gesture and scroll-based 
 section: API
 ---
 
+<script>
+	import * as Code from "$lib/components/ui/code";
+
+	let codeHover = `
+	<div
+		{@attach mercury({
+			animate: { scale: 0.3 }, //since exit is not defined, this will be the exit
+			whileHover: {
+				scale: 1.25,
+				transition: { duration: 0.5, type: 'spring', stiffness: 150, damping: 20 }
+			},
+			transition: { ease: 'circInOut', duration: 1 }
+		})}
+/>
+  `
+	let codeTap = `
+	<div
+		{@attach mercury({
+			whileTap: {
+				scale: 0.5,
+				transition: { duration: 0.5, type: 'spring', stiffness: 200, damping: 15 }
+			},
+			transition: { ease: 'circInOut', duration: 1 }
+		})}
+/>
+  `
+	let codeScroll = `
+	<div
+		{@attach mercury({
+			scroll: {
+				enter: { x: 150, rotate: 180 },
+				exit: { x: 0, rotate: 0 },
+				transition: { duration: 1, type: 'spring', stiffness: 100, damping: 10 }
+			},
+			transition: { ease: 'circInOut', duration: 1 }
+		})}
+/>
+  `
+</script>
+
 ## Overview
 
 Mercury provides robust support for interactive gesture and scroll-triggered animations, making it easy to enrich user experiences in your Svelte applications. Below, you’ll find detailed explanations and practical examples focusing on hover, tap, and scroll animations.
@@ -22,18 +62,9 @@ Hover animations activate when a user moves their cursor over an element, creati
 - `onHoverEnd`: function that runs when the mouse goes outside the element.
 - `whileHover`: animation run when the element is hovered.
 
-```svelte
-<div
-	{@attach mercury({
-		animate: { scale: 0.3 }, //since exit is not defined, this will be the exit
-		whileHover: {
-			scale: 1.25,
-			transition: { duration: 0.5, type: 'spring', stiffness: 150, damping: 20 }
-		},
-		transition: { ease: 'circInOut', duration: 1 }
-	})}
-/>
-```
+<Code.Root lang="svelte" class="w-full" code={codeHover}>
+<Code.CopyButton />
+</Code.Root>
 
 ## Tap
 
@@ -43,17 +74,9 @@ Tap animations trigger on user click or touch interactions, creating engaging fe
 - `onTapEnd`: function that runs when the click is up.
 - `whileTap`: animation run when the element is tapped.
 
-```svelte
-<div
-	{@attach mercury({
-		whileTap: {
-			scale: 0.5,
-			transition: { duration: 0.5, type: 'spring', stiffness: 200, damping: 15 }
-		},
-		transition: { ease: 'circInOut', duration: 1 }
-	})}
-/>
-```
+<Code.Root lang="svelte" class="w-full" code={codeTap}>
+<Code.CopyButton />
+</Code.Root>
 
 ## Scroll
 
@@ -63,15 +86,6 @@ Scroll-triggered animations activate as elements enter or leave the viewport, en
 - `exit`: animation that runs when the element exists the root.
 - `root`: element to be used as scroll viewport.
 
-```svelte
-<div
-	{@attach mercury({
-		scroll: {
-			enter: { x: 150, rotate: 180 },
-			exit: { x: 0, rotate: 0 },
-			transition: { duration: 1, type: 'spring', stiffness: 100, damping: 10 }
-		},
-		transition: { ease: 'circInOut', duration: 1 }
-	})}
-/>
-```
+<Code.Root lang="svelte" class="w-full" code={codeScroll}>
+<Code.CopyButton />
+</Code.Root>

@@ -11,6 +11,7 @@
     import * as Dialog from "$lib/components/ui/dialog/index.js";
     import { pre as Pre, code as SvedocsCode } from "@svecodocs/kit";
     import { codeToHtml } from "shiki";
+    import * as CodeComponent from "$lib/components/ui/code";
 
     let {
         params: { slug },
@@ -18,7 +19,7 @@
     } = page;
     let animation = $state<AnimationInstance>();
     let isPremium = $derived(examples[slug].isPremium);
-    let sourceCode = $state<string>();
+    let source = $state<string>();
     let isEmbedded = $derived(searchParams.get("utm_source") === "embed");
     onMount(() => {
         loadComponent();
@@ -26,18 +27,11 @@
     async function loadComponent() {
         try {
             // Import both the component and its source
-            const source = await import(`$lib/examples/${slug}.svelte?raw`);
-            sourceCode = await codeToHtml(source.default, {
-                lang: "svelte",
+             source = (await import(`$lib/examples/${slug}.svelte?raw`)).default;
 
-                themes: {
-                    light: "github-light",
-                    dark: "nord",
-                },
-            });
         } catch (error) {
             console.error("Component not found:", error);
-            sourceCode = "";
+
         }
     }
 </script>
@@ -46,7 +40,7 @@
     class={[
         "flex flex-col h-full w-full place-content-center px-8 relative",
         isEmbedded &&
-            "fixed! w-full h-full top-0 left-0 right-0 bottom-0 z-10 bg-background py-12 px-12",
+            "fixed! w-full h-full top-0 left-0 right-0 bottom-0 z-10 bg-background-secondary p-3!",
     ]}
 >
     <div class="flex justify-between">
@@ -65,29 +59,36 @@
                         {/if} Show Code</Button
                     >
                 </Dialog.Trigger>
-                <Dialog.Content>
-                    <Dialog.Header>
+                <Dialog.Content class="max-h-[80dvh] flex flex-col">
+                    <Dialog.Header class="shrink-0">
                         <Dialog.Title>
                             <span class="inline-flex gap-2 items-center">
                                 <Code />Source Code
                             </span>
                         </Dialog.Title>
                     </Dialog.Header>
-                    {#if isPremium}
-                        <div class="code-container">
-                            This example is part of the premium content on the
-                            original creator's site. Out of respect for their
-                            work, we’re not sharing the source code here—but
-                            we’ve recreated it with Mercury to demonstrate
-                            what’s possible. If you like it, consider supporting
-                            the author by subscribing to their website.
-                        </div>
-                    {:else}
-                        <div class="code-container">
-                            {@html sourceCode}
-                        </div>
-                    {/if}
+                    <div class="flex-1 min-h-0 overflow-auto">
+                        {#if isPremium}
+                            <div class="code-container">
+                                This example is part of the premium content on the
+                                original creator's site. Out of respect for their
+                                work, we're not sharing the source code here—but
+                                we've recreated it with Mercury to demonstrate
+                                what's possible. If you like it, consider supporting
+                                the author by subscribing to their website.
+                            </div>
+                        {:else}
+                            <CodeComponent.Root
+                                lang="svelte"
+                                class="w-full"
+                                code={source!}
+                            >
+                                <CodeComponent.CopyButton />
+                            </CodeComponent.Root>
+                        {/if}
+                    </div>
                 </Dialog.Content>
+
             </Dialog.Root>
 
             {#if animation}
