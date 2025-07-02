@@ -202,7 +202,6 @@
 		align-items: center;
 		justify-content: space-between;
 		border-bottom: 1px solid #d4d6d861;
-		background: var(--theme-color-background);
 	}
 
 	.list li:last-of-type .game-wrapper {
