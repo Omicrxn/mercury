@@ -18,3 +18,21 @@
 .container {
     @apply p-2 rounded-md dark:bg-slate-400 border-2 dark:border-slate-50 border-slate-500 bg-slate-200;
 }
+
+.draggable {
+    display: flex;
+}
+.draggable::after {
+    content: "";
+    pointer-events: none;
+    position: relative;
+    align-self: center;
+    margin: auto;
+    display: block;
+    width: 20px;
+    height: 20px;
+    background-image:
+        radial-gradient(circle at center, #000 1px, transparent 0),
+        radial-gradient(circle at center, #000 1px, transparent 0);
+    background-size: 5px 5px;
+}

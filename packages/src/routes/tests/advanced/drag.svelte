@@ -4,25 +4,16 @@
 </script>
 
 <div class="flex flex-col gap-4">
-	<h2 class="text-xl font-bold">Drag</h2>
-	<!-- <div
-		{@attach mercury({ drag: true, whileDrag: { bounds: { bottom: 500 }, rubberband: true } })}
-		class="box w-16 h-16 bg-blue-200 rounded-md border border-slate-500"
-	></div> -->
-
-	<div bind:this={container} class="bg-red-500 w-[500px] h-[500px] rounded-md">
+	<div
+		bind:this={container}
+		class="border-2 border-blue-500 w-[400px] h-[300px] rounded-md flex items-center justify-center"
+	>
 		<div
 			{@attach mercury({
 				drag: true,
-				whileDrag: { bounds: container, rubberband: true },
-				onDragStart: (event) => {
-					console.log(event);
-				},
-				onDragEnd: (event) => {
-					console.log(event);
-				}
+				whileDrag: { bounds: container, rubberband: true }
 			})}
-			class="box w-16 h-16 bg-blue-200 rounded-md border border-slate-500"
+			class="box draggable"
 		></div>
 	</div>
 </div>

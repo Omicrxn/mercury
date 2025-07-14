@@ -24,8 +24,8 @@
 	<div class="scroll-test flex flex-col gap-16 p-12 w-full h-full overflow-auto">
 		<!-- <BasicAnimation /> -->
 		<!-- <InteractiveTextarea />  -->
-		<!-- <Drag /> -->
-		<Tap />
+		<Drag />
+		<!-- <Tap /> -->
 		<!-- <Scroll /> -->
 		<!-- <Flip /> -->
 		<!-- <FlipArray /> -->
