@@ -11,7 +11,8 @@
 		style="transform: scale(0.4);"
 		{@attach mercury({
 			animate: { scale: 1 },
-			whileTap: { enter: { scale: 0.5 }, transition: { duration: 0.5, type: 'spring' } },
+			whileTap: { scale: 0.5, transition: { duration: 0.5, type: 'spring' } },
+			whileHover: { scale: 1.5 },
 			transition: { ease: 'circInOut', duration: 1 }
 		})}
 	></div>

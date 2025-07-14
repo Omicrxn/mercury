@@ -1,4 +1,3 @@
-// src/adapters/motionOneAdapter.ts
 import type { AnimationEngine } from '../animation-interface.js';
 import { animate as motionAnimate } from 'motion';
 import { mapTransitionToMotion } from '../utils.js';

@@ -1,6 +1,6 @@
 import { v4 as uuid } from 'uuid';
 import { tick } from 'svelte';
-import { useDebounce, useEventListener, watch } from "runed";
+import { useDebounce, useEventListener } from 'runed';
 import { BasicProjectionNode, ProjectionNode } from '@layout-projection/core';
 import {
 	CompositeProjectionAnimator,
@@ -39,8 +39,6 @@ function hasTextChild(element: HTMLElement): boolean {
 		(node) => node.nodeType === Node.TEXT_NODE && node.textContent?.trim().length > 0
 	);
 }
-
-
 
 /**
  * Attempt to find the nearest parent Projection Node for the given Projection
@@ -118,9 +116,7 @@ function snapAndAnimate(
 		});
 	});
 }
-function snap(
-	projectionNode: ProjectionNode
-): void {
+function snap(projectionNode: ProjectionNode): void {
 	const isRoot = projectionNode.parent() === null;
 	if (!isRoot) return;
 
@@ -243,41 +239,38 @@ export const layout = ({
 
 		// Try to attach to nearest parent in the projection tree
 		tryAttachToNearestParent(projectionNode);
-		let isScrolling = $state(false)
+		let isScrolling = $state(false);
 		// wrap our “end scroll” logic
-    const onScrollEnd = useDebounce(() => {
-      isScrolling = false;
-      // final animate when scroll stops
-      snapAndAnimate(projectionNode, animator, animationConfig);
-    }, 200);
+		const onScrollEnd = useDebounce(() => {
+			isScrolling = false;
+			// final animate when scroll stops
+			snapAndAnimate(projectionNode, animator, animationConfig);
+		}, 200);
 		useEventListener(
-					() => document,
-					"scroll",
-					() => {
-					isScrolling = true
-					resetAndMeasure(projectionNode);
-					snap(projectionNode);
-     onScrollEnd();
-
-},
-					{capture:true,passive:true}
-				);
-	// Set up reactive tracking for layout changes
+			() => document,
+			'scroll',
+			() => {
+				isScrolling = true;
+				resetAndMeasure(projectionNode);
+				snap(projectionNode);
+				onScrollEnd();
+			},
+			{ capture: true, passive: true }
+		);
+		// Set up reactive tracking for layout changes
 		$effect(() => {
 			// Call the tracking function to establish dependencies
 			track();
 
 			// Reset, measure, and animate from this root
 			resetAndMeasure(projectionNode);
-			if(!isScrolling){
-			snapAndAnimate(projectionNode, animator, animationConfig);
+			if (!isScrolling) {
+				snapAndAnimate(projectionNode, animator, animationConfig);
 			}
-
 		});
 
 		// Return cleanup function
 		return () => {
-
 			// Clean up snapshots for this subtree only if this is the root of the attachment
 			projectionNode.traverse((n) => {
 				const snapshot = snapshots.get(n.identity());

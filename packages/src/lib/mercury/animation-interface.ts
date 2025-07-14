@@ -1,5 +1,3 @@
-import type { DraggableParams } from 'animejs';
-
 // src/animationInterface.ts
 export interface AnimationEngine {
 	animate(target: HTMLElement | any, params: AnimationParams): AnimationInstance;
@@ -58,7 +56,19 @@ export interface ScrollInteractionAnimation extends InteractionAnimation {
 	enter?: AnimationAttributes;
 	exit?: AnimationAttributes;
 }
-
+export interface DraggableParams {
+	axis?: 'x' | 'y' | 'lock' | undefined;
+	bounds?:
+		| {
+				left?: number;
+				right?: number;
+				top?: number;
+				bottom?: number;
+		  }
+		| HTMLElement
+		| { current: HTMLElement | null };
+	rubberband: boolean | number;
+}
 export interface AnimationParams {
 	instance?: (instance: AnimationInstance) => void;
 	animate?: AnimationAttributes;
@@ -69,7 +79,10 @@ export interface AnimationParams {
 	onTapStart?: (event: PointerEvent) => void;
 	onTapEnd?: (event: PointerEvent) => void;
 	whileTap?: InteractionAnimation;
-	drag?: DraggableParams;
+	drag?: boolean;
+	whileDrag?: DraggableParams;
+	onDragStart?: (event: PointerEvent | MouseEvent | TouchEvent | KeyboardEvent) => void;
+	onDragEnd?: (event: PointerEvent | MouseEvent | TouchEvent | KeyboardEvent) => void;
 	scroll?: ScrollInteractionAnimation;
 	engine?: AnimationEngine;
 	callbacks?: AnimationCallbacks;

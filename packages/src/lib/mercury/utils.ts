@@ -3,7 +3,6 @@ import type {
 	AnimationTransition,
 	EasingFunction
 } from './animation-interface.js';
-import { createSpring } from 'animejs';
 
 export const mapTransitionToMotion = (
 	mercuryTransition?: AnimationTransition,
@@ -31,15 +30,6 @@ export const mapTransitionToAnimeJS = (
 	duration: (mercuryTransition?.duration ?? 0.3) * 1000,
 	autoplay: mercuryTransition?.autoplay,
 	delay: (mercuryTransition?.delay ?? 0) * 1000,
-	ease:
-		mercuryTransition?.type === 'spring'
-			? createSpring({
-					stiffness: mercuryTransition?.stiffness,
-					damping: mercuryTransition?.damping,
-					mass: mercuryTransition?.mass,
-					velocity: mercuryTransition?.velocity
-				})
-			: mercuryTransition?.ease,
 	loop: mercuryTransition?.repeat,
 	alternate: mercuryTransition?.repeatType === 'reverse',
 	reversed: mercuryTransition?.repeatType === 'mirror',

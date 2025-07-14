@@ -1,6 +1,6 @@
-import { MotionEngine } from './adapters/index.js';
+import { AnimeEngine, GSAPEngine, MotionEngine } from './adapters/index.js';
 import type { AnimationEngine, AnimationParams } from './animation-interface.js';
-import { handleGestures } from './gestures.js';
+import { handleGestures } from './gestures/index.js';
 
 export const mercury = (options?: AnimationParams) => {
 	const engine: AnimationEngine = options?.engine ?? MotionEngine;
@@ -10,8 +10,10 @@ export const mercury = (options?: AnimationParams) => {
 			let animation = engine.animate(element, options);
 			options.instance?.(animation);
 		}
-		handleGestures(element, options);
+		let cleanupGestures = handleGestures(element, options);
 
-		return () => {};
+		return () => {
+			cleanupGestures();
+		};
 	};
 };

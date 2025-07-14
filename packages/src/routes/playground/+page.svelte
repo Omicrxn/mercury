@@ -15,13 +15,19 @@
 	import GooeyButton from '../tests/advanced/gooey-button.svelte';
 	import FlipArray from '../tests/advanced/flip-array.svelte';
 	import ReorderingLayout from '../tests/advanced/reordering-layout.svelte';
+	import Drag from '../tests/advanced/drag.svelte';
+	import Scroll from '../tests/advanced/scroll.svelte';
+	import Tap from '../tests/advanced/tap.svelte';
 </script>
 
 <div class=" flex h-dvh w-full">
 	<div class="scroll-test flex flex-col gap-16 p-12 w-full h-full overflow-auto">
 		<!-- <BasicAnimation /> -->
 		<!-- <InteractiveTextarea />  -->
-		<Flip />
+		<!-- <Drag /> -->
+		<Tap />
+		<!-- <Scroll /> -->
+		<!-- <Flip /> -->
 		<!-- <FlipArray /> -->
 		<!-- <ReorderingLayout /> -->
 		<!-- <FlipSize /> -->
