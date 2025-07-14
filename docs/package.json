@@ -51,7 +51,7 @@
     "wrangler": "^4.20.0"
   },
   "dependencies": {
-    "@omicrxn/mercury": "^0.5.2",
+    "@omicrxn/mercury": "0.5.4",
     "motion": "^12.19.3",
     "runed": "^0.28.0"
   }
