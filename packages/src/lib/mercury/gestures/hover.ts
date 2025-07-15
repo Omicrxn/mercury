@@ -1,13 +1,9 @@
 import type { AnimationParams } from '../animation-interface.js';
-import {
-	hover,
-	animate as motionAnimate,
-	type AnimationPlaybackControlsWithThen,
-} from 'motion';
+import { hover, animate as motionAnimate, type AnimationPlaybackControlsWithThen } from 'motion';
 import { mapTransitionToMotion } from '../utils.js';
 
-export const handleHover = (element: HTMLElement, params: AnimationParams)=>{
-  if (params.whileHover || params.onHoverStart || params.onHoverEnd) {
+export const handleHover = (element: HTMLElement, params: AnimationParams | undefined) => {
+	if (params?.whileHover || params?.onHoverStart || params?.onHoverEnd) {
 		hover(element, (element, startEvent) => {
 			params.onHoverStart?.(startEvent);
 			let animation: AnimationPlaybackControlsWithThen | undefined;
@@ -28,4 +24,4 @@ export const handleHover = (element: HTMLElement, params: AnimationParams)=>{
 			};
 		});
 	}
-}
+};

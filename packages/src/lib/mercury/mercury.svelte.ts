@@ -1,4 +1,4 @@
-import { AnimeEngine, GSAPEngine, MotionEngine } from './adapters/index.js';
+import { MotionEngine } from './adapters/index.js';
 import type { AnimationEngine, AnimationParams } from './animation-interface.js';
 import { handleGestures } from './gestures/index.js';
 

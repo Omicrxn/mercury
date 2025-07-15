@@ -14,15 +14,15 @@ function runInertia(
 		...(bounds ? { min: bounds[0], max: bounds[1] } : {})
 	});
 }
-export const handleDrag = (element: HTMLElement, params: AnimationParams) => {
-	if (params.drag === true) {
+export const handleDrag = (element: HTMLElement, params: AnimationParams | undefined) => {
+	if (params?.drag === true) {
 		element.style.touchAction = 'none';
 		element.style.cursor = 'pointer';
 		let x = motionValue<number>(0);
 		let y = motionValue<number>(0);
 
 		styleEffect(element, { x, y });
-		let numericBounds: { left: number; right: number; top: number; bottom: number } | undefined;
+
 		const { bounds } = params.whileDrag || {};
 
 		return new DragGesture(

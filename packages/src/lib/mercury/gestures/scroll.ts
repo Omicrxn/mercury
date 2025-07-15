@@ -1,9 +1,9 @@
 import type { AnimationParams } from '../animation-interface.js';
-import { animate as motionAnimate, inView, styleEffect } from 'motion';
+import { animate as motionAnimate, inView } from 'motion';
 import { mapTransitionToMotion } from '../utils.js';
 
-export const handleScroll = (element: HTMLElement, params: AnimationParams) => {
-	if (params.scroll) {
+export const handleScroll = (element: HTMLElement, params: AnimationParams| undefined) => {
+	if (params?.scroll) {
 		inView(
 			element,
 			(element) => {

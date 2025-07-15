@@ -1,19 +1,13 @@
-import type { AnimationParams, InteractionAnimation } from '../animation-interface.js';
+import type { AnimationParams } from '../animation-interface.js';
 import {
-	hover,
 	animate as motionAnimate,
 	press,
-	inView,
-	motionValue,
-	styleEffect,
 	type AnimationPlaybackControlsWithThen,
-	MotionValue
 } from 'motion';
-import { DragGesture } from '@use-gesture/vanilla';
 import { mapTransitionToMotion } from '../utils.js';
 
-export const handleTap = (element: HTMLElement, params: AnimationParams)=>{
-  if (params.whileTap || params.onTapStart || params.onTapEnd) {
+export const handleTap = (element: HTMLElement, params: AnimationParams | undefined) => {
+	if (params?.whileTap || params?.onTapStart || params?.onTapEnd) {
 		press(element, (element, startEvent) => {
 			params.onTapStart?.(startEvent);
 			let animation: AnimationPlaybackControlsWithThen | undefined;
@@ -34,4 +28,4 @@ export const handleTap = (element: HTMLElement, params: AnimationParams)=>{
 			};
 		});
 	}
-}
+};
