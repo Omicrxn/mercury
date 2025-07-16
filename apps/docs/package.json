@@ -1,5 +1,5 @@
 {
-  "name": "@svecodocs/docs",
+  "name": "@omicrxn/mercury-docs",
   "version": "0.0.0",
   "type": "module",
   "scripts": {
@@ -51,7 +51,7 @@
     "wrangler": "^4.20.0"
   },
   "dependencies": {
-    "@omicrxn/mercury": "0.5.4",
+    "@omicrxn/mercury": "workspace:*",
     "motion": "^12.19.3",
     "runed": "^0.28.0"
   }
