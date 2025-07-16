@@ -1,9 +1,0 @@
-name = "mercury"
-compatibility_date = "2025-04-01"
-main = ".svelte-kit/cloudflare/_worker.js"
-routes = [
-  { pattern = "mercury.uialchemy.com", custom_domain = true }
-]
-[assets]
-binding = "ASSETS"
-directory = ".svelte-kit/cloudflare"
