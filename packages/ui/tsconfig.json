@@ -1,8 +1,10 @@
 {
-  "extends": "@repo/typescript-config/react-library.json",
+  "extends": ["@repo/typescript-config/svelte.json", "./.svelte-kit/tsconfig.json"],
   "compilerOptions": {
-    "outDir": "dist"
+    "declaration": true,
+    "declarationMap": true,
+    "allowArbitraryExtensions": true
   },
-  "include": ["src"],
-  "exclude": ["node_modules", "dist"]
+  "include": ["dist", "./src/**/*.svelte", "./src/**/*.ts"],
+  "exclude": ["node_modules", ".svelte-kit"]
 }
