@@ -1,0 +1,43 @@
+import BasicAnimation from "./basic-animation.svelte";
+import BouncingEasing from "./bouncing-easing.svelte";
+import ColorInterpolation from "./color-interpolation.svelte";
+import ExitAnimation from "./exit-animation.svelte";
+import Stagger from "./stagger.svelte";
+import AdvancedDialogue from "./advanced-dialogue.svelte";
+import AnimatedNavbar from "./animated-navbar.svelte";
+import CopyButton from "./copy-button.svelte";
+import CssSpring from "./css-spring.svelte";
+import Drag from "./drag.svelte";
+import FeedbackPopover from "./feedback-popover.svelte";
+import Flip from "./flip.svelte";
+import FlipSize from "./flip-size.svelte";
+import GooeyButton from "./gooey-button.svelte";
+import Hover from "./hover.svelte";
+import InteractiveGraph from "./interactive-graph.svelte";
+import LayoutId from "./layout-id.svelte";
+import LayoutIdCards from "./layout-id-cards.svelte";
+import Scroll from "./scroll.svelte";
+import Tap from "./tap.svelte";
+
+export const examples = {
+  "basic-animation": {component:BasicAnimation, isPremium: false},
+  "bouncing-easing": {component:BouncingEasing, isPremium: false},
+  "color-interpolation": {component:ColorInterpolation, isPremium: false},
+  "exit-animation": {component:ExitAnimation, isPremium: false},
+  "stagger": {component:Stagger, isPremium: false},
+  "advanced-dialogue": {component:AdvancedDialogue, isPremium: true},
+  "animated-navbar": {component:AnimatedNavbar, isPremium: true},
+  "copy-button": {component:CopyButton, isPremium: true},
+  "css-spring": {component:CssSpring, isPremium: false},
+  "drag": {component:Drag, isPremium: false},
+  "feedback-popover": {component:FeedbackPopover, isPremium: true},
+  "flip": {component:Flip, isPremium: false},
+  "flip-size": {component:FlipSize, isPremium: false},
+  "gooey-button": {component:GooeyButton, isPremium: true},
+  "hover": {component:Hover, isPremium: false},
+  "interactive-graph": {component:InteractiveGraph, isPremium: true},
+  "layout-id": {component:LayoutId, isPremium: false},
+  "layout-id-cards": {component:LayoutIdCards, isPremium: true},
+  "scroll": {component:Scroll, isPremium: false},
+  "tap": {component:Tap, isPremium: false},
+};
