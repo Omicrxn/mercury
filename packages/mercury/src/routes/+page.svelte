@@ -12,6 +12,9 @@
 	import LayoutId from './tests/advanced/layout-id.svelte';
 </script>
 
+<div class="p-4">
+	<a href="/tests" class="text-blue-600 hover:underline">Browse all tests in isolation &rarr;</a>
+</div>
 <div class="flex">
 	<div class="flex flex-col gap-16 p-12">
 		<BasicAnimation />
