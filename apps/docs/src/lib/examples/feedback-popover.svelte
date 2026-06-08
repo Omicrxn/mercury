@@ -41,9 +41,10 @@
 		window.addEventListener('keydown', handleKeyDown);
 		return () => window.removeEventListener('keydown', handleKeyDown);
 	});
+	const layoutGroup = layout(() => open, { transition: { duration: 0.35 } });
 </script>
 
-<div class="feedback-wrapper">
+<div {@attach layoutGroup} class="feedback-wrapper">
 	{#key 'button'}
 		<button
 			onclick={() => {
@@ -53,21 +54,21 @@
 			}}
 			class="feedback-button"
 			style:border-radius={8}
-			{@attach layout({ layoutId: 'wrapper', track: () => open })}
+			{...layout.props('wrapper')}
 		>
-			<span {@attach layout({ layoutId: 'title', track: () => open })}>Feedback</span>
+			<span {...layout.props('title')}>Feedback</span>
 		</button>
 	{/key}
 
 	{#if open}
 		<div
-			{@attach layout({ layoutId: 'wrapper', track: () => open })}
+			{...layout.props('wrapper')}
 			class="feedback-popover"
 			style:border-radius={12}
 			bind:this={popover}
 		>
 			<span
-				{@attach layout({ layoutId: 'title', track: () => open })}
+				{...layout.props('title')}
 				aria-hidden
 				class="placeholder"
 				data-success={formState === 'success' ? 'true' : 'false'}

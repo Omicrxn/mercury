@@ -8,9 +8,9 @@
 	let dialog = $state<HTMLDivElement | null>(null);
 	let modal = $state<HTMLDivElement | null>(null);
 	let isModalOpened = $state(false);
-	let animationConfig = {
-		duration: 300,
-		easing: ease
+	let transition = {
+		duration: 0.3,
+		ease
 	};
 	async function openModal() {
 		dialog?.showModal();
@@ -19,6 +19,8 @@
 	async function closeModal() {
 		isModalOpened = false;
 	}
+
+	const layoutGroup = layout(() => isModalOpened, { transition });
 	$effect(() => {
 		// Handle click outside
 		function checkClickOutside(event, element) {
@@ -44,15 +46,11 @@
 </script>
 
 <main id="sandbox">
-	<div id="example-container">
+	<div id="example-container" {@attach layoutGroup}>
 		{#if !isModalOpened}
 			<button
 				{@attach mercury({ whileTap: { scale: 0.9 }, onTapEnd: openModal })}
-				{@attach layout({
-					layoutId: 'openButton',
-					track: () => isModalOpened,
-					animation: animationConfig
-				})}
+				{...layout.props('openButton')}
 				class="openButton"
 				data-primary-action><span>Receive</span></button
 			>
@@ -90,11 +88,7 @@
 								<button
 									class="save"
 									style="border-radius: 50px"
-									{@attach layout({
-										layoutId: 'openButton',
-										track: () => isModalOpened,
-										animation: animationConfig
-									})}
+									{...layout.props('openButton')}
 								>
 									<span>Receive</span>
 								</button>

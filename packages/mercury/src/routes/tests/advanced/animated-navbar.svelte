@@ -1,62 +1,32 @@
 <script lang="ts">
-	import { mercury, layout } from '$lib/index.js';
+	import { layout } from '$lib/index.js';
 	import { ArrowBigDown, ArrowBigRight } from '@lucide/svelte';
-	import type { AnimationConfig } from '@layout-projection/animation';
 	import { spring } from 'motion';
-	import { onMount, tick } from 'svelte';
-	import { nodeMap } from '$lib/mercury/layout.svelte.js';
 	const tabs = ['Home', 'React', 'Vue', 'Svelte'];
 	let selectedTab = $state<number>(0);
-	const { duration, ease } = spring.applyToOptions({
+	const { ease } = spring.applyToOptions({
 		bounce: 0,
 		stiffness: 40,
 		damping: 80
 	});
-	let animationConfig: AnimationConfig = {
-		duration: 300,
-		easing: ease
-	};
 	let horizontal = $state(true);
-	let ref = $state<HTMLElement>();
-	function logTree() {
-		let root = nodeMap.get(ref);
-		console.log(nodeMap);
-		root?.traverse((n) => console.log(n.identity()));
-	}
+
+	const layoutGroup = layout(
+		() => [selectedTab, horizontal],
+		{ transition: { duration: 0.35, ease } }
+	);
 </script>
 
-<nav
-	class="container"
-	bind:this={ref}
-	{@attach layout({
-		layoutId: 'nav',
-		track: () => selectedTab & horizontal,
-		animationConfig: { duration: 350 }
-	})}
->
+<nav {@attach layoutGroup} class="container">
 	<ul class={horizontal ? 'flex-row' : 'flex-col'}>
 		{#each tabs as tab, index (index)}
 			{@const isSelected = selectedTab === index}
 			<li class={isSelected ? 'selected' : ''} role="tab" aria-selected={isSelected}>
 				{#if isSelected}
-					<div
-						{@attach layout({
-							layoutId: 'selected-indicator',
-							track: () => selectedTab & horizontal,
-							animationConfig
-						})}
-						class="selected-indicator"
-					/>
+					<div {...layout.props('selected-indicator')} class="selected-indicator" />
 				{/if}
 
-				<button
-					onclick={() => (selectedTab = index)}
-					{@attach layout({
-						layoutId: `button-${index}`,
-						track: () => selectedTab & horizontal,
-						animationConfig: { duration: 350 }
-					})}
-				>
+				<button onclick={() => (selectedTab = index)} {...layout.props(`button-${index}`)}>
 					{tab}
 				</button>
 			</li>
@@ -72,13 +42,6 @@
 		<ArrowBigRight />
 	{:else}<ArrowBigDown />
 	{/if}
-</button>
-<button
-	onclick={() => {
-		logTree();
-	}}
->
-	Log Tree
 </button>
 
 <style>

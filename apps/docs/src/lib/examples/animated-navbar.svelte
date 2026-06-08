@@ -1,30 +1,25 @@
 <script lang="ts">
-	import { mercury, layout } from '@omicrxn/mercury';
+	import { layout } from '@omicrxn/mercury';
 	import { ArrowBigDown, ArrowBigRight } from '@lucide/svelte';
 	import { spring } from 'motion';
-	import { onMount, tick } from 'svelte';
-	const tabs = ['Home', 'React',  'Svelte'];
+	const tabs = ['Home', 'React', 'Svelte'];
 	let selectedTab = $state<number>(0);
-	const { duration, ease } = spring.applyToOptions({
+	const { ease } = spring.applyToOptions({
 		bounce: 0,
 		stiffness: 40,
 		damping: 80
 	});
-	let animationConfig = {
-		duration: 300,
-		easing: ease
-	};
 	let horizontal = $state(true);
 
+	const layoutGroup = layout(
+		() => [selectedTab, horizontal],
+		{ transition: { duration: 0.35, ease } }
+	);
 </script>
 
 <nav
+	{@attach layoutGroup}
 	class="container dark:bg-slate-400 border dark:border-slate-50 border-slate-500 bg-slate-200"
-	{@attach layout({
-		layoutId: 'nav',
-		track: () => selectedTab & horizontal,
-		animationConfig: { duration: 350 }
-	})}
 >
 	<ul class={horizontal ? 'flex-row' : 'flex-col'}>
 		{#each tabs as tab, index (index)}
@@ -32,11 +27,7 @@
 			<li class={isSelected ? 'selected' : ''} role="tab" aria-selected={isSelected}>
 				{#if isSelected}
 					<div
-						{@attach layout({
-							layoutId: 'selected-indicator',
-							track: () => selectedTab & horizontal,
-							animationConfig
-						})}
+						{...layout.props('selected-indicator')}
 						class="selected-indicator bg-indigo-200 dark:bg-indigo-400 border dark:border-slate-50 border-slate-500"
 					/>
 				{/if}
@@ -44,11 +35,7 @@
 				<button
 					onclick={() => (selectedTab = index)}
 					class="dark:text-white text-black"
-					{@attach layout({
-						layoutId: `button-${index}`,
-						track: () => selectedTab & horizontal,
-						animationConfig: { duration: 350 }
-					})}
+					{...layout.props(`button-${index}`)}
 				>
 					{tab}
 				</button>
@@ -67,10 +54,9 @@
 	{/if}
 </button>
 
-
 <style>
 	.container {
-	    border-radius: 10px;
+		border-radius: 10px;
 		padding: 5px;
 	}
 

@@ -68,21 +68,22 @@
 
 		return () => window.removeEventListener('keydown', onKeyDown);
 	});
+	const layoutGroup = layout(() => activeGame, { transition: { duration: 0.4 } });
 </script>
 
-<div class="flex-1 flex flex-col w-full overflow-hidden">
+<div {@attach layoutGroup} class="flex-1 flex flex-col w-full overflow-hidden">
 {#if activeGame}
 	<div  class="overlay" />
 	<div  class="active-game">
 		<div
 		bind:this={modal}
-			{@attach layout({ layoutId: `card-${activeGame.title}`, track: () => activeGame })}
+			{...layout.props(`card-${activeGame.title}`)}
 			class="inner"
 			style="border-radius: 12px"
 		>
 			<div class="header">
 				<img
-					{@attach layout({ layoutId: `image-${activeGame.title}`, track: () => activeGame })}
+					{...layout.props(`image-${activeGame.title}`)}
 					height={56}
 					width={56}
 					alt="Game"
@@ -92,23 +93,20 @@
 				<div class="header-inner">
 					<div class="content-wrapper">
 						<h2
-							{@attach layout({ layoutId: `title-${activeGame.title}`, track: () => activeGame })}
+							{...layout.props(`title-${activeGame.title}`)}
 							class="game-title"
 						>
 							{activeGame.title}
 						</h2>
 						<p
-							{@attach layout({
-								layoutId: `description-${activeGame.title}`,
-								track: () => activeGame
-							})}
+							{...layout.props(`description-${activeGame.title}`)}
 							class="game-description"
 						>
 							{activeGame.description}
 						</p>
 					</div>
 					<button
-						{@attach layout({ layoutId: `button-${activeGame.title}`, track: () => activeGame })}
+						{...layout.props(`button-${activeGame.title}`)}
 						class="button">Get</button
 					>
 				</div>
@@ -123,7 +121,7 @@
 						delay: 0.3
 					}
 				})}
-				{@attach layout({ track: () => activeGame })}
+				{...layout.props()}
 				class="long-description"
 			>
 				{activeGame.longDescription}
@@ -137,12 +135,12 @@
 		{#if activeGame?.title !== game.title}
 			{#key game.title}
 				<li
-					{@attach layout({ layoutId: `card-${game.title}`, track: () => activeGame })}
+					{...layout.props(`card-${game.title}`)}
 					onclick={() => (activeGame = game)}
 					style="border-radius: 8px;"
 				>
 					<img
-						{@attach layout({ layoutId: `image-${game.title}`, track: () => activeGame })}
+						{...layout.props(`image-${game.title}`)}
 						height={56}
 						width={56}
 						alt="Game"
@@ -152,20 +150,20 @@
 					<div class="game-wrapper">
 						<div class="content-wrapper">
 							<h2
-								{@attach layout({ layoutId: `title-${game.title}`, track: () => activeGame })}
+								{...layout.props(`title-${game.title}`)}
 								class="game-title"
 							>
 								{game.title}
 							</h2>
 							<p
-								{@attach layout({ layoutId: `description-${game.title}`, track: () => activeGame })}
+								{...layout.props(`description-${game.title}`)}
 								class="game-description truncate"
 							>
 								{game.description}
 							</p>
 						</div>
 						<button
-							{@attach layout({ layoutId: `button-${game.title}`, track: () => activeGame })}
+							{...layout.props(`button-${game.title}`)}
 							class="button">Get</button
 						>
 					</div>

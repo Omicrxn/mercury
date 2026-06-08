@@ -28,7 +28,7 @@ Mercury aims to bring layout-aware, fine-grained animations to Svelte in a way t
 
 The core philosophy behind Mercury is to enable expressive animation without compromising the clarity or structure of Svelte code. It builds upon Svelte’s strengths rather than abstracting them away, offering a motion system that is:
 
-- **Predictable** – Built on motion values, transitions, and layout projections that behave consistently.
+- **Predictable** – Built on motion values, transitions, and layout animations that behave consistently.
 - **Flexible** – Easily integrated into existing components and layouts.
 - **Performant** – Lightweight and optimized for UI responsiveness.
 - **Made the Svelte Way** - Mercury is built with Svelte’s philosophy at its core. Instead of mimicking patterns from other frameworks, it embraces Svelte’s strengths—reactivity, attachments, and transitions—without forcing external abstractions or workarounds that don't apply in the Svelte ecosystem.

@@ -66,112 +66,114 @@
 
 		return () => window.removeEventListener('keydown', onKeyDown);
 	});
+
+	const layoutGroup = layout(() => activeGame, { transition: { duration: 0.4 } });
 </script>
 
-{#if activeGame}
-	<div class="overlay" />
-	<div class="active-game">
-		<div
-			{@attach layout({ layoutId: `card-${activeGame.title}`, track: () => activeGame })}
-			class="inner"
-			style="border-radius: 12px"
-		>
-			<div class="header">
-				<img
-					{@attach layout({ layoutId: `image-${activeGame.title}`, track: () => activeGame })}
-					height={56}
-					width={56}
-					alt="Game"
-					src={activeGame.image}
-					style="border-radius: 12px"
-				/>
-				<div class="header-inner">
-					<div class="content-wrapper">
-						<h2
-							{@attach layout({ layoutId: `title-${activeGame.title}`, track: () => activeGame })}
-							class="game-title"
-						>
-							{activeGame.title}
-						</h2>
-						<p
-							{@attach layout({
-								layoutId: `description-${activeGame.title}`,
-								track: () => activeGame
-							})}
-							class="game-description"
-						>
-							{activeGame.description}
-						</p>
-					</div>
-					<button
-						{@attach layout({ layoutId: `button-${activeGame.title}`, track: () => activeGame })}
-						class="button">Get</button
-					>
-				</div>
-			</div>
-			<p
-				{@attach mercury({
-					animate: {
-						opacity: 1
-					},
-					transition: {
-						duration: 0.1,
-						delay: 0.3
-					}
-				})}
-				{@attach layout({ track: () => activeGame })}
-				class="long-description"
+<div {@attach layoutGroup} class="layout-root">
+	{#if activeGame}
+		<div class="overlay" />
+		<div class="active-game">
+			<div
+				{...layout.props(`card-${activeGame.title}`)}
+				class="inner"
+				style="border-radius: 12px"
 			>
-				{activeGame.longDescription}
-			</p>
-		</div>
-	</div>
-{/if}
-
-<ul class="list">
-	{#each GAMES as game (game.title)}
-		{#if activeGame?.title !== game.title}
-			{#key game.title}
-				<li
-					{@attach layout({ layoutId: `card-${game.title}`, track: () => activeGame })}
-					onclick={() => (activeGame = game)}
-					style="border-radius: 8px;"
-				>
+				<div class="header">
 					<img
-						{@attach layout({ layoutId: `image-${game.title}`, track: () => activeGame })}
+						{...layout.props(`image-${activeGame.title}`)}
 						height={56}
 						width={56}
 						alt="Game"
-						src={game.image}
-						style="border-radius: 12px;"
+						src={activeGame.image}
+						style="border-radius: 12px"
 					/>
-					<div class="game-wrapper">
+					<div class="header-inner">
 						<div class="content-wrapper">
 							<h2
-								{@attach layout({ layoutId: `title-${game.title}`, track: () => activeGame })}
+								{...layout.props(`title-${activeGame.title}`)}
 								class="game-title"
 							>
-								{game.title}
+								{activeGame.title}
 							</h2>
 							<p
-								{@attach layout({ layoutId: `description-${game.title}`, track: () => activeGame })}
+								{...layout.props(`description-${activeGame.title}`)}
 								class="game-description"
 							>
-								{game.description}
+								{activeGame.description}
 							</p>
 						</div>
 						<button
-							{@attach layout({ layoutId: `button-${game.title}`, track: () => activeGame })}
+							{...layout.props(`button-${activeGame.title}`)}
 							class="button">Get</button
 						>
 					</div>
-				</li>
-			{/key}
-		{/if}
-	{/each}
-</ul>
+				</div>
+				<p
+					{...layout.props()}
+					{@attach mercury({
+						animate: {
+							opacity: 1
+						},
+						transition: {
+							duration: 0.1,
+							delay: 0.3
+						}
+					})}
+					class="long-description"
+				>
+					{activeGame.longDescription}
+				</p>
+			</div>
+		</div>
+	{/if}
+
+	<ul class="list">
+		{#each GAMES as game (game.title)}
+			{#if activeGame?.title !== game.title}
+				{#key game.title}
+					<li
+						{...layout.props(`card-${game.title}`)}
+						onclick={() => (activeGame = game)}
+						style="border-radius: 8px;"
+					>
+						<img
+							{...layout.props(`image-${game.title}`)}
+							height={56}
+							width={56}
+							alt="Game"
+							src={game.image}
+							style="border-radius: 12px;"
+						/>
+						<div class="game-wrapper">
+							<div class="content-wrapper">
+								<h2 {...layout.props(`title-${game.title}`)} class="game-title">
+									{game.title}
+								</h2>
+								<p
+									{...layout.props(`description-${game.title}`)}
+									class="game-description"
+								>
+									{game.description}
+								</p>
+							</div>
+							<button {...layout.props(`button-${game.title}`)} class="button"
+								>Get</button
+							>
+						</div>
+					</li>
+				{/key}
+			{/if}
+		{/each}
+	</ul>
+</div>
 
 <style>
+	.layout-root {
+		position: relative;
+		width: 100%;
+	}
+
 	.list {
 		position: relative;
 		display: flex;

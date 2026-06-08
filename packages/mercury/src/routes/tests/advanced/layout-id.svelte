@@ -1,25 +1,24 @@
 <script lang="ts">
 	import { layout } from '$lib/mercury/layout.svelte.js';
 	let showSecond = $state(false);
+
+	const layoutGroup = layout(() => showSecond, { transition: { duration: 0.4 } });
 </script>
 
-<div class="wrapper">
+<div {@attach layoutGroup} class="wrapper">
 	<button class="button" onclick={() => (showSecond = !showSecond)}> Animate </button>
 	{#if showSecond}
-		<div
-			{@attach layout({ layoutId: 'rectangle', track: () => showSecond })}
-			class="second-element"
-		>
+		<div {...layout.props('rectangle')} class="second-element">
 			<div
+				{...layout.props('rectangle-square')}
 				class="size-4 bg-blue-200 rounded-md"
-				{@attach layout({ layoutId: 'rectangle-square', track: () => showSecond })}
 			></div>
 		</div>
 	{:else}
-		<div {@attach layout({ layoutId: 'rectangle', track: () => showSecond })} class="element">
+		<div {...layout.props('rectangle')} class="element">
 			<div
+				{...layout.props('rectangle-square')}
 				class="size-4 bg-red-500 rounded-md m-4"
-				{@attach layout({ layoutId: 'rectangle-square', track: () => showSecond })}
 			></div>
 		</div>
 	{/if}
