@@ -1,27 +1,12 @@
-// src/animationInterface.ts
-export interface AnimationEngine {
-	animate(target: HTMLElement | any, params: AnimationParams): AnimationInstance;
-}
-export type EasingFunction =
-	| readonly [number, number, number, number]
-	| 'linear'
-	| 'easeIn'
-	| 'easeOut'
-	| 'easeInOut'
-	| 'circIn'
-	| 'circOut'
-	| 'circInOut'
-	| 'backIn'
-	| 'backOut'
-	| 'backInOut'
-	| 'anticipate'
-	| string;
+import type { Easing } from 'motion';
+
+export type { Easing };
 
 export interface AnimationTransition {
 	duration?: number;
 	autoplay?: boolean;
 	delay?: number;
-	ease?: EasingFunction | EasingFunction[];
+	ease?: Easing | Easing[];
 	repeat?: number;
 	repeatType?: 'loop' | 'reverse' | 'mirror';
 	repeatDelay?: number;
@@ -84,7 +69,6 @@ export interface AnimationParams {
 	onDragStart?: (event: PointerEvent | MouseEvent | TouchEvent | KeyboardEvent) => void;
 	onDragEnd?: (event: PointerEvent | MouseEvent | TouchEvent | KeyboardEvent) => void;
 	scroll?: ScrollInteractionAnimation;
-	engine?: AnimationEngine;
 	callbacks?: AnimationCallbacks;
 }
 export interface AnimationInstance {

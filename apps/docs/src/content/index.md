@@ -22,7 +22,7 @@ Mercury aims to bring layout-aware, fine-grained animations to Svelte in a way t
 - **Shared layout transitions** – Mercury enables elements to animate seamlessly across layouts using `layoutId`s, making complex interactions feel effortless.
 - **Presence animations** – Full support for presence animations brings component mount/unmount animations similar to what Framer Motion offers, but in a Svelte-native way.
 - **Minimal friction** – The API is designed to be declarative, composable, and minimal. It scales from simple transitions to advanced UI flows without boilerplate.
-- **Compatibility** - Mercury is engine-agnostic. Whether you prefer AnimeJS, Motion, or GSAP, Mercury lets you plug in your preferred animation engine while handling the coordination logic. This means you can continue using utilities, motion values, and other features from those libraries seamlessly alongside Mercury.
+- **Powered by Motion** - Mercury is built on [Motion](https://motion.dev/), so you get its mature, performant animation engine for free. You can continue using Motion's utilities, motion values, and other features seamlessly alongside Mercury.
 
 ## Philosophy
 

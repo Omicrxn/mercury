@@ -43,7 +43,7 @@ let codeRepetition = `
 			duration: 2,
 			repeat: Infinity,
 			repeatType: 'reverse',
-			easing: 'linear'
+			ease: 'linear'
 		}
 	})}
   >
@@ -73,11 +73,9 @@ Include the `animate` property within the `mercury()` attachment like this:
 
 ## Supported Features
 
-Mercury supports animations from popular engines like GSAP, Motion, and AnimeJS. To explore detailed capabilities, check your chosen engine’s documentation:
+Mercury is powered by Motion. To explore the full set of animatable values and capabilities, check the Motion documentation:
 
-- [GSAP Docs](<https://gsap.com/docs/v3/GSAP/gsap.to()/>)
 - [Motion Docs](https://motion.dev/docs/animate)
-- [Anime Docs](https://animejs.com/documentation/animation/)
 
 ## Stagger
 
@@ -105,13 +103,19 @@ Control the animation’s transition properties (duration, easing, repeat) with 
 
 ## Easing
 
-Easings control animation pacing, enhancing visual appeal. Mercury provides these built-in easings:
+Easings control animation pacing throughout an animation's duration. Mercury uses Motion's easing system — pass any [Motion easing](https://motion.dev/docs/easing-functions) via the `ease` property on `transition`:
 
-- `linear`, `easeIn`, `easeOut`, `easeInOut`
-- `circIn`, `circOut`,`circInOut`
-- `backIn`, `backOut`, `backInOut`
-- `anticipate`
-  Additionally, you can use custom easing functions provided by your selected animation library.
+- **Named easings:** `linear`, `easeIn`, `easeOut`, `easeInOut`, `circIn`, `circOut`, `circInOut`, `backIn`, `backOut`, `backInOut`, `anticipate`
+- **Cubic bezier:** `ease: [0.39, 0.24, 0.3, 1]`
+- **Custom functions:** `ease: (progress) => progress * progress`
+- **Steps:** import `steps` from `motion` and pass the result as `ease`
+
+```svelte
+{@attach mercury({
+	animate: { scale: 1.5 },
+	transition: { ease: 'circInOut', duration: 1 }
+})}
+```
 
 ## Repetition
 
@@ -146,5 +150,5 @@ Customize springs with
 - `velocity`: Sets initial spring velocity.
 
 <Callout type="note" title="Note">
-    Parameters might behave differently depending on the chosen animation library. Refer to its documentation for specific behaviors.
+    Refer to the Motion documentation for specific behaviors of these parameters.
 </Callout>

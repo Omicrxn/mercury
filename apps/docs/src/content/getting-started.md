@@ -1,6 +1,6 @@
 ---
 title: Getting Started
-description: Seamlessly integrate your favorite animation libraries (Motion, AnimeJS, GSAP) into your Svelte projects using Mercury.
+description: Seamlessly integrate Motion-powered animations into your Svelte projects using Mercury.
 section: Overview
 ---
 

@@ -14,7 +14,7 @@ Mercury aims to bring layout-aware, fine-grained animations to Svelte in a way t
 - **Shared layout transitions** – Mercury enables elements to animate seamlessly across layouts using `layoutId`s, making complex interactions feel effortless.
 - **Presence animations** – Full support for presence animations brings component mount/unmount animations similar to what Framer Motion offers, but in a Svelte-native way.
 - **Minimal friction** – The API is designed to be declarative, composable, and minimal. It scales from simple transitions to advanced UI flows without boilerplate.
-- **Compatibility** - Mercury is engine-agnostic. Whether you prefer AnimeJS, Motion, or GSAP, Mercury lets you plug in your preferred animation engine while handling the coordination logic. This means you can continue using utilities, motion values, and other features from those libraries seamlessly alongside Mercury.
+- **Powered by Motion** – Mercury is built on [Motion](https://motion.dev/), so you get its mature animation engine for gestures, presence, and tweens. You can use Motion's utilities, motion values, and [easing functions](https://motion.dev/docs/easing-functions) seamlessly alongside Mercury.
 
 ## Philosophy
 
@@ -27,7 +27,6 @@ The core philosophy behind Mercury is to enable expressive animation without com
 
 Mercury makes advanced animations accessible to Svelte developers—without introducing unnecessary overhead or breaking the mental model of how Svelte works.
 
-
 # Documentation
 
 See in-depth documentation and examples at this [site](https://mercury.uialchemy.com/docs)
@@ -35,7 +34,6 @@ See in-depth documentation and examples at this [site](https://mercury.uialchemy
 # Working Demo / Examples
 
 Check some [examples](https://mercury.uialchemy.com/examples) of how to use **Mercury**
-
 
 ## Installation
 
@@ -51,10 +49,9 @@ pnpm install @omicrxn/mercury
 yarn install @omicrxn/mercury
 ```
 
-
 ## Acknowledgments
 
-Mercury is built on the shoulders of giants. Special thanks to the creators and maintainers of [Svelte](https://svelte.dev/), [Anime.js](https://github.com/juliangarnier/anime/), [Motion](https://motion.dev/) and [GSAP](https://gsap.com/) and special thanks to [@Char2sGu](https://github.com/Char2sGu) for helping me integrate layout projections into the library.
+Mercury is built on the shoulders of giants. Special thanks to the creators and maintainers of [Svelte](https://svelte.dev/), [Motion](https://motion.dev/) and [Anime.js](https://github.com/juliangarnier/anime/) and special thanks to [@Char2sGu](https://github.com/Char2sGu) for helping me integrate layout projections into the library.
 
 ## License
 
