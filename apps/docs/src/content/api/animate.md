@@ -61,7 +61,9 @@ let codeSprings = `
 
 ## Overview
 
-The `animate` property lets you control animations applied to your components with Mercury.
+The `animate` property lets you control animations applied to your components with Mercury. It is the equivalent of Motion's `animate` prop: the element animates to these values on mount, and again whenever they change.
+
+Mercury's mental model in one sentence: **your CSS is the resting state, `animate` is state-driven animation, and [`presence`](/docs/api/presence) (`initial` / `exit`) handles mounting and unmounting.**
 
 ### Usage
 
@@ -70,6 +72,32 @@ Include the `animate` property within the `mercury()` attachment like this:
 <Code.Root lang="svelte" class="w-full" code={codeUsage}>
 <Code.CopyButton />
 </Code.Root>
+
+Because attachments re-run when their reactive dependencies change, `animate` is naturally state-driven — derive it from `$state` and Mercury animates on every change:
+
+```svelte
+{@attach mercury({
+	animate: { width: isSilent ? 148 : 128 },
+	transition: { type: 'spring', bounce: 0.5 }
+})}
+```
+
+## Initial
+
+By default, `animate` plays on mount, from the element's current styles to the `animate` values. To skip that first animation — Motion's `initial={false}` — pass `initial: false`. The element renders directly in its `animate` state (keyframe arrays snap to their last frame), and only subsequent updates animate:
+
+```svelte
+<!-- no wiggle on mount; wiggles on every isSilent change -->
+{@attach mercury({
+	initial: false,
+	animate: {
+		rotate: isSilent ? [0, -15, 5, -2, 0] : [0, 20, -15, 12.5, -10, 10, -7.5, 7.5, -5, 5, 0],
+		x: isSilent ? 9 : 0
+	}
+})}
+```
+
+If you instead need the element to enter **from** an explicit hidden state, that's a presence concern — use `initial` on [`transition:presence`](/docs/api/presence).
 
 ## Supported Features
 

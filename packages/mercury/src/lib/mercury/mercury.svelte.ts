@@ -1,4 +1,8 @@
-import { animate as motionAnimate, type AnimationOptions } from 'motion';
+import {
+	animate as motionAnimate,
+	type AnimationOptions,
+	type DOMKeyframesDefinition
+} from 'motion';
 import type { AnimationInstance, AnimationParams } from './animation-interface.js';
 import { handleGestures } from './gestures/index.js';
 import {
@@ -10,6 +14,9 @@ import {
 import { mapTransitionToMotion } from './utils.js';
 import { clearPresence } from './animate-presence.js';
 
+/** Elements that have had a mercury `animate` applied at least once (for `initial: false`). */
+const initialized = new WeakSet<HTMLElement>();
+
 export const mercury = (options?: AnimationParams) => {
 	return (element: HTMLElement) => {
 		let animation: AnimationInstance | undefined;
@@ -17,7 +24,13 @@ export const mercury = (options?: AnimationParams) => {
 
 		clearPresence(element);
 
-		if (options?.animate) {
+		if (options?.animate && options.initial === false && !initialized.has(element)) {
+			initialized.add(element);
+			// motion's `initial={false}`: render the settled `animate` state on first
+			// application (keyframe arrays snap to their last frame), animate on updates.
+			motionAnimate(element, options.animate as DOMKeyframesDefinition, { duration: 0 });
+		} else if (options?.animate) {
+			initialized.add(element);
 			const { animate, transition, callbacks } = options;
 
 			const startAnimation = () => {

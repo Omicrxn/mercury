@@ -1,16 +1,8 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
 	import { mercury, presence } from '$lib/index.js';
 
 	let { ...restProps } = $props();
 	let isSilent = $state(false);
-	let mounted = $state(false);
-	let skipBellIntro = true;
-	let skipLabelIntro = true;
-
-	onMount(() => {
-		mounted = true;
-	});
 
 	$effect(() => {
 		isSilent;
@@ -20,42 +12,12 @@
 		return () => clearTimeout(timeout);
 	});
 
-	const labelTransition = { duration: 0.3 };
-
-	const labelEnter = {
-		opacity: [0, 1],
-		scale: [0.25, 1],
-		filter: ['blur(4px)', 'blur(0px)']
-	};
-
-	const labelExit = {
-		opacity: 0,
-		scale: 0.25,
-		filter: 'blur(4px)',
+	const labelPresence = {
+		initial: { opacity: 0, scale: 0.25, filter: 'blur(4px)' },
+		exit: { opacity: 0, scale: 0.25, filter: 'blur(4px)' },
 		mode: 'popLayout' as const,
-		transition: labelTransition
+		transition: { duration: 0.3 }
 	};
-
-	const pillSpring = { type: 'spring', bounce: 0.35 } as const;
-
-	const pillEnter = {
-		width: [0, 40],
-		opacity: [0, 1],
-		filter: ['blur(4px)', 'blur(0px)']
-	};
-
-	const pillExit = {
-		width: 0,
-		opacity: 0,
-		filter: 'blur(4px)',
-		transition: pillSpring
-	};
-
-	const bellKeyframes = $derived(
-		isSilent
-			? { rotate: [0, -15, 5, -2, 0] as number[], x: 9 }
-			: { rotate: [0, 20, -15, 12.5, -10, 10, -7.5, 7.5, -5, 5, 0] as number[], x: 0 }
-	);
 </script>
 
 <div
@@ -69,24 +31,23 @@
 >
 	{#if isSilent}
 		<div
-			class="absolute left-[5px] h-[18px] overflow-hidden rounded-full bg-[#FD4F30]"
-			{@attach mercury({ animate: pillEnter, transition: pillSpring })}
-			out:presence={pillExit}
+			class="absolute left-[5px] z-0 h-[18px] w-10 overflow-hidden rounded-full bg-[#FD4F30]"
+			transition:presence={{
+				initial: { width: 0, opacity: 0, filter: 'blur(4px)' },
+				exit: { width: 0, opacity: 0, filter: 'blur(4px)' },
+				transition: { type: 'spring', bounce: 0.35 }
+			}}
 		></div>
 	{/if}
 	<div
-		class="relative h-[12.75px] w-[11.25px]"
-		{@attach (el) => {
-			isSilent;
-			if (!mounted) return;
-
-			if (skipBellIntro) {
-				skipBellIntro = false;
-				return;
+		class="relative z-[1] h-[12.75px] w-[11.25px]"
+		{@attach mercury({
+			initial: false,
+			animate: {
+				rotate: isSilent ? [0, -15, 5, -2, 0] : [0, 20, -15, 12.5, -10, 10, -7.5, 7.5, -5, 5, 0],
+				x: isSilent ? 9 : 0
 			}
-
-			return mercury({ animate: bellKeyframes })(el);
-		}}
+		})}
 	>
 		<svg
 			class="absolute inset-0"
@@ -122,24 +83,11 @@
 		</div>
 	</div>
 	<div class="relative ml-auto flex items-center">
-		{#key isSilent}
+		{#key isSilent ? 'silent' : 'ring'}
 			<span
-				style="transform-origin: {isSilent ? 'left center' : 'right center'};"
 				class={['text-xs font-medium', isSilent ? 'text-[#FD4F30]' : 'text-white']}
-				{@attach (el) => {
-					if (!mounted) return;
-
-					if (skipLabelIntro) {
-						skipLabelIntro = false;
-						return mercury({
-							animate: { opacity: 1, scale: 1, filter: 'blur(0px)' },
-							transition: { duration: 0 }
-						})(el);
-					}
-
-					return mercury({ animate: labelEnter, transition: labelTransition })(el);
-				}}
-				out:presence={labelExit}
+				style="transform-origin: {isSilent ? 'left center' : 'right center'};"
+				transition:presence={labelPresence}
 			>
 				{isSilent ? 'Silent' : 'Ring'}
 			</span>

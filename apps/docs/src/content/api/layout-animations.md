@@ -10,6 +10,8 @@ section: API
 
 	let codeBasicUsage = `
 <script lang="ts">
+	import { layout } from '@omicrxn/mercury';
+
 	let justify = $state('start');
 	const layoutGroup = layout(() => justify, { transition: { duration: 0.4 } });
 <\/script>
@@ -21,9 +23,7 @@ section: API
 	/>
 </div>
 <button
-	onclick={() => {
-		flip(); //this toggles the parent element between justify-start and justify-end
-	}}
+	onclick={() => (justify = justify === 'start' ? 'end' : 'start')}
 	class="bg-slate-200">Flip</button
 >
   `
@@ -54,22 +54,27 @@ Layout animations enable you to animate properties and scenarios typically not s
 
 ## Basic Usage
 
-Attach a layout group to a container, then mark animated children with `layout.props()`:
+Layout animations have two parts:
+
+1. **`layout(trigger, options)`** — creates a layout group. The `trigger` is a getter for the reactive state that causes layout changes; `options.transition` controls the timing. Attach the returned group to the **container** with `{@attach layoutGroup}`.
+2. **`layout.props(id?)`** — spread onto each **child** that should animate when the layout changes.
 
 <Code.Root lang="svelte" class="w-full" code={codeBasicUsage}>
 <Code.CopyButton />
 </Code.Root>
 
-<Callout type="warning" title="Important Notes">
-	Svelte lacks automatic DOM change detection. Mercury is built on Svelte core features and works directly on HTML elements rather than wrapper components. Pass a reactive trigger getter as the first argument to `layout()` so Mercury knows when to record and animate layout changes.
+This is Mercury's equivalent of Motion's `layout` prop: when the trigger changes, Mercury measures every marked element before and after the DOM update and FLIP-animates the difference (position and size), including structural changes CSS can't animate — `justify-content`, `flex-direction`, `grid-template-columns`, reordering, and so on.
+
+<Callout type="warning" title="Why the trigger?">
+	Svelte has no automatic DOM change detection, and Mercury works directly on HTML elements rather than wrapper components. The trigger getter passed as the first argument to <code>layout()</code> is how Mercury knows when to record and animate layout changes.
 </Callout>
 
 ## Layout ID (Shared Layout Animations)
 
-To animate between two different elements, give them the same id via `layout.props('id')`. Mercury smoothly transitions one element to another when state changes:
+To animate between two **different** elements — Motion's `layoutId` — give them the same id via `layout.props('id')`. When state swaps one for the other, Mercury smoothly transitions the old element into the new one:
 
 <Code.Root lang="svelte" class="w-full" code={codeLayoutId}>
 <Code.CopyButton />
 </Code.Root>
 
-Both elements share the layout id (`test`), enabling seamless and visually appealing transitions between the states.
+Both elements share the layout id (`rectangle`), so swapping the `{#if}` branches morphs one into the other instead of cutting. Nested shared elements (like `rectangle-square` above) each get their own id.

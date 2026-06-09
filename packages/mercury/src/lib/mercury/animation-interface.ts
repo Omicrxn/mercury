@@ -43,9 +43,22 @@ export interface InteractionAnimation extends AnimationAttributes {
 	transition?: AnimationTransition;
 }
 export type PresenceMode = 'sync' | 'wait' | 'popLayout';
+/** One side of a presence animation (enter or exit). */
+export interface PresenceSpec extends AnimationAttributes {
+	/** Overrides the shared `transition` for this direction. */
+	transition?: AnimationTransition;
+}
 export interface PresenceAnimation extends AnimationAttributes {
 	transition?: AnimationTransition;
 	mode?: PresenceMode;
+	/**
+	 * The hidden state the element enters from (motion's `initial`). On enter it
+	 * animates from these values to its settled CSS styles. Array values are
+	 * treated as full keyframes.
+	 */
+	initial?: PresenceSpec;
+	/** Exit spec (motion's `exit`): values the element animates to before removal. */
+	exit?: PresenceSpec;
 }
 export interface ScrollInteractionAnimation extends InteractionAnimation {
 	root?: HTMLElement;
@@ -69,6 +82,12 @@ export interface DraggableParams {
 }
 export interface AnimationParams {
 	instance?: (instance: AnimationInstance) => void;
+	/**
+	 * Like motion's `initial={false}`: when the attachment first applies to an element,
+	 * snap to the `animate` values instead of animating. Subsequent updates animate
+	 * normally.
+	 */
+	initial?: false;
 	animate?: AnimationAttributes;
 	transition?: AnimationTransition;
 	onHoverStart?: (event: PointerEvent) => void;
