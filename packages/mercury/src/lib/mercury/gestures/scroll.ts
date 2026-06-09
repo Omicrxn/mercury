@@ -1,25 +1,23 @@
 import type { AnimationParams } from '../animation-interface.js';
-import { animate as motionAnimate, inView } from 'motion';
+import { animate as motionAnimate, inView, type AnimationOptions } from 'motion';
 import { mapTransitionToMotion } from '../utils.js';
 
-export const handleScroll = (element: HTMLElement, params: AnimationParams| undefined) => {
+export const handleScroll = (element: HTMLElement, params: AnimationParams | undefined) => {
 	if (params?.scroll) {
-		inView(
+		const scroll = params.scroll;
+		const transitionOptions = mapTransitionToMotion(scroll.transition) as AnimationOptions;
+		return inView(
 			element,
 			(element) => {
-				motionAnimate(
-					element,
-					params.scroll?.enter,
-					mapTransitionToMotion(params.scroll?.transition)
-				);
+				motionAnimate(element, scroll.enter ?? {}, transitionOptions);
 				return () =>
-					motionAnimate(
-						element,
-						params.scroll?.exit ?? params.animate,
-						mapTransitionToMotion(params.scroll?.transition)
-					);
+					motionAnimate(element, scroll.exit ?? params.animate ?? {}, transitionOptions);
 			},
-			{ root: params.scroll.root, amount: params.scroll.amount }
+			{
+				root: scroll.root,
+				amount: scroll.amount,
+				margin: scroll.margin
+			} as Parameters<typeof inView>[2]
 		);
 	}
 };

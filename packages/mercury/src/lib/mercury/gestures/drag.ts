@@ -1,5 +1,11 @@
 import type { AnimationParams } from '../animation-interface.js';
-import { animate as motionAnimate, motionValue, styleEffect, MotionValue } from 'motion';
+import {
+	animate as motionAnimate,
+	motionValue,
+	styleEffect,
+	type MotionValue,
+	type AnimationPlaybackControlsWithThen
+} from 'motion';
 import { DragGesture } from '@use-gesture/vanilla';
 
 function runInertia(
@@ -14,18 +20,24 @@ function runInertia(
 		...(bounds ? { min: bounds[0], max: bounds[1] } : {})
 	});
 }
+
 export const handleDrag = (element: HTMLElement, params: AnimationParams | undefined) => {
 	if (params?.drag === true) {
+		const prevTouchAction = element.style.touchAction;
+		const prevCursor = element.style.cursor;
 		element.style.touchAction = 'none';
 		element.style.cursor = 'pointer';
-		let x = motionValue<number>(0);
-		let y = motionValue<number>(0);
+
+		const x = motionValue<number>(0);
+		const y = motionValue<number>(0);
 
 		styleEffect(element, { x, y });
 
-		const { bounds } = params.whileDrag || {};
+		const { axis, bounds, rubberband } = params.whileDrag ?? {};
+		let inertiaX: AnimationPlaybackControlsWithThen | undefined;
+		let inertiaY: AnimationPlaybackControlsWithThen | undefined;
 
-		return new DragGesture(
+		const gesture = new DragGesture(
 			element,
 			({
 				_bounds,
@@ -37,14 +49,14 @@ export const handleDrag = (element: HTMLElement, params: AnimationParams | undef
 				direction: [dx, dy]
 			}) => {
 				if (first) {
+					inertiaX?.stop();
+					inertiaY?.stop();
 					params.onDragStart?.(event);
 				}
 				if (last) {
 					params.onDragEnd?.(event);
-				}
-				if (last) {
-					runInertia(x, ox, vx * dx * 100, _bounds?.[0]);
-					runInertia(y, oy, vy * dy * 100, _bounds?.[1]);
+					inertiaX = runInertia(x, ox, vx * dx * 100, _bounds?.[0]);
+					inertiaY = runInertia(y, oy, vy * dy * 100, _bounds?.[1]);
 				} else {
 					x.jump(ox);
 					y.jump(oy);
@@ -52,9 +64,18 @@ export const handleDrag = (element: HTMLElement, params: AnimationParams | undef
 			},
 			{
 				from: () => [x.get(), y.get()],
-				bounds: bounds,
-				...params.whileDrag
+				axis,
+				bounds,
+				rubberband
 			}
 		);
+
+		return () => {
+			inertiaX?.stop();
+			inertiaY?.stop();
+			gesture.destroy();
+			element.style.touchAction = prevTouchAction;
+			element.style.cursor = prevCursor;
+		};
 	}
 };

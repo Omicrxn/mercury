@@ -16,6 +16,7 @@ export const MotionEngine: AnimationEngine = {
 			completed: false,
 			play: ()=> animation.play(),
 			pause:  ()=> animation.pause(),
+			stop: ()=> animation.stop(),
 			cancel: ()=> animation.cancel(),
 			onComplete: (onResolve: VoidFunction, onReject?: VoidFunction) => {
 				return animation.then(() => {

@@ -78,6 +78,13 @@ export const AnimeEngine: AnimationEngine = {
 					pendingOperations.push(() => animation?.pause());
 				}
 			},
+			stop: () => {
+				if (animeReady && animation) {
+					animation.pause();
+				} else {
+					pendingOperations.push(() => animation?.pause());
+				}
+			},
 			cancel: () => {
 				if (animeReady && animation) {
 					animation.cancel();

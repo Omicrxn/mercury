@@ -1,17 +1,23 @@
 import type { AnimationParams } from '../animation-interface.js';
-import { hover, animate as motionAnimate, type AnimationPlaybackControlsWithThen } from 'motion';
+import {
+	hover,
+	animate as motionAnimate,
+	type AnimationOptions,
+	type AnimationPlaybackControlsWithThen,
+} from 'motion';
 import { mapTransitionToMotion } from '../utils.js';
 
 export const handleHover = (element: HTMLElement, params: AnimationParams | undefined) => {
 	if (params?.whileHover || params?.onHoverStart || params?.onHoverEnd) {
-		hover(element, (element, startEvent) => {
+		return hover(element, (element, startEvent) => {
 			params.onHoverStart?.(startEvent);
 			let animation: AnimationPlaybackControlsWithThen | undefined;
 			if (params.whileHover) {
+				const { transition, ...keyframes } = params.whileHover;
 				animation = motionAnimate(
 					element,
-					params.whileHover,
-					mapTransitionToMotion(params.whileHover?.transition)
+					keyframes,
+					mapTransitionToMotion(transition) as AnimationOptions
 				);
 			}
 

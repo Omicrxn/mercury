@@ -64,6 +64,13 @@ export const GSAPEngine: AnimationEngine = {
                     pendingOperations.push(() => tween?.pause());
                 }
             },
+            stop: () => {
+                if (gsapReady && tween) {
+                    tween.pause();
+                } else {
+                    pendingOperations.push(() => tween?.pause());
+                }
+            },
             cancel: () => {
                 if (gsapReady && tween) {
                     tween.kill();

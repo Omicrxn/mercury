@@ -67,7 +67,7 @@ export interface DraggableParams {
 		  }
 		| HTMLElement
 		| { current: HTMLElement | null };
-	rubberband: boolean | number;
+	rubberband?: boolean | number;
 }
 export interface AnimationParams {
 	instance?: (instance: AnimationInstance) => void;
@@ -90,6 +90,7 @@ export interface AnimationParams {
 export interface AnimationInstance {
 	play: () => any | void;
 	pause: () => any | void;
+	stop: () => any | void;
 	cancel: () => any | void;
 	onComplete: (onResolve: VoidFunction, onReject?: VoidFunction) => Promise<any>;
 	completed: boolean;
