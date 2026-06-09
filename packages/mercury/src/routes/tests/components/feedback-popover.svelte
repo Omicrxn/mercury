@@ -114,7 +114,7 @@
 			{:else}
 				{#key 'form'}
 					<form
-						out:presence={{
+						out:presence|global={{
 							y: 8,
 							opacity: 0,
 							filter: 'blur(4px)',

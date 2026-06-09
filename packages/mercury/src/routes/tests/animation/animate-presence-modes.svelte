@@ -1,21 +1,12 @@
 <script lang="ts">
-	import { mercury, presence } from '$lib/index.js';
+	import { mercury, presence, type PresenceMode } from '$lib/index.js';
 	import type { Snippet } from 'svelte';
 
 	let state = $state(true);
 
-	const defaultEase = [0.26, 0.02, 0.23, 0.94];
-	const waitEnterEase = [0.02, 0.35, 0.25, 0.99];
-	const waitExitEase = [0.46, 0.04, 0.97, 0.44];
-
-	type Mode = {
-		label: 'sync' | 'wait' | 'popLayout';
-		icon: Snippet;
-		popLayout: boolean;
-		enterDelay: number;
-		enterEase: number[];
-		exitEase: number[];
-	};
+	const defaultEase = [0.26, 0.02, 0.23, 0.94] as [number, number, number, number];
+	const waitEnterEase = [0.02, 0.35, 0.25, 0.99] as [number, number, number, number];
+	const waitExitEase = [0.46, 0.04, 0.97, 0.44] as [number, number, number, number];
 </script>
 
 {#snippet syncIcon()}
@@ -75,60 +66,54 @@
 	</svg>
 {/snippet}
 
-{#snippet modeExample(mode: Mode)}
+{#snippet presenceCircle(mode: PresenceMode, icon: Snippet)}
+	<div
+		class={['circle', { active: state }]}
+		{@attach mercury({
+			animate: { opacity: 1, scale: 1 },
+			transition: {
+				duration: 0.3,
+				ease: mode === 'wait' ? waitEnterEase : defaultEase
+			}
+		})}
+		out:presence={{
+			opacity: 0,
+			scale: 0.8,
+			mode,
+			transition: {
+				duration: 0.3,
+				ease: mode === 'wait' ? waitExitEase : defaultEase
+			}
+		}}
+	>
+		{@render icon()}
+	</div>
+{/snippet}
+
+{#snippet modeExample(mode: PresenceMode, icon: Snippet)}
 	<div class="mode-section">
 		<div class="icon-container">
+			<!-- keyed child, like React's key={String(state)} in AnimatePresence -->
 			{#key state}
-				<div
-					class={['circle', { active: state }]}
-					{@attach mercury({
-						animate: { opacity: 1, scale: 1 },
-						transition: { duration: 0.3, delay: mode.enterDelay, ease: mode.enterEase }
-					})}
-					out:presence={{
-						opacity: 0,
-						scale: 0.8,
-						popLayout: mode.popLayout,
-						transition: { duration: 0.3, ease: mode.exitEase }
-					}}
-				>
-					{@render mode.icon()}
-				</div>
+				{@render presenceCircle(mode, icon)}
 			{/key}
 		</div>
-		<code class="mode-title">{mode.label}</code>
+		<code class="mode-title">{mode}</code>
 	</div>
 {/snippet}
 
 <div class="container">
 	<div class="modes-container">
-		{@render modeExample({
-			label: 'sync',
-			icon: syncIcon,
-			popLayout: false,
-			enterDelay: 0,
-			enterEase: defaultEase,
-			exitEase: defaultEase
-		})}
-		{@render modeExample({
-			label: 'wait',
-			icon: waitIcon,
-			popLayout: true,
-			enterDelay: 0.3,
-			enterEase: waitEnterEase,
-			exitEase: waitExitEase
-		})}
-		{@render modeExample({
-			label: 'popLayout',
-			icon: popLayoutIcon,
-			popLayout: true,
-			enterDelay: 0,
-			enterEase: defaultEase,
-			exitEase: defaultEase
-		})}
+		{@render modeExample('sync', syncIcon)}
+		{@render modeExample('wait', waitIcon)}
+		{@render modeExample('popLayout', popLayoutIcon)}
 	</div>
 
-	<button class="switch-button" onclick={() => (state = !state)} {@attach mercury({ whileTap: { scale: 0.95 } })}>
+	<button
+		class="switch-button"
+		onclick={() => (state = !state)}
+		{@attach mercury({ whileTap: { scale: 0.95 } })}
+	>
 		Switch
 	</button>
 </div>
@@ -171,7 +156,6 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		flex-direction: column;
 	}
 
 	.mode-title {

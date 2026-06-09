@@ -30,9 +30,10 @@ export interface AnimationAttributes {
 export interface InteractionAnimation extends AnimationAttributes {
 	transition?: AnimationTransition;
 }
+export type PresenceMode = 'sync' | 'wait' | 'popLayout';
 export interface PresenceAnimation extends AnimationAttributes {
 	transition?: AnimationTransition;
-	popLayout?: boolean;
+	mode?: PresenceMode;
 }
 export interface ScrollInteractionAnimation extends InteractionAnimation {
 	root?: HTMLElement;

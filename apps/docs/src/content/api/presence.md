@@ -17,7 +17,7 @@ section: API
 				animate: { opacity: 1, y: 0 },
 				transition: { type: 'spring', duration: 1, bounce: 0 }
 			})}
-			out:presence={{ opacity: 0, y: 25, popLayout: true, transition: { duration: 0.15 } }}
+			out:presence={{ opacity: 0, y: 25, mode: 'popLayout', transition: { duration: 0.15 } }}
 		>
 			Example
 		</span>
@@ -32,6 +32,16 @@ Mercury simplifies animating component entrances and exits, leveraging Svelte’
 ## Enter animations
 
 By default, Mercury animates from the element’s current style to the defined `animate` parameters, providing immediate entry animations. However, in scenarios where explicit control over initial states is required—particularly if you need different behaviors between initial render and subsequent renders—you can manually handle these styles.
+
+### Using `in:presence`
+
+`presence` is symmetric, so you can also use it with Svelte’s `in:` directive. The parameters describe the element’s _hidden_ state, and Mercury animates **from** those values **to** the element’s natural state on enter:
+
+```svelte
+<div in:presence={{ opacity: 0, y: 25 }} out:presence={{ opacity: 0, y: 25 }} />
+```
+
+For transform values (`x`, `y`, `scale`, `rotate`, …) the natural target is the identity (no transform); other properties fall back to the element’s computed style. Because of the Svelte first-render limitation described below, prefer the `mercury` attachment when you need full control over the very first mount.
 
 ### Author Notes on Svelte Limitations:
 
@@ -103,4 +113,59 @@ Quoting [Motion’s documentation](https://motion.dev/docs/react-animate-presenc
 > - “wait”: The entering child will wait until the exiting child has animated out. Note: Currently only renders a single child at a time.
 > - “popLayout”: Exiting children will be “popped” out of the page layout. This allows surrounding elements to move to their new layout immediately.
 
-`sync` is the default behaviour in Mercury, but as you will notice. As you can see in the example above `popLayout` is a boolean parameter in the transition. So what happens with `wait`? Well as per Svelte documentation that behaviour is accomplished by default by wrapping the element in a `{#key }` block. So by leaving the transition by default, iff the element is wrapped by a `{#key }` block the behaviour will be Motion’s `wait`, but if it isn’t the behaviour will be Motion’s `sync`.
+In Mercury the mode is selected with a single `mode` parameter on the **exit** transition:
+
+```svelte
+<div out:presence={{ opacity: 0, scale: 0.8, mode: 'popLayout' }} />
+```
+
+- **`mode: 'sync'`** (default) — entering and exiting nodes animate at the same time. Use an `{#if}` branch swap without `{#key}` so both can overlap. Pair with `{@attach mercury(...)}` on enter and `out:presence` on exit.
+- **`mode: 'popLayout'`** — snapshots the exiting element's box and pins it with `position: absolute`, so siblings reflow immediately while it animates out in place. Mercury sets the direct parent to `position: relative` when it is `static`.
+- **`mode: 'wait'`** — the next enter in the same parent slot waits until the exit animation finishes. Set `mode: 'wait'` on `out:presence`; Mercury coordinates the delay automatically for `in:presence` and `{@attach mercury(...)}` enter animations in that slot.
+
+When an element uses both `{@attach mercury(...)}` and `out:presence`, Mercury stops the enter animation before running the exit so the two don't fight over the same properties.
+
+<Callout>
+    `presence` respects the user’s <code>prefers-reduced-motion</code> setting. When reduced motion is requested the element is added/removed instantly without animating.
+</Callout>
+
+## Caveats & differences from Motion
+
+`presence` is built directly on Svelte transitions instead of a wrapper component like React's `<AnimatePresence>`. The common cases map over cleanly, but a few rules come from Svelte's model rather than Mercury and are worth knowing up front.
+
+### Exits inside a conditional parent need `|global`
+
+Svelte does **not** play a _local_ `out:` transition when a **parent** block (`{#if}`, `{#key}`, `{#each}`) is the thing being removed — it only plays local transitions when the element's own block is removed. If an ancestor block is destroyed, add the `|global` modifier so the exit still runs:
+
+```svelte
+{#if open}
+	{#if state === 'success'}
+		<Success />
+	{:else}
+		<!-- the parent {:else} block is destroyed on success, so |global is required -->
+		<form out:presence|global={{ opacity: 0, y: 8, mode: 'popLayout' }}>…</form>
+	{/if}
+{/if}
+```
+
+Rule of thumb: if the element's own `{#if}` toggles, local `out:presence` is fine; if an ancestor block is removed, use `out:presence|global`.
+
+### `mode` is set per element, not on a wrapper
+
+Motion sets `mode` once on `<AnimatePresence>`. In Mercury the mode lives on each `out:presence`. For a list, set the same `mode` on every item's exit transition.
+
+### Animate-on-first-mount isn't automatic with `in:`
+
+Svelte usually won't play an `in:` transition for an element that is already present on the very first render (intros are off by default on initial load), whereas Motion animates `initial` by default. For a guaranteed mount animation use the `{@attach mercury(...)}` `animate` (it runs on mount), and reserve `in:presence` for conditionally-inserted elements. See [Disabling Initial Animation on First Render](#disabling-initial-animation-on-first-render) above.
+
+### `popLayout` reflows siblings instantly
+
+Motion pairs `popLayout` with the `layout` prop so neighbours _animate_ to their new positions (FLIP). Mercury's `popLayout` only pops the exiting node out of flow; surrounding elements reflow **immediately**. For a smooth reflow, add Mercury's [`layout`](/docs/api/layout-animations) to the siblings.
+
+### No `onExitComplete` hook
+
+There is no single "all exits finished" callback like Motion's `onExitComplete`. Because the node is removed as the exit ends, a Motion `transition.onComplete` may not fire for exits — don't rely on it to detect exit completion.
+
+### `wait` coordinates through the shared parent
+
+`wait` mode renders one child at a time and sequences the next enter after the current exit, coordinating through the **shared parent element**. The entering and exiting nodes must live under the same DOM parent for the sequencing to work — keyed swaps (`{#key}`) and `{#if}` blocks normally satisfy this.

@@ -113,13 +113,13 @@
 			{:else}
 				{#key 'form'}
 					<form
-						out:presence={{
-							y: 8,
-							opacity: 0,
-							filter: 'blur(4px)',
-							popLayout: true,
-							transition: { type: 'spring', duration: 0.4, bounce: 0 }
-						}}
+					out:presence={{
+						y: 8,
+						opacity: 0,
+						filter: 'blur(4px)',
+						mode: 'popLayout',
+						transition: { type: 'spring', duration: 0.4, bounce: 0 }
+					}}
 						onsubmit={(e) => {
 							e.preventDefault();
 							if (!feedback) return;
