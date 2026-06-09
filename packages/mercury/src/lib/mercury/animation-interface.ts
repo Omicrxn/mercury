@@ -3,25 +3,37 @@ import type { Easing } from 'motion';
 export type { Easing };
 
 export interface AnimationTransition {
+	type?: 'decay' | 'spring' | 'keyframes' | 'tween' | 'inertia';
 	duration?: number;
+	/** Visual duration (seconds) for springs. Overrides `duration` when set. */
+	visualDuration?: number;
 	autoplay?: boolean;
 	delay?: number;
 	ease?: Easing | Easing[];
+	/** Keyframe positions (0-1), one per animated keyframe. */
+	times?: number[];
 	repeat?: number;
 	repeatType?: 'loop' | 'reverse' | 'mirror';
 	repeatDelay?: number;
-	type?: 'decay' | 'spring' | 'keyframes' | 'tween' | 'inertia';
+	/**
+	 * Spring bounciness (0 = no bounce, 1 = very bouncy) for duration-based springs.
+	 * Ignored by Motion if `stiffness`/`damping`/`mass` are set.
+	 */
+	bounce?: number;
 	stiffness?: number;
 	damping?: number;
-	velocity?: number;
 	mass?: number;
+	velocity?: number;
+	restSpeed?: number;
+	restDelta?: number;
 }
+/** Mirrors Motion's animation playback lifecycle callbacks. */
 export interface AnimationCallbacks {
-	onBegin?: () => void;
+	onPlay?: () => void;
 	onComplete?: () => void;
-	onUpdate?: (value: any) => void;
-	onRender?: () => void;
-	onLoop?: () => void;
+	onUpdate?: (latest: any) => void;
+	onRepeat?: () => void;
+	onStop?: () => void;
 }
 export interface AnimationAttributes {
 	// Add other common animation parameters
