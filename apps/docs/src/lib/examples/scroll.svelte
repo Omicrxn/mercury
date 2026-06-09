@@ -14,7 +14,7 @@
 				enter: { opacity: 1, x: 150, rotate: 180 },
 				exit: { opacity: 0, x: 0, rotate: 0 },
 				transition: { duration: 1 },
-				root: document.querySelector('.scroll-test')
+				root: document.querySelector('.scroll-test') as HTMLElement
 			},
 			transition: { ease: 'circInOut', duration: 1 }
 		})}

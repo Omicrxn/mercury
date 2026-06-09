@@ -1,8 +1,5 @@
 <script lang="ts">
 	import { mercury } from '@omicrxn/mercury';
-	import { stagger } from 'motion';
-
-
 </script>
 
 <div class="flex flex-col gap-4">

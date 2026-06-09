@@ -29,21 +29,20 @@ section: API
   `
 	let codeLayoutId = `
 <script lang="ts">
-	let toggle = $state(false);
-	const layoutGroup = layout(() => toggle, { transition: { duration: 0.4 } });
+	let showSecond = $state(false);
+	const layoutGroup = layout(() => showSecond, { transition: { duration: 0.4 } });
 <\/script>
 
 <div {@attach layoutGroup}>
-	{#if toggle}
-		<div
-			{...layout.props('test')}
-			class="box h-16 w-16 rounded-md border border-slate-500 bg-blue-200"
-		></div>
+	<button onclick={() => (showSecond = !showSecond)}>Animate</button>
+	{#if showSecond}
+		<div {...layout.props('rectangle')} class="second-element">
+			<div {...layout.props('rectangle-square')} class="size-4 rounded-md bg-blue-200"></div>
+		</div>
 	{:else}
-		<div
-			{...layout.props('test')}
-			class="box h-24 w-24 rounded-md border border-slate-500 bg-blue-200"
-		></div>
+		<div {...layout.props('rectangle')} class="element">
+			<div {...layout.props('rectangle-square')} class="size-4 rounded-md bg-red-500 m-4"></div>
+		</div>
 	{/if}
 </div>
   `

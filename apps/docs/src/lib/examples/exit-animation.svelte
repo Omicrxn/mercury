@@ -1,12 +1,7 @@
 <script lang="ts">
-	import { layout, mercury, presence } from '@omicrxn/mercury';
+	import { mercury, presence } from '@omicrxn/mercury';
     import { Button } from '@svecodocs/kit';
 	let show = $state(true);
-	let trigger = $state(true);
-
-	// 	<AnimatePresence>
-	//   {show && <motion.div key="modal" exit={{ opacity: 0 }} />}
-	// </AnimatePresence>
 </script>
 
 

@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { mercury } from '$lib/mercury/mercury.svelte.js';
-	import { stagger } from 'motion';
 </script>
 
 <div class="flex flex-col gap-4">

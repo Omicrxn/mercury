@@ -2,7 +2,7 @@
 	import { mercury } from '$lib/index.js';
 </script>
 
-<div class="flex flex-col gap-4">
+<div class="scroll-test flex h-[400px] flex-col gap-4 overflow-auto">
 	<h2 class="text-xl font-bold">Scroll Animation</h2>
 	<div class="h-[1000px]"></div>
 	<div
@@ -12,7 +12,7 @@
 				enter: { x: 150, rotate: 180 },
 				exit: { x: 0, rotate: 0 },
 				transition: { duration: 1 },
-				root: document.querySelector('.scroll-test')
+				root: document.querySelector('.scroll-test') as HTMLElement
 			},
 			transition: { ease: 'circInOut', duration: 1 }
 		})}

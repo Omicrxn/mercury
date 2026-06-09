@@ -1,11 +1,6 @@
 <script lang="ts">
-	import { layout, mercury, presence } from '$lib/index.js';
+	import { mercury, presence } from '$lib/index.js';
 	let show = $state(true);
-	let trigger = $state(true);
-
-	// 	<AnimatePresence>
-	//   {show && <motion.div key="modal" exit={{ opacity: 0 }} />}
-	// </AnimatePresence>
 </script>
 
 <button onclick={() => (show = !show)}>

@@ -1,27 +1,25 @@
 <script lang="ts">
 	import { layout } from '@omicrxn/mercury';
-	let showSecond = $state(true);
+
+	let showSecond = $state(false);
 
 	const layoutGroup = layout(() => showSecond, { transition: { duration: 0.4 } });
 </script>
 
 <div {@attach layoutGroup} class="wrapper">
 	<button
-		class="rounded-md px-2 py-1 dark:bg-indigo-400 bg-indigo-200 dark:border-slate-50 border-slate-500 dark:hover:bg-indigo-500 hover:bg-indigo-300"
+		class="rounded-md px-2 py-1 dark:bg-indigo-400 bg-indigo-200 dark:hover:bg-indigo-500 hover:bg-indigo-300"
 		onclick={() => (showSecond = !showSecond)}
 	>
 		Animate
 	</button>
 	{#if showSecond}
-		<div {...layout.props('rectangle')} class="box">
-			<div {...layout.props('rectangle-square')} class="size-4 bg-rose-600 rounded-md"></div>
+		<div {...layout.props('rectangle')} class="second-element">
+			<div {...layout.props('rectangle-square')} class="size-4 bg-blue-200 rounded-md"></div>
 		</div>
 	{:else}
-		<div {...layout.props('rectangle')} class="box size-32!">
-			<div
-				{...layout.props('rectangle-square')}
-				class="size-4 bg-rose-600 rounded-md m-4"
-			></div>
+		<div {...layout.props('rectangle')} class="element">
+			<div {...layout.props('rectangle-square')} class="size-4 bg-red-500 rounded-md m-4"></div>
 		</div>
 	{/if}
 </div>
@@ -32,6 +30,7 @@
 		place-items: center;
 		flex: 1;
 		width: 100%;
+		gap: 16px;
 	}
 
 	.element {
@@ -46,13 +45,5 @@
 		width: 96px;
 		background: #fad658;
 		border-radius: 12px;
-	}
-
-	.button {
-		background: white;
-		padding: 8px 16px;
-		border-radius: 8px;
-		border: 1px solid var(--color-border);
-		font-size: 14px;
 	}
 </style>

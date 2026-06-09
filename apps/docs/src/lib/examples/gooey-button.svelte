@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { mercury, layout, presence, GooeyEffect } from '@omicrxn/mercury';
+	import { mercury, presence, GooeyEffect } from '@omicrxn/mercury';
 	let show = $state(false);
 </script>
 
@@ -24,7 +24,7 @@
 						animate: { opacity: 1 },
 						transition: { duration: 0.5, delay: 0.2, ease: 'easeOut' }
 					})}
-					out:presence={{ opacity: 0, blur: 4, transition: { duration: 0.3, ease: 'easeOut' } }}
+					out:presence={{ opacity: 0, filter: 'blur(4px)', transition: { duration: 0.3, ease: 'easeOut' } }}
 				>
 					<div
 						style="transform:translateY(20px);"
