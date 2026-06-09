@@ -1,23 +1,23 @@
 <script lang="ts">
-	import AdvancedDialogue from '../tests/advanced/advanced-dialogue.svelte';
-	import AnimatedNavbar from '../tests/advanced/animated-navbar.svelte';
-	import ExitAnimation from '../tests/javascript/exit-animation.svelte';
-	import FlipSize from '../tests/advanced/flip-size.svelte';
-	import Flip from '../tests/advanced/flip.svelte';
-	import InteractiveTextarea from '../tests/advanced/interactive-textarea.svelte';
-	import LayoutIdCards from '../tests/advanced/layout-id-cards.svelte';
-	import LayoutId from '../tests/advanced/layout-id.svelte';
-	import CopyButton from '../tests/advanced/copy-button.svelte';
-	import StatefulButton from '../tests/advanced/stateful-button.svelte';
-	import FeedbackPopover from '../tests/advanced/feedback-popover.svelte';
-	import BasicAnimation from '../tests/javascript/basic-animation.svelte';
-	import InteractiveGraph from '../tests/advanced/interactive-graph.svelte';
-	import GooeyButton from '../tests/advanced/gooey-button.svelte';
-	import FlipArray from '../tests/advanced/flip-array.svelte';
-	import ReorderingLayout from '../tests/advanced/reordering-layout.svelte';
-	import Drag from '../tests/advanced/drag.svelte';
-	import Scroll from '../tests/advanced/scroll.svelte';
-	import Tap from '../tests/advanced/tap.svelte';
+	import AdvancedDialogue from '../tests/components/advanced-dialogue.svelte';
+	import AnimatedNavbar from '../tests/components/animated-navbar.svelte';
+	import ExitAnimation from '../tests/animation/exit-animation.svelte';
+	import FlipSize from '../tests/layout/flip-size.svelte';
+	import Flip from '../tests/layout/flip.svelte';
+	import InteractiveTextarea from '../tests/components/interactive-textarea.svelte';
+	import LayoutIdCards from '../tests/layout/layout-id-cards.svelte';
+	import LayoutId from '../tests/layout/layout-id.svelte';
+	import CopyButton from '../tests/components/copy-button.svelte';
+	import StatefulButton from '../tests/components/stateful-button.svelte';
+	import FeedbackPopover from '../tests/components/feedback-popover.svelte';
+	import BasicAnimation from '../tests/animation/basic-animation.svelte';
+	import InteractiveGraph from '../tests/components/interactive-graph.svelte';
+	import GooeyButton from '../tests/components/gooey-button.svelte';
+	import FlipArray from '../tests/layout/flip-array.svelte';
+	import ReorderingLayout from '../tests/layout/reordering-layout.svelte';
+	import Drag from '../tests/gestures/drag.svelte';
+	import Scroll from '../tests/gestures/scroll.svelte';
+	import Tap from '../tests/gestures/tap.svelte';
 </script>
 
 <div class=" flex h-dvh w-full">
