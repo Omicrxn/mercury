@@ -17,7 +17,7 @@
 					duration: 2,
 					repeat: Infinity,
 					repeatType: 'reverse',
-					easing: 'linear'
+					ease: 'linear'
 				}
 			})}
 		></div>

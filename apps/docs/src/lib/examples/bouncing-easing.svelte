@@ -1,9 +1,8 @@
-<script>
-	import { animate } from 'motion';
-	import { mercury } from '@omicrxn/mercury';
+<script lang="ts">
+	import { mercury, type AnimationTransition } from '@omicrxn/mercury';
 
 	// From https://easings.net/#easeOutBounce
-	function bounceEase(x) {
+	function bounceEase(x: number) {
 		const n1 = 7.5625;
 		const d1 = 2.75;
 
@@ -18,20 +17,18 @@
 		}
 	}
 
-	const bounce = {
+	const bounce: AnimationTransition = {
 		duration: 1.2,
 		ease: bounceEase
 	};
 
-	const spring = {
+	const spring: AnimationTransition = {
 		type: 'spring',
 		stiffness: 700,
 		damping: 30
 	};
 
 	let isOn = $state(true);
-	// 	animate(ball, { y: isOn ? 0 : 120 }, isOn ? spring : bounce);
-	// });
 </script>
 
 <div class="flex flex-col h-full w-full items-center justify-center gap-4">

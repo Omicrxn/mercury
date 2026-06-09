@@ -53,7 +53,7 @@ let codeSprings = `
 	class="box h-16 w-16 rounded-md border border-slate-500 bg-blue-200"
 	{@attach mercury({
 		animate: { rotate: 90 },
-		transition: { type: 'spring', repeat: Infinity, repeatDelay: 0.2 }
+		transition: { type: 'spring', duration: 0.8, bounce: 0.35, repeat: Infinity, repeatDelay: 0.2 }
 	})}
   />
   `
@@ -131,24 +131,87 @@ Control how animations repeat with these parameters:
 
 ## Springs
 
-Spring-based animations mimic physical springs, often providing the most natural animation experience:
+Spring-based animations mimic physical springs, often providing the most natural animation experience. Set `type: 'spring'` on the `transition`:
 
 <Code.Root lang="svelte" class="w-full" code={codeSprings}>
 <Code.CopyButton />
 </Code.Root>
 
-Customize springs with
+Just like Motion, Mercury springs can be configured in **two ways** — and the two sets of options are mutually exclusive.
 
-- `bounce`: Controls spring bounce intensity.
+### Duration-based springs
 
-- `damping`: Adjusts resistance force.
+Set with a `duration` and a `bounce` value. These are the easiest to reason about: you pick how long it takes and how bouncy it feels.
 
-- `mass`: Sets the mass of the animated object.
+- `duration`: Total duration of the spring, in seconds.
+- `bounce`: Bounciness, from `0` (no bounce) to `1` (very bouncy). Defaults to `0.25`.
+- `visualDuration`: Optional. Time (in seconds) the animation takes to *visually* reach its target. When set, it overrides `duration` and makes springs easier to coordinate with other time-based animations.
 
-- `stiffness`: Defines spring stiffness.
+```svelte
+{@attach mercury({
+	animate: { y: 0 },
+	transition: { type: 'spring', duration: 0.6, bounce: 0.2 }
+})}
+```
 
-- `velocity`: Sets initial spring velocity.
+### Physics-based springs
 
-<Callout type="note" title="Note">
-    Refer to the Motion documentation for specific behaviors of these parameters.
+Set with `stiffness`, `damping`, and `mass`. These incorporate the velocity of any in-progress gesture or animation for natural, interruptible motion.
+
+- `stiffness`: Spring stiffness. Higher values create more sudden movement.
+- `damping`: Opposing force. `0` oscillates forever.
+- `mass`: Mass of the moving object. Higher values feel more lethargic.
+- `velocity`: Initial velocity of the spring.
+- `restSpeed` / `restDelta`: Thresholds that determine when the spring is considered "at rest" and the animation ends.
+
+```svelte
+{@attach mercury({
+	animate: { rotate: 180 },
+	transition: { type: 'spring', stiffness: 150, damping: 20 }
+})}
+```
+
+<Callout type="warning" title="Don't mix the two">
+    `duration` and `bounce` are ignored the moment any of <code>stiffness</code>, <code>damping</code>, or <code>mass</code> is set. Pick one configuration style per spring.
 </Callout>
+
+## Callbacks
+
+Pass a `callbacks` object to hook into the animation lifecycle. These mirror [Motion's playback lifecycle](https://motion.dev/docs/animate#controls) one-to-one:
+
+- `onPlay`: Fires when the animation starts playing.
+- `onComplete`: Fires when the animation finishes.
+- `onUpdate`: Fires with the latest value on each frame (single-value animations).
+- `onRepeat`: Fires on each repetition.
+- `onStop`: Fires when the animation is stopped.
+
+```svelte
+{@attach mercury({
+	animate: { x: 100 },
+	callbacks: {
+		onPlay: () => console.log('started'),
+		onComplete: () => console.log('done')
+	}
+})}
+```
+
+## Playback controls
+
+Use the `instance` callback to capture the running animation and drive it imperatively. The instance exposes `play()`, `pause()`, `stop()`, and `cancel()`, plus a `completed` flag and an `onComplete` promise helper:
+
+```svelte
+<script lang="ts">
+	import { mercury, type AnimationInstance } from '@omicrxn/mercury';
+	let animation = $state<AnimationInstance>();
+</script>
+
+<div
+	{@attach mercury({
+		animate: { scale: 1.5 },
+		transition: { duration: 1 },
+		instance: (i) => (animation = i)
+	})}
+></div>
+
+<button onclick={() => animation?.play()}>Play</button>
+<button onclick={() => animation?.pause()}>Pause</button>
