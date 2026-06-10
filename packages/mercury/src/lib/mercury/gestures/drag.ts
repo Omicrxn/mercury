@@ -33,7 +33,7 @@ export const handleDrag = (element: HTMLElement, params: AnimationParams | undef
 
 		styleEffect(element, { x, y });
 
-		const { axis, bounds, rubberband } = params.whileDrag ?? {};
+		const { axis, bounds, rubberband } = params.dragOptions ?? {};
 		let inertiaX: AnimationPlaybackControlsWithThen | undefined;
 		let inertiaY: AnimationPlaybackControlsWithThen | undefined;
 

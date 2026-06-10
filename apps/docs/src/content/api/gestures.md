@@ -30,6 +30,20 @@ section: API
 		})}
 />
   `
+	let codeDrag = `
+<!-- bind the boundary you want to constrain dragging to -->
+<div bind:this={container} class="boundary">
+	<div
+		{@attach mercury({
+			drag: true,
+			dragOptions: { axis: 'x', bounds: container, rubberband: true },
+			onDragStart: () => console.log('drag start'),
+			onDragEnd: () => console.log('drag end')
+		})}
+		class="box"
+	/>
+</div>
+  `
 	let codeScroll = `
 	<div
 		{@attach mercury({
@@ -46,9 +60,9 @@ section: API
 
 ## Overview
 
-Mercury provides robust support for interactive gesture and scroll-triggered animations, making it easy to enrich user experiences in your Svelte applications. Below, you’ll find detailed explanations and practical examples focusing on hover, tap, and scroll animations.
+Mercury provides robust support for interactive gesture and scroll-triggered animations, making it easy to enrich user experiences in your Svelte applications. Below, you’ll find detailed explanations and practical examples for hover, tap, drag, and scroll.
 
-All gesture animations described below (`hover`, `tap`, and `scroll`) have their own independent `transition`. Additionally, the `scroll` animation supports extra parameters such as `root`, `margin`, and `amount`. If you don’t provide a specific `transition`, Mercury will use the default `transition` settings.
+The animation-driven gestures (`hover`, `tap`, and `scroll`) each have their own independent `transition`; if you don’t provide one, Mercury uses the default `transition` settings. The `scroll` gesture supports extra parameters such as `root`, `margin`, and `amount`. `drag` is different — it isn’t a keyframe animation but a pointer-driven interaction, so instead of a `transition` it takes `dragOptions` for its behavior.
 
 ## Gesture Animations
 
@@ -75,6 +89,22 @@ Tap animations trigger on user click or touch interactions, creating engaging fe
 - `whileTap`: animation run when the element is tapped.
 
 <Code.Root lang="svelte" class="w-full" code={codeTap}>
+<Code.CopyButton />
+</Code.Root>
+
+## Drag
+
+Set `drag: true` to make an element draggable. Mercury tracks the pointer, moves the element with Motion values, and applies inertia when you release it.
+
+- `drag`: set to `true` to make the element draggable.
+- `onDragStart`: function that runs when dragging begins.
+- `onDragEnd`: function that runs when the pointer is released (before inertia settles).
+- `dragOptions`: configures **how** the drag behaves. This is drag _configuration_, not an animation — it does not animate the element while dragging.
+  - `axis`: restrict movement to `'x'` or `'y'`, or `'lock'` to lock to the first axis the user moves along.
+  - `bounds`: constrain movement — pass an element (e.g. a `bind:this` reference), a `{ current }` ref, or an object of pixel offsets `{ left, right, top, bottom }`.
+  - `rubberband`: elastic resistance when dragging past the bounds — `true`, or a number to tune the elasticity.
+
+<Code.Root lang="svelte" class="w-full" code={codeDrag}>
 <Code.CopyButton />
 </Code.Root>
 

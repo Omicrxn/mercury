@@ -67,7 +67,7 @@ export interface ScrollInteractionAnimation extends InteractionAnimation {
 	enter?: AnimationAttributes;
 	exit?: AnimationAttributes;
 }
-export interface DraggableParams {
+export interface DragOptions {
 	axis?: 'x' | 'y' | 'lock' | undefined;
 	bounds?:
 		| {
@@ -102,7 +102,12 @@ export interface AnimationParams {
 	onTapEnd?: (event: PointerEvent) => void;
 	whileTap?: InteractionAnimation;
 	drag?: boolean;
-	whileDrag?: DraggableParams;
+	/**
+	 * Configures how the drag behaves: `axis` lock, `bounds`, and `rubberband` elasticity.
+	 * This is drag *configuration*, not an animation — it does not animate the element
+	 * while dragging.
+	 */
+	dragOptions?: DragOptions;
 	onDragStart?: (event: PointerEvent | MouseEvent | TouchEvent | KeyboardEvent) => void;
 	onDragEnd?: (event: PointerEvent | MouseEvent | TouchEvent | KeyboardEvent) => void;
 	scroll?: ScrollInteractionAnimation;

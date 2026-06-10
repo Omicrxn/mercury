@@ -8,7 +8,7 @@
 		<div
 			{@attach mercury({
 				drag: true,
-				whileDrag: { bounds: container, rubberband: true },
+				dragOptions: { bounds: container, rubberband: true },
 			})}
 			class="box draggable"
 		></div>
