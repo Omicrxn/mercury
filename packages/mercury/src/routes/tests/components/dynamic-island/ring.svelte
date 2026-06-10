@@ -42,7 +42,7 @@
 	<div
 		class="relative z-[1] h-[12.75px] w-[11.25px]"
 		{@attach mercury({
-			initial: false,
+			animateOnMount: false,
 			animate: {
 				rotate: isSilent ? [0, -15, 5, -2, 0] : [0, 20, -15, 12.5, -10, 10, -7.5, 7.5, -5, 5, 0],
 				x: isSilent ? 9 : 0

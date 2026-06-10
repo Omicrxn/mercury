@@ -82,14 +82,17 @@ Because attachments re-run when their reactive dependencies change, `animate` is
 })}
 ```
 
-## Initial
+## animateOnMount
 
-By default, `animate` plays on mount, from the element's current styles to the `animate` values. To skip that first animation — Motion's `initial={false}` — pass `initial: false`. The element renders directly in its `animate` state (keyframe arrays snap to their last frame), and only subsequent updates animate:
+By default `animate` plays once on mount — animating from the element's current styles to the `animate` values — and then again whenever `animate` changes. `animateOnMount` controls **only that first run**:
+
+- **`animateOnMount: true`** (default) — the mount animation plays.
+- **`animateOnMount: false`** — the element renders directly in its `animate` state on mount (keyframe arrays snap to their last frame) with no entrance animation; only subsequent changes animate. This is the equivalent of Motion's `initial={false}`.
 
 ```svelte
 <!-- no wiggle on mount; wiggles on every isSilent change -->
 {@attach mercury({
-	initial: false,
+	animateOnMount: false,
 	animate: {
 		rotate: isSilent ? [0, -15, 5, -2, 0] : [0, 20, -15, 12.5, -10, 10, -7.5, 7.5, -5, 5, 0],
 		x: isSilent ? 9 : 0
@@ -97,7 +100,9 @@ By default, `animate` plays on mount, from the element's current styles to the `
 })}
 ```
 
-If you instead need the element to enter **from** an explicit hidden state, that's a presence concern — use `initial` on [`transition:presence`](/docs/api/presence).
+<Callout type="warning" title="animateOnMount is not a from-state">
+	`animateOnMount` only chooses whether the first transition to <code>animate</code> runs — it cannot give the element a hidden <em>starting</em> style. The attachment runs after the element is already in the DOM, so it can't paint a hidden state before the first frame. If you need the element to enter <strong>from</strong> an explicit hidden state (flash-free), that's a presence concern — use <code>initial</code> on <a href="/docs/api/presence"><code>transition:presence</code></a>.
+</Callout>
 
 ## Supported Features
 

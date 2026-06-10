@@ -83,11 +83,16 @@ export interface DraggableParams {
 export interface AnimationParams {
 	instance?: (instance: AnimationInstance) => void;
 	/**
-	 * Like motion's `initial={false}`: when the attachment first applies to an element,
-	 * snap to the `animate` values instead of animating. Subsequent updates animate
-	 * normally.
+	 * Whether `animate` plays the first time the attachment is applied to an element.
+	 * Defaults to `true`. Set to `false` (Motion's `initial={false}`) to render the
+	 * element directly in its `animate` state on mount — keyframe arrays snap to their
+	 * last frame — and only animate on subsequent updates.
+	 *
+	 * Note: this is NOT a from-state. The attachment runs after the element is already
+	 * in the DOM, so it cannot paint a hidden starting style before the first frame.
+	 * For "enter from a hidden state" use `initial` on `transition:presence` instead.
 	 */
-	initial?: false;
+	animateOnMount?: boolean;
 	animate?: AnimationAttributes;
 	transition?: AnimationTransition;
 	onHoverStart?: (event: PointerEvent) => void;

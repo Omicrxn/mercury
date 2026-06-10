@@ -14,7 +14,7 @@ import {
 import { mapTransitionToMotion } from './utils.js';
 import { clearPresence } from './animate-presence.js';
 
-/** Elements that have had a mercury `animate` applied at least once (for `initial: false`). */
+/** Elements that have had a mercury `animate` applied at least once (for `animateOnMount: false`). */
 const initialized = new WeakSet<HTMLElement>();
 
 export const mercury = (options?: AnimationParams) => {
@@ -24,9 +24,9 @@ export const mercury = (options?: AnimationParams) => {
 
 		clearPresence(element);
 
-		if (options?.animate && options.initial === false && !initialized.has(element)) {
+		if (options?.animate && options.animateOnMount === false && !initialized.has(element)) {
 			initialized.add(element);
-			// motion's `initial={false}`: render the settled `animate` state on first
+			// animateOnMount: false — render the settled `animate` state on first
 			// application (keyframe arrays snap to their last frame), animate on updates.
 			motionAnimate(element, options.animate as DOMKeyframesDefinition, { duration: 0 });
 		} else if (options?.animate) {
