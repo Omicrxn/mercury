@@ -25,12 +25,12 @@
 		{#each tabs as tab, index (index)}
 			{@const isSelected = selectedTab === index}
 			<li class={isSelected ? 'selected' : ''} role="tab" aria-selected={isSelected}>
-				{#if isSelected}
-					<div
-						{...layout.props('selected-indicator')}
-						class="selected-indicator bg-indigo-200 dark:bg-indigo-400 border dark:border-slate-50 border-slate-500"
-					/>
-				{/if}
+				<div
+					{...layout.props('selected-indicator')}
+					class="selected-indicator bg-indigo-200 dark:bg-indigo-400 border dark:border-slate-50 border-slate-500"
+					class:is-hidden={!isSelected}
+					aria-hidden={!isSelected}
+				></div>
 
 				<button
 					onclick={() => (selectedTab = index)}
@@ -78,8 +78,12 @@
 		left: 0;
 		bottom: 0;
 		right: 0;
-		z-index: 1;
+		z-index: 0;
 		border-radius: 5px;
+	}
+
+	.container .selected-indicator.is-hidden {
+		display: none;
 	}
 
 	.container button {

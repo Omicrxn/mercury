@@ -1,16 +1,39 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import StatefulButton from './stateful-button.svelte';
+	import StatefulButton from './stateful-button/button.svelte';
 	import { onClickOutside } from 'runed';
-	import { layout, mercury, presence } from '$lib/index.js';
+	import { layout, mercury } from '$lib/index.js';
+	import { spring } from 'motion';
+
+	const CLOSE_DURATION_MS = 400;
+
 	let open = $state(false);
 	let formState = $state('idle');
 	let feedback = $state('');
 	let popover = $state<HTMLElement | null>(null);
+
+	const { ease } = spring.applyToOptions({ bounce: 0.15, stiffness: 320, damping: 32 });
+
+	const layoutGroup = layout(() => open, {
+		transition: { duration: CLOSE_DURATION_MS / 1000, ease },
+		states: { swapAt: { opacity: 1 } }
+	});
+
+	function resetPopoverState() {
+		formState = 'idle';
+		feedback = '';
+	}
+
+	function closePopover() {
+		open = false;
+		setTimeout(resetPopoverState, CLOSE_DURATION_MS);
+	}
+
 	onClickOutside(
 		() => popover,
-		() => (open = false)
+		() => closePopover()
 	);
+
 	function submit() {
 		//This is just a simulation of a real submit
 		formState = 'loading';
@@ -23,13 +46,13 @@
 		setTimeout(() => {
 			console.log('close');
 
-			open = false;
+			closePopover();
 		}, 3300);
 	}
 
-	const handleKeyDown = (event) => {
-		if (event.key === 'Escape') {
-			open = false;
+	const handleKeyDown = (event: KeyboardEvent) => {
+		if (event.key === 'Escape' && open) {
+			closePopover();
 		}
 
 		if ((event.ctrlKey || event.metaKey) && event.key === 'Enter' && open && formState === 'idle') {
@@ -42,32 +65,31 @@
 		return () => window.removeEventListener('keydown', handleKeyDown);
 	});
 
-	const layoutGroup = layout(() => open, { transition: { duration: 0.35 } });
 </script>
 
-<div {@attach layoutGroup} class="feedback-wrapper">
-	{#key 'button'}
-		<button
-			onclick={() => {
-				open = true;
-				formState = 'idle';
-				feedback = '';
-			}}
-			class="feedback-button"
-			style:border-radius={8}
-			{...layout.props('wrapper')}
-		>
-			<span {...layout.props('title')}>Feedback</span>
-		</button>
-	{/key}
-
-	{#if open}
-		<div
-			{...layout.props('wrapper')}
-			class="feedback-popover"
-			style:border-radius={12}
-			bind:this={popover}
-		>
+<div class="feedback-wrapper">
+	<div {@attach layoutGroup} class="feedback-stage">
+		{#if !open}
+			<button
+				type="button"
+				onclick={() => {
+					open = true;
+					formState = 'idle';
+					feedback = '';
+				}}
+				class="feedback-button"
+				style:border-radius={8}
+				{...layout.props('wrapper')}
+			>
+				<span {...layout.props('title')}>Feedback</span>
+			</button>
+		{:else}
+			<div
+				{...layout.props('wrapper')}
+				class="feedback-popover"
+				style:border-radius={12}
+				bind:this={popover}
+			>
 			<span
 				{...layout.props('title')}
 				aria-hidden
@@ -114,13 +136,6 @@
 			{:else}
 				{#key 'form'}
 					<form
-						out:presence|global={{
-							y: 8,
-							opacity: 0,
-							filter: 'blur(4px)',
-							mode: 'popLayout',
-							transition: { type: 'spring', duration: 0.4, bounce: 0 }
-						}}
 						onsubmit={(e) => {
 							e.preventDefault();
 							if (!feedback) return;
@@ -211,8 +226,9 @@
 					</form>
 				{/key}
 			{/if}
-		</div>
-	{/if}
+			</div>
+		{/if}
+	</div>
 </div>
 
 <style>
@@ -224,36 +240,45 @@
 		width: 100%;
 	}
 
+	.feedback-stage {
+		position: relative;
+		display: inline-block;
+	}
+
+	/* Shared shell styles — layout morphs border/background by default; mismatched
+	   values interpolate into pink/blue artifacts during open/close. */
+	.feedback-button,
+	.feedback-popover {
+		border: none;
+		background-color: #f5f6f7;
+		box-shadow:
+			0 0 0 1px rgba(0, 0, 0, 0.08),
+			0px 2px 2px rgba(0, 0, 0, 0.04);
+		outline: none;
+	}
+
 	.feedback-button {
 		position: relative;
 		display: flex;
 		height: 36px;
 		align-items: center;
 		border-radius: 8px;
-		border: 1px solid #e9e9e7;
-		background: white;
 		padding: 0 12px;
 		font-weight: 500;
-		outline: none;
 	}
 
 	.feedback-button span {
 		display: block;
 		font-size: 14px;
+		color: #63635d;
 	}
 
 	.feedback-popover {
-		position: absolute;
 		height: 192px;
 		width: 364px;
 		overflow: hidden;
 		border-radius: 12px;
-		background: #f5f6f7;
 		padding: 4px;
-		box-shadow:
-			0 0 0 1px rgba(0, 0, 0, 0.08),
-			0px 2px 2px rgba(0, 0, 0, 0.04);
-		outline: none;
 	}
 
 	.placeholder {
@@ -295,18 +320,25 @@
 
 	.feedback-form {
 		border-radius: 8px;
-		border: 1px solid #e6e7e8;
 		background: white;
+		outline: none;
 	}
 
 	.textarea {
 		width: 100%;
 		height: 128px;
 		resize: none;
+		border: none;
 		border-radius: 8px 0;
 		padding: 12px;
 		font-size: 14px;
 		outline: none;
+	}
+
+	.textarea:focus,
+	.textarea:focus-visible {
+		outline: none;
+		box-shadow: none;
 	}
 
 	.textarea::placeholder {

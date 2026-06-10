@@ -3,29 +3,26 @@
 	let show = $state(true);
 </script>
 
-<button onclick={() => (show = !show)}>
-	{#if show}
-		hide
-	{:else}
-		show
-	{/if}
-</button>
-<!-- {#if show}
+<div class="flex min-h-screen flex-col items-center justify-center gap-8 p-8">
+	<button
+		onclick={() => (show = !show)}
+		class="rounded-md border border-slate-500 bg-blue-200 px-5 py-2 text-sm font-medium text-slate-800 transition-colors hover:bg-blue-300"
+	>
+		{show ? 'Hide' : 'Show'}
+	</button>
+
 	<div
-		in:presence={{ opacity: 1, scale: 1 }}
-		out:presence={{ opacity: 0, scale: 0 }}
-		class="size-16 bg-blue-200 rounded-md border border-slate-500"
-	/>
-{/if} -->
-<div>
-	{#if show}
-		<div
-			{@attach mercury({ animate: { opacity: 1 } })}
-			out:presence={{
-				opacity: 0,
-				mode: 'sync'
-			}}
-			class="size-16 bg-blue-200 rounded-md border border-slate-500 opacity-0"
-		></div>
-	{/if}
+		class="flex size-48 items-center justify-center rounded-md border border-slate-500 border-dashed bg-slate-50"
+	>
+		{#if show}
+			<div
+				{@attach mercury({ animate: { opacity: 1 } })}
+				out:presence={{
+					opacity: 0,
+					mode: 'sync'
+				}}
+				class="size-16 rounded-md border border-slate-500 bg-blue-200 opacity-0"
+			></div>
+		{/if}
+	</div>
 </div>

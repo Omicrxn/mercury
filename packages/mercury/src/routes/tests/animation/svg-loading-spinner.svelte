@@ -3,34 +3,15 @@
 </script>
 
 <div class="flex flex-col gap-4">
-	<h2 class="text-xl font-bold">SVG Loading Spinner</h2>
-	<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200">
-		<g class="segment" opacity="0">
-			<path
-				id="loading-path"
-				d="M 94 25 C 94 21.686 96.686 19 100 19 L 100 19 C 103.314 19 106 21.686 106 25 L 106 50 C 106 53.314 103.314 56 100 56 L 100 56 C 96.686 56 94 53.314 94 50 Z"
-			></path>
-		</g>
-		<g class="segment" opacity="0">
-			<use href="#loading-path" style="transform: rotate(45deg)" />
-		</g>
-		<g class="segment" opacity="0">
-			<use href="#loading-path" style="transform: rotate(90deg)" />
-		</g>
-		<g class="segment" opacity="0">
-			<use href="#loading-path" style="transform: rotate(135deg)" />
-		</g>
-		<g class="segment" opacity="0">
-			<use href="#loading-path" style="transform: rotate(180deg)" />
-		</g>
-		<g class="segment" opacity="0">
-			<use href="#loading-path" style="transform: rotate(225deg)" />
-		</g>
-		<g class="segment" opacity="0">
-			<use href="#loading-path" style="transform: rotate(270deg)" />
-		</g>
-		<g class="segment" opacity="0">
-			<use href="#loading-path" style="transform: rotate(315deg)" />
-		</g>
-	</svg>
+	<h2 class="text-xl font-bold">Loading Spinner</h2>
+
+	<div class="flex items-center justify-center rounded-lg p-10">
+		<div
+			class="size-[50px] rounded-full border-4 border-slate-300 border-t-blue-400 will-change-transform"
+			{@attach mercury({
+				animate: { rotate: 360 },
+				transition: { duration: 1.5, repeat: Infinity, ease: 'linear' }
+			})}
+		></div>
+	</div>
 </div>

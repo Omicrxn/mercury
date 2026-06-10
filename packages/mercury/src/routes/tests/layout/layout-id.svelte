@@ -3,54 +3,45 @@
 	let showSecond = $state(false);
 
 	const layoutGroup = layout(() => showSecond, { transition: { duration: 0.4 } });
+
+	const buttonClass =
+		'rounded-md border border-slate-500 bg-blue-200 px-4 py-2 text-sm font-medium text-slate-800 transition-colors hover:bg-blue-300';
 </script>
 
-<div {@attach layoutGroup} class="wrapper">
-	<button class="button" onclick={() => (showSecond = !showSecond)}> Animate </button>
-	{#if showSecond}
-		<div {...layout.props('rectangle')} class="second-element">
-			<div
-				{...layout.props('rectangle-square')}
-				class="size-4 bg-blue-200 rounded-md"
-			></div>
+<div class="flex min-h-screen flex-col justify-center gap-8 p-8">
+	<div class="mx-auto flex w-full max-w-2xl flex-col gap-6">
+		<h2 class="text-xl font-bold">Layout Animation: Layout ID</h2>
+
+		<div
+			class="flex min-h-48 w-full items-center justify-center rounded-md border border-slate-500 border-dashed bg-slate-50 p-8"
+		>
+			<div {@attach layoutGroup}>
+				{#if showSecond}
+					<div
+						{...layout.props('rectangle')}
+						class="size-24 rounded-xl border border-slate-500 bg-blue-200"
+					>
+						<div
+							{...layout.props('rectangle-square')}
+							class="size-4 rounded-md border m-2 border-slate-500 bg-amber-200"
+						></div>
+					</div>
+				{:else}
+					<div
+						{...layout.props('rectangle')}
+						class="size-12 rounded-xl border border-slate-500 bg-blue-200"
+					>
+						<div
+							{...layout.props('rectangle-square')}
+							class="m-4 size-4 rounded-md bg-purple-400"
+						></div>
+					</div>
+				{/if}
+			</div>
 		</div>
-	{:else}
-		<div {...layout.props('rectangle')} class="element">
-			<div
-				{...layout.props('rectangle-square')}
-				class="size-4 bg-red-500 rounded-md m-4"
-			></div>
-		</div>
-	{/if}
+
+		<button class={buttonClass} onclick={() => (showSecond = !showSecond)}>
+			{showSecond ? 'Shrink' : 'Expand'}
+		</button>
+	</div>
 </div>
-
-<style>
-	.wrapper {
-		display: grid;
-		height: 100vh;
-		width: 100vw;
-		place-items: center;
-		background: #0d0d0d;
-	}
-
-	.element {
-		width: 48px;
-		height: 48px;
-		background: #fad658;
-		border-radius: 12px;
-	}
-
-	.second-element {
-		height: 96px;
-		width: 96px;
-		background: #fad658;
-		border-radius: 12px;
-	}
-
-	.button {
-		background: white;
-		padding: 8px 16px;
-		border-radius: 8px;
-		font-size: 14px;
-	}
-</style>
