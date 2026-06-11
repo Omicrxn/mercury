@@ -24,7 +24,7 @@
 				class="box flex h-16 shrink-0 flex-col items-center justify-center gap-1 rounded-md border border-slate-500 bg-blue-200 px-2 text-sm font-medium text-slate-800"
 			>
 				<div>Test</div>
-				<div class="size-4 rounded-sm bg-green-200"></div>
+				<div class="size-4 rounded-xs bg-green-200"></div>
 			</div>
 			<div {...layout.props()} class="box size-16 shrink-0"></div>
 		</div>

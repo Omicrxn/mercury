@@ -59,7 +59,7 @@
 		"@sveltejs/kit": "^2.64.0",
 		"@sveltejs/package": "^2.5.8",
 		"@sveltejs/vite-plugin-svelte": "^7.1.2",
-		"@tailwindcss/postcss": "^4.3.0",
+		"@tailwindcss/vite": "^4.3.0",
 		"@tailwindcss/typography": "^0.5.20",
 		"@types/eslint": "^9.6.1",
 		"@types/node": "^25.9.2",

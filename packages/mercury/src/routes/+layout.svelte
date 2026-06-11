@@ -58,7 +58,7 @@
 					type="search"
 					bind:value={query}
 					placeholder="Search {tests.length} tests…"
-					class="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-none transition-colors focus:border-indigo-400 focus:bg-white"
+					class="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-hidden transition-colors focus:border-indigo-400 focus:bg-white"
 				/>
 			</div>
 
@@ -108,7 +108,7 @@
 			<button
 				type="button"
 				onclick={() => (collapsed = false)}
-				class="absolute left-3 top-3 z-50 rounded-md border border-gray-200 bg-white/90 p-1.5 text-gray-500 shadow-sm backdrop-blur transition-colors hover:bg-gray-100 hover:text-gray-800"
+				class="absolute left-3 top-3 z-50 rounded-md border border-gray-200 bg-white/90 p-1.5 text-gray-500 shadow-xs backdrop-blur-sm transition-colors hover:bg-gray-100 hover:text-gray-800"
 				title="Expand sidebar"
 				aria-label="Expand sidebar"
 			>

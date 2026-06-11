@@ -10,7 +10,7 @@
 {#if test}
 	<div class="flex min-h-full w-full flex-col">
 		<header
-			class="sticky top-0 z-10 flex items-center gap-2 border-b border-gray-200 bg-white/80 px-4 py-2.5 pl-14 backdrop-blur"
+			class="sticky top-0 z-10 flex items-center gap-2 border-b border-gray-200 bg-white/80 px-4 py-2.5 pl-14 backdrop-blur-sm"
 		>
 			<a href="/" class="text-sm text-gray-400 transition-colors hover:text-gray-700">Playground</a>
 			<span class="text-sm text-gray-300">/</span>
