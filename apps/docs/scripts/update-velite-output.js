@@ -26,7 +26,18 @@ async function replaceIndexContents() {
 	});
 	if (!data) return;
 
-	const updatedContent = data.replaceAll(".json'", ".json' with { type: 'json' }");
+	// Velite 0.3+ already emits `with { type: 'json' }`; repair accidental duplicates
+	// from re-running this script against newer Velite output.
+	let updatedContent = data.replace(
+		/(\.json'\s*with\s*\{\s*type:\s*'json'\s*\})\s*with\s*\{\s*type:\s*'json'\s*\}/g,
+		"$1",
+	);
+
+	// Older Velite versions omit the import attribute — add it once if missing.
+	if (!updatedContent.includes("with { type: 'json' }")) {
+		updatedContent = updatedContent.replaceAll(".json'", ".json' with { type: 'json' }");
+	}
+
 	if (updatedContent === data) return;
 
 	await writeFile(indexPath, updatedContent, "utf8").catch((err) => {
