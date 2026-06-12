@@ -66,15 +66,6 @@ function createLayout(
 	return (element: HTMLElement) => {
 		controller.mount(element).then(() => {
 			mounted = true;
-
-			if (import.meta.env.DEV) {
-				const hasMarkers = element.querySelector('[data-layout], [data-layout-id]');
-				if (!hasMarkers) {
-					console.warn(
-						'[mercury layout] layout group has no layout targets. Spread layout.props() on children.'
-					);
-				}
-			}
 		});
 
 		return () => {

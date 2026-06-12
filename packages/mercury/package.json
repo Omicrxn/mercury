@@ -1,6 +1,6 @@
 {
 	"name": "@omicrxn/mercury",
-	"version": "0.5.5",
+	"version": "0.6.0",
 	"description": "Mercury is a Svelte animation library powered by Motion. It simplifies complex animations with Svelte actions, provides layout and exit animations, and integrates seamlessly with Svelte features.",
 	"license": "MIT",
 	"keywords": [
