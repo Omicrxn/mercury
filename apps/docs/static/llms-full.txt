@@ -1,0 +1,416 @@
+# Getting Started
+
+> Seamlessly integrate Motion-powered animations into your Svelte projects using Mercury.
+
+The following guide will walk you through the process of installing Mercury.
+
+## Installation
+
+You can easily install Mercury with npm or your preferred package manager:
+
+## Animating Elements
+
+Mercury leverages Svelte Attachments to provide intuitive animation handling. Here’s a basic example demonstrating its usage:
+
+<!-- Basic Animation here -->
+<iframe id="basic-animation" title="Basic Animation" loading="lazy" allow="accelerometer; ambient-light-sensor; camera; encrypted-media; geolocation; gyroscope; hid; microphone; midi; payment; usb; vr; xr-spatial-tracking; clipboard-write;" sandbox="allow-forms allow-modals allow-popups allow-presentation allow-same-origin allow-scripts allow-top-navigation allow-top-navigation-by-user-activation" style="width:100%; height:450px;  border-radius: 16px; flex:1; " src="https://mercury.uialchemy.com/examples/basic-animation?utm_source=embed"></iframe>
+
+---
+
+# Introduction
+
+> What is Mercury?
+
+Mercury is an animation library designed specifically for Svelte, created to bring powerful, expressive motion into modern Svelte applications—without adding unnecessary complexity or breaking away from Svelte’s core principles.
+
+Many existing animation solutions for Svelte either offer limited functionality, are deprecated or introduce awkward abstractions. Libraries like Framer Motion set a high bar for motion design in React, but adapting those patterns to Svelte often results in unexpected results and bloated code.
+
+Mercury was built to solve this gap.
+
+## Purpose
+
+Mercury aims to bring layout-aware, fine-grained animations to Svelte in a way that feels native. It focuses on:
+
+- **Attachment-based control** – Animations are declared using Svelte attachments, allowing direct manipulation of DOM elements without extra components or wrappers.
+- **Shared layout transitions** – Mercury enables elements to animate seamlessly across layouts using `layoutId`s, making complex interactions feel effortless.
+- **Presence animations** – Full support for presence animations brings component mount/unmount animations similar to what Framer Motion offers, but in a Svelte-native way.
+- **Minimal friction** – The API is designed to be declarative, composable, and minimal. It scales from simple transitions to advanced UI flows without boilerplate.
+- **Powered by Motion** - Mercury is built on [Motion](https://motion.dev/), so you get its mature, performant animation engine for free. You can continue using Motion's utilities, motion values, and other features seamlessly alongside Mercury.
+
+## Philosophy
+
+The core philosophy behind Mercury is to enable expressive animation without compromising the clarity or structure of Svelte code. It builds upon Svelte’s strengths rather than abstracting them away, offering a motion system that is:
+
+- **Predictable** – Built on motion values, transitions, and layout animations that behave consistently.
+- **Flexible** – Easily integrated into existing components and layouts.
+- **Performant** – Lightweight and optimized for UI responsiveness.
+- **Made the Svelte Way** - Mercury is built with Svelte’s philosophy at its core. Instead of mimicking patterns from other frameworks, it embraces Svelte’s strengths—reactivity, attachments, and transitions—without forcing external abstractions or workarounds that don't apply in the Svelte ecosystem.
+
+Mercury makes advanced animations accessible to Svelte developers—without introducing unnecessary overhead or breaking the mental model of how Svelte works.
+
+---
+
+# Animate
+
+> Easily animate your Svelte components using Mercury
+
+## Overview
+
+The `animate` property lets you control animations applied to your components with Mercury. It is the equivalent of Motion's `animate` prop: the element animates to these values on mount, and again whenever they change.
+
+Mercury's mental model in one sentence: **your CSS is the resting state, `animate` is state-driven animation, and [`presence`](/docs/api/presence) (`initial` / `exit`) handles mounting and unmounting.**
+
+### Usage
+
+Include the `animate` property within the `mercury()` attachment like this:
+
+Because attachments re-run when their reactive dependencies change, `animate` is naturally state-driven — derive it from `$state` and Mercury animates on every change:
+
+```svelte
+{@attach mercury({
+	animate: { width: isSilent ? 148 : 128 },
+	transition: { type: 'spring', bounce: 0.5 }
+})}
+```
+
+## animateOnMount
+
+By default `animate` plays once on mount — animating from the element's current styles to the `animate` values — and then again whenever `animate` changes. `animateOnMount` controls **only that first run**:
+
+- **`animateOnMount: true`** (default) — the mount animation plays.
+- **`animateOnMount: false`** — the element renders directly in its `animate` state on mount (keyframe arrays snap to their last frame) with no entrance animation; only subsequent changes animate. This is the equivalent of Motion's `initial={false}`.
+
+```svelte
+<!-- no wiggle on mount; wiggles on every isSilent change -->
+{@attach mercury({
+	animateOnMount: false,
+	animate: {
+		rotate: isSilent ? [0, -15, 5, -2, 0] : [0, 20, -15, 12.5, -10, 10, -7.5, 7.5, -5, 5, 0],
+		x: isSilent ? 9 : 0
+	}
+})}
+```
+
+	`animateOnMount` only chooses whether the first transition to <code>animate</code> runs — it cannot give the element a hidden <em>starting</em> style. The attachment runs after the element is already in the DOM, so it can't paint a hidden state before the first frame. If you need the element to enter <strong>from</strong> an explicit hidden state (flash-free), that's a presence concern — use <code>initial</code> on <a href="/docs/api/presence"><code>transition:presence</code></a>.
+
+## Supported Features
+
+Mercury is powered by Motion. To explore the full set of animatable values and capabilities, check the Motion documentation:
+
+- [Motion Docs](https://motion.dev/docs/animate)
+
+## Stagger
+
+Instead of using stagger functions from the animation libraries, Mercury simplifies staggering animations by individually delaying elements:
+
+## Keyframes
+
+Mercury supports keyframe animations by providing arrays of values:
+
+## Transition
+
+Control the animation’s transition properties (duration, easing, repeat) with the transition parameter:
+
+## Easing
+
+Easings control animation pacing throughout an animation's duration. Mercury uses Motion's easing system — pass any [Motion easing](https://motion.dev/docs/easing-functions) via the `ease` property on `transition`:
+
+- **Named easings:** `linear`, `easeIn`, `easeOut`, `easeInOut`, `circIn`, `circOut`, `circInOut`, `backIn`, `backOut`, `backInOut`, `anticipate`
+- **Cubic bezier:** `ease: [0.39, 0.24, 0.3, 1]`
+- **Custom functions:** `ease: (progress) => progress * progress`
+- **Steps:** import `steps` from `motion` and pass the result as `ease`
+
+```svelte
+{@attach mercury({
+	animate: { scale: 1.5 },
+	transition: { ease: 'circInOut', duration: 1 }
+})}
+```
+
+## Repetition
+
+Control how animations repeat with these parameters:
+
+- `repeat`: Number of repetitions (`Infinity` supported).
+- `repeatType`: `loop`, `reverese` or `mirror`
+- `repeatDelay`: Delay in seconds between repetitions.
+
+## Springs
+
+Spring-based animations mimic physical springs, often providing the most natural animation experience. Set `type: 'spring'` on the `transition`:
+
+Just like Motion, Mercury springs can be configured in **two ways** — and the two sets of options are mutually exclusive.
+
+### Duration-based springs
+
+Set with a `duration` and a `bounce` value. These are the easiest to reason about: you pick how long it takes and how bouncy it feels.
+
+- `duration`: Total duration of the spring, in seconds.
+- `bounce`: Bounciness, from `0` (no bounce) to `1` (very bouncy). Defaults to `0.25`.
+- `visualDuration`: Optional. Time (in seconds) the animation takes to *visually* reach its target. When set, it overrides `duration` and makes springs easier to coordinate with other time-based animations.
+
+```svelte
+{@attach mercury({
+	animate: { y: 0 },
+	transition: { type: 'spring', duration: 0.6, bounce: 0.2 }
+})}
+```
+
+### Physics-based springs
+
+Set with `stiffness`, `damping`, and `mass`. These incorporate the velocity of any in-progress gesture or animation for natural, interruptible motion.
+
+- `stiffness`: Spring stiffness. Higher values create more sudden movement.
+- `damping`: Opposing force. `0` oscillates forever.
+- `mass`: Mass of the moving object. Higher values feel more lethargic.
+- `velocity`: Initial velocity of the spring.
+- `restSpeed` / `restDelta`: Thresholds that determine when the spring is considered "at rest" and the animation ends.
+
+```svelte
+{@attach mercury({
+	animate: { rotate: 180 },
+	transition: { type: 'spring', stiffness: 150, damping: 20 }
+})}
+```
+
+    `duration` and `bounce` are ignored the moment any of <code>stiffness</code>, <code>damping</code>, or <code>mass</code> is set. Pick one configuration style per spring.
+
+## Callbacks
+
+Pass a `callbacks` object to hook into the animation lifecycle. These mirror [Motion's playback lifecycle](https://motion.dev/docs/animate#controls) one-to-one:
+
+- `onPlay`: Fires when the animation starts playing.
+- `onComplete`: Fires when the animation finishes.
+- `onUpdate`: Fires with the latest value on each frame (single-value animations).
+- `onRepeat`: Fires on each repetition.
+- `onStop`: Fires when the animation is stopped.
+
+```svelte
+{@attach mercury({
+	animate: { x: 100 },
+	callbacks: {
+		onPlay: () => console.log('started'),
+		onComplete: () => console.log('done')
+	}
+})}
+```
+
+## Playback controls
+
+Use the `instance` callback to capture the running animation and drive it imperatively. The instance exposes `play()`, `pause()`, `stop()`, and `cancel()`, plus a `completed` flag and an `onComplete` promise helper:
+
+```svelte
+
+<div
+	{@attach mercury({
+		animate: { scale: 1.5 },
+		transition: { duration: 1 },
+		instance: (i) => (animation = i)
+	})}
+></div>
+
+<button onclick={() => animation?.play()}>Play</button>
+<button onclick={() => animation?.pause()}>Pause</button>
+
+---
+
+# Gestures
+
+> Learn how to easily implement interactive gesture and scroll-based animations with Mercury.
+
+## Overview
+
+Mercury provides robust support for interactive gesture and scroll-triggered animations, making it easy to enrich user experiences in your Svelte applications. Below, you’ll find detailed explanations and practical examples for hover, tap, drag, and scroll.
+
+The animation-driven gestures (`hover`, `tap`, and `scroll`) each have their own independent `transition`; if you don’t provide one, Mercury uses the default `transition` settings. The `scroll` gesture supports extra parameters such as `root`, `margin`, and `amount`. `drag` is different — it isn’t a keyframe animation but a pointer-driven interaction, so instead of a `transition` it takes `dragOptions` for its behavior.
+
+## Gesture Animations
+
+Gesture animations respond dynamically to user interactions such as hovering or tapping, providing immediate visual feedback that enhances interactivity.
+
+## Hover
+
+Hover animations activate when a user moves their cursor over an element, creating intuitive and visually appealing interactions.
+
+- `onHoverStart`: function that runs when the mouse starts hovering the element.
+- `onHoverEnd`: function that runs when the mouse goes outside the element.
+- `whileHover`: animation run when the element is hovered.
+
+## Tap
+
+Tap animations trigger on user click or touch interactions, creating engaging feedback that enhances tactile experiences.
+
+- `onTapStart`: function that runs when the mouse clicks the element.
+- `onTapEnd`: function that runs when the click is up.
+- `whileTap`: animation run when the element is tapped.
+
+## Drag
+
+Set `drag: true` to make an element draggable. Mercury tracks the pointer, moves the element with Motion values, and applies inertia when you release it.
+
+- `drag`: set to `true` to make the element draggable.
+- `onDragStart`: function that runs when dragging begins.
+- `onDragEnd`: function that runs when the pointer is released (before inertia settles).
+- `dragOptions`: configures **how** the drag behaves. This is drag _configuration_, not an animation — it does not animate the element while dragging.
+  - `axis`: restrict movement to `'x'` or `'y'`, or `'lock'` to lock to the first axis the user moves along.
+  - `bounds`: constrain movement — pass an element (e.g. a `bind:this` reference), a `{ current }` ref, or an object of pixel offsets `{ left, right, top, bottom }`.
+  - `rubberband`: elastic resistance when dragging past the bounds — `true`, or a number to tune the elasticity.
+
+## Scroll
+
+Scroll-triggered animations activate as elements enter or leave the viewport, enhancing the visual flow and interactivity of content on scroll.
+
+- `enter`: animation that runs when the element goes into view.
+- `exit`: animation that runs when the element exists the root.
+- `root`: element to be used as scroll viewport.
+
+---
+
+# Layout Animations
+
+> Enhance your UI transitions with powerful layout animations using Mercury.
+
+## Overview
+
+Layout animations enable you to animate properties and scenarios typically not supported by standard CSS animations. While standard animations effectively animate individual properties like opacity or scale, they can’t handle structural changes—such as switching flex-direction, updating grid-template-columns, or smoothly animating between two separate elements. Mercury’s layout animations effortlessly manage these complex cases.
+
+## Basic Usage
+
+Layout animations have two parts:
+
+1. **`layout(trigger, options)`** — creates a layout group. The `trigger` is a getter for the reactive state that causes layout changes; `options.transition` controls the timing. Attach the returned group to the **container** with `{@attach layoutGroup}`.
+2. **`layout.props(id?)`** — spread onto each **child** that should animate when the layout changes.
+
+This is Mercury's equivalent of Motion's `layout` prop: when the trigger changes, Mercury measures every marked element before and after the DOM update and FLIP-animates the difference (position and size), including structural changes CSS can't animate — `justify-content`, `flex-direction`, `grid-template-columns`, reordering, and so on.
+
+	Svelte has no automatic DOM change detection, and Mercury works directly on HTML elements rather than wrapper components. The trigger getter passed as the first argument to <code>layout()</code> is how Mercury knows when to record and animate layout changes.
+
+## Layout ID (Shared Layout Animations)
+
+To animate between two **different** elements — Motion's `layoutId` — give them the same id via `layout.props('id')`. When state swaps one for the other, Mercury smoothly transitions the old element into the new one:
+
+Both elements share the layout id (`rectangle`), so swapping the `{#if}` branches morphs one into the other instead of cutting. Nested shared elements (like `rectangle-square` above) each get their own id.
+
+---
+
+# Presence (Enter / Exit)
+
+> Effortlessly animate component mounting and unmounting using Mercury's presence features.
+
+## Overview
+
+Mercury's `presence` is the equivalent of Motion's `` — without the wrapper component. It is a Svelte transition, so you attach it directly to the element whose mounting and unmounting you want to animate:
+
+- **`initial`** — the hidden state the element enters **from**. On enter, Mercury animates from these values to the element's settled CSS styles.
+- **`exit`** — the values the element animates **to** before it is removed.
+- **`transition`** — shared timing for both directions. Each spec can override it with its own `transition` (e.g. `exit: { opacity: 0, transition: { duration: 0.15 } }`).
+- **`mode`** — `'sync' | 'wait' | 'popLayout'`, matching ``.
+
+The mental model is one sentence: **your CSS is the resting state, `initial` and `exit` are the hidden states, and `mercury({ animate })` is for state-driven animation.** Because the enter target is the element's own styles, there is no `animate` key on `presence` — `animate` always means the [mercury attachment](/docs/api/animate).
+
+## Mapping from Motion
+
+```jsx
+// motion/react
+
+	{isSilent && (
+		<motion.div
+			initial={{ width: 0, opacity: 0, filter: 'blur(4px)' }}
+			animate={{ width: 40, opacity: 1, filter: 'blur(0px)' }}
+			exit={{ width: 0, opacity: 0, filter: 'blur(4px)' }}
+			transition={{ type: 'spring', bounce: 0.35 }}
+			className="... w-10"
+		/>
+	)}
+
+```
+
+In Mercury, the static `animate` values move into CSS (`w-10`, default opacity, no filter), and `initial`/`exit` move onto the transition:
+
+| motion/react | Mercury |
+| --- | --- |
+| `` wrapper | not needed — Svelte transitions track unmounts natively |
+| `initial={{ ... }}` | `initial` on `transition:presence` |
+| `animate={{ ... }}` (static) | the element's CSS |
+| `animate={{ ... }}` (state-driven) | `{@attach mercury({ animate })}` |
+| `exit={{ ... }}` | `exit` on `transition:presence` |
+| `` | `mode` on `transition:presence` |
+| `` | the default (local transitions) |
+| `` | `transition:presence\|global` |
+
+## First render (`initial={false}`)
+
+Svelte transitions are _local_ by default: they don't play when an **ancestor** block mounts, only when the element's own block is added or removed. This is exactly `` — a component appearing for the first time renders its children in their resting state, and only subsequent toggles animate.
+
+If you _do_ want the enter to play when an ancestor mounts (Motion's default), opt in with the `|global` modifier:
+
+```svelte
+<div transition:presence|global={{ initial: { opacity: 0 }, exit: { opacity: 0 } }} />
+```
+
+## The flat form
+
+For simple cases you can skip `initial`/`exit` and pass the hidden state directly. Enters animate **from** it, exits animate **to** it:
+
+For transform values (`x`, `y`, `scale`, `rotate`, …) the settled target is the identity (no transform); other properties use the element's computed style.
+
+## Modes (`sync`, `wait` and `popLayout`)
+
+Quoting [Motion's documentation](https://motion.dev/docs/react-animate-presence#mode):
+
+> - “sync”: Children animate in/out as soon as they’re added/removed.
+> - “wait”: The entering child will wait until the exiting child has animated out. Note: Currently only renders a single child at a time.
+> - “popLayout”: Exiting children will be “popped” out of the page layout. This allows surrounding elements to move to their new layout immediately.
+
+In Mercury the mode is a parameter of the transition itself:
+
+- **`mode: 'sync'`** (default) — entering and exiting elements animate at the same time.
+- **`mode: 'popLayout'`** — snapshots the exiting element's box and pins it with `position: absolute`, so siblings reflow immediately while it animates out in place. Mercury sets the direct parent to `position: relative` when it is `static`.
+- **`mode: 'wait'`** — the next enter in the same parent slot waits until the exit animation finishes. Mercury coordinates the delay automatically for `presence` enters and `{@attach mercury(...)}` enter animations in that slot.
+
+## Interruptions
+
+Presence animations are interruptible, like Motion's:
+
+- If an element is re-inserted while its exit is still running (a quick toggle back), Mercury animates it from wherever the exit left off back to its settled state instead of replaying the enter from `initial`.
+- If an exit starts mid-enter, the enter is stopped and the exit animates from the current state.
+- When an element uses both `{@attach mercury(...)}` and `presence`, Mercury stops the mercury animation before running the exit so the two don't fight over the same properties.
+
+    `presence` respects the user’s <code>prefers-reduced-motion</code> setting. When reduced motion is requested the element is added/removed instantly without animating.
+
+## Caveats & differences from Motion
+
+`presence` is built directly on Svelte transitions instead of a wrapper component. The common cases map over cleanly, but a few rules come from Svelte's model rather than Mercury and are worth knowing up front.
+
+### Exits inside a conditional parent need `|global`
+
+Svelte does **not** play a _local_ `out:` transition when a **parent** block (`{#if}`, `{#key}`, `{#each}`) is the thing being removed — it only plays local transitions when the element's own block is removed. If an ancestor block is destroyed, add the `|global` modifier so the exit still runs:
+
+```svelte
+{#if open}
+	{#if state === 'success'}
+		
+	{:else}
+		<!-- the parent {:else} block is destroyed on success, so |global is required -->
+		<form out:presence|global={{ opacity: 0, y: 8, mode: 'popLayout' }}>…</form>
+	{/if}
+{/if}
+```
+
+Rule of thumb: if the element's own `{#if}` toggles, local `presence` is fine; if an ancestor block is removed, use `presence|global`.
+
+### `mode` is set per element, not on a wrapper
+
+Motion sets `mode` once on ``. In Mercury the mode lives on each element's `presence` params. For a list, set the same `mode` on every item.
+
+### `popLayout` reflows siblings instantly
+
+Motion pairs `popLayout` with the `layout` prop so neighbours _animate_ to their new positions (FLIP). Mercury's `popLayout` only pops the exiting node out of flow; surrounding elements reflow **immediately**. For a smooth reflow, add Mercury's [`layout`](/docs/api/layout-animations) to the siblings.
+
+### No `onExitComplete` hook
+
+There is no single "all exits finished" callback like Motion's `onExitComplete`. Because the node is removed as the exit ends, a Motion `transition.onComplete` may not fire for exits — don't rely on it to detect exit completion.
+
+### `wait` coordinates through the shared parent
+
+`wait` mode renders one child at a time and sequences the next enter after the current exit, coordinating through the **shared parent element**. The entering and exiting nodes must live under the same DOM parent for the sequencing to work — keyed swaps (`{#key}`) and `{#if}` blocks normally satisfy this.
