@@ -1,0 +1,59 @@
+---
+import CodeBlock from "blume/components/content/CodeBlock.astro";
+import RootLayout from "blume/components/layout/RootLayout.astro";
+import data from "blume:data";
+import ExampleViewer from "./_components/ExampleViewer.svelte";
+import { examples, exampleTitle, type ExampleSlug } from "./_components/registry";
+
+export function getStaticPaths() {
+	return Object.keys(examples).map((slug) => ({ params: { slug } }));
+}
+
+const sources = import.meta.glob<string>("../../../examples/*.svelte", {
+	query: "?raw",
+	import: "default",
+	eager: true,
+});
+
+const slug = Astro.params.slug as ExampleSlug;
+const { isPremium } = examples[slug];
+const source = isPremium ? undefined : sources[`../../../examples/${slug}.svelte`];
+const title = exampleTitle(slug);
+---
+
+<RootLayout
+	site={{ title: data.config.title, description: data.config.description }}
+	logo={data.config.logo}
+	favicon={data.config.favicon}
+	banner={data.config.banner}
+	navigation={data.navigation}
+	page={{ title, description: `${title} — a Mercury animation example.`, route: `/docs/examples/${slug}` }}
+	headings={[]}
+	themeMode={data.config.theme.mode}
+	fontCssVars={data.fontCssVars}
+	searchEnabled={data.config.search.enabled}
+	siteUrl={data.config.site}
+	indexable={true}
+	feedback={false}
+>
+	<p class="not-prose m-0 text-sm"><a href="/docs/examples">← All examples</a></p>
+	<h1>{title}</h1>
+	<div class="not-prose my-6">
+		<ExampleViewer client:only="svelte" slug={slug} />
+	</div>
+	{
+		source ? (
+			<>
+				<h2>Source code</h2>
+				<CodeBlock code={source} lang="svelte" title={`${slug}.svelte`} />
+			</>
+		) : (
+			<div class="not-prose my-6 rounded-blume border border-border bg-muted px-4 py-3 text-sm">
+				This example is part of the premium content on the original creator's site. Out of respect
+				for their work, we're not sharing the source code here — but we've recreated it with
+				Mercury to demonstrate what's possible. If you like it, consider supporting the author by
+				subscribing to their website.
+			</div>
+		)
+	}
+</RootLayout>

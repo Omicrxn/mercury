@@ -30,7 +30,7 @@ Mercury makes advanced animations accessible to Svelte developers—without intr
 ## Documentation
 
 - [Docs](https://mercury.uialchemy.com/docs)
-- [Examples](https://mercury.uialchemy.com/examples)
+- [Examples](https://mercury.uialchemy.com/docs/examples)
 
 ## Installation
 

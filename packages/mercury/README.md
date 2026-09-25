@@ -8,7 +8,7 @@ Animate elements directly, coordinate enter/exit with `presence`, handle layout 
 
 - [Introduction](https://mercury.uialchemy.com/docs)
 - [Getting Started](https://mercury.uialchemy.com/docs/getting-started)
-- [Examples](https://mercury.uialchemy.com/examples)
+- [Examples](https://mercury.uialchemy.com/docs/examples)
 
 ## Mental model
 

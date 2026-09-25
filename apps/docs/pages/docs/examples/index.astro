@@ -1,0 +1,45 @@
+---
+import RootLayout from "blume/components/layout/RootLayout.astro";
+import data from "blume:data";
+import ExamplesGallery from "./_components/ExamplesGallery.svelte";
+
+const title = "Examples";
+const description = "Explore practical examples demonstrating Mercury's capabilities.";
+---
+
+<RootLayout
+	site={{ title: data.config.title, description: data.config.description }}
+	logo={data.config.logo}
+	favicon={data.config.favicon}
+	banner={data.config.banner}
+	navigation={data.navigation}
+	page={{ title, description, route: "/docs/examples" }}
+	headings={[]}
+	themeMode={data.config.theme.mode}
+	fontCssVars={data.fontCssVars}
+	searchEnabled={data.config.search.enabled}
+	siteUrl={data.config.site}
+	indexable={true}
+	feedback={false}
+>
+	<h1>{title}</h1>
+	<p>{description}</p>
+	<p>
+		These examples illustrate the versatile animations achievable with Mercury. Many are adapted
+		from Matt Perry’s Motion library, showcasing Mercury’s compatibility with reliable,
+		battle-tested animations.
+	</p>
+	<div class="not-prose my-6 rounded-blume border border-border bg-muted px-4 py-3 text-sm">
+		<p class="m-0 font-semibold">Important note</p>
+		<p class="m-0 mt-1">
+			While the animations have been adapted to Svelte with Mercury, only examples from Motion’s
+			free tier have their source code here, to respect their premium content. For access to
+			exclusive animations and source code, consider subscribing to{" "}
+			<a href="https://motion.dev/plus">Motion+</a>. You are encouraged to subscribe and
+			replicate their advanced examples in Svelte using Mercury for practice.
+		</p>
+	</div>
+	<div class="not-prose">
+		<ExamplesGallery client:visible />
+	</div>
+</RootLayout>

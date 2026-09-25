@@ -1,0 +1,63 @@
+/* Site theme overrides, also injected into every <Component> preview frame (see examples.css). */
+
+/* Blume only scans .astro/.tsx/.jsx files for utilities; the demos and gallery are Svelte, so scan them too. */
+@source "./examples";
+@source "./pages";
+
+/* Shared styles for the Mercury demos. */
+.box,
+.circle {
+	width: 4rem;
+	height: 4rem;
+	border: 2px solid #64748b;
+	background-color: #c7d2fe;
+	border-radius: 0.375rem;
+}
+
+.circle {
+	border-radius: 9999px;
+}
+
+.container {
+	padding: 0.5rem;
+	border: 2px solid #64748b;
+	border-radius: 0.375rem;
+	background-color: #e2e8f0;
+}
+
+:where(.dark, [data-theme="dark"]) .box,
+:where(.dark, [data-theme="dark"]) .circle {
+	border-color: #f8fafc;
+	background-color: #818cf8;
+}
+
+:where(.dark, [data-theme="dark"]) .container {
+	border-color: #f8fafc;
+	background-color: #94a3b8;
+}
+
+.draggable {
+	display: flex;
+}
+
+.draggable::after {
+	content: "";
+	pointer-events: none;
+	position: relative;
+	align-self: center;
+	margin: auto;
+	display: block;
+	width: 20px;
+	height: 20px;
+	background-image:
+		radial-gradient(circle at center, #000 1px, transparent 0),
+		radial-gradient(circle at center, #000 1px, transparent 0);
+	background-size: 5px 5px;
+}
+
+/* Header brand: Blume sizes the inline logo at h-5 (20px); the Mercury wordmark
+   reads small at that height, so give it a little more room. */
+header a[aria-label] > span[aria-hidden="true"]:has(> svg),
+header a[aria-label] > span[aria-hidden="true"] > svg {
+	height: 1.75rem;
+}

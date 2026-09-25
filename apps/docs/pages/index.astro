@@ -1,0 +1,266 @@
+---
+import CodeBlock from "blume/components/content/CodeBlock.astro";
+import PageLayout from "blume/components/layout/PageLayout.astro";
+import data from "blume:data";
+import BouncingEasing from "../examples/bouncing-easing.svelte";
+import ExitAnimation from "../examples/exit-animation.svelte";
+import Flip from "../examples/flip.svelte";
+import Hover from "../examples/hover.svelte";
+import logoSvg from "../public/logo.svg?raw";
+import HeroActions from "./_home/HeroActions.svelte";
+
+const { config } = data;
+
+// Inline the wordmark so its paths can be stroke-drawn like the UI Alchemy title.
+// pathLength="1" normalises every path, so one dash length fits them all.
+const wordmark = logoSvg
+  .replace(/<svg[^>]*?>/, (tag) =>
+    tag
+      .replace(/\s(width|height)="[^"]*"/g, "")
+      .replace("<svg", '<svg class="wordmark" role="img" aria-label="Mercury"'),
+  )
+  .replaceAll("<path", '<path pathLength="1"');
+
+const features = [
+  {
+    title: "Animate",
+    description: "Declare targets with an attachment. Springs, keyframes, and easings come from Motion.",
+    href: "/docs/api/animate",
+    example: "bouncing-easing",
+  },
+  {
+    title: "Gestures",
+    description: "Hover, tap, drag, and scroll — each with its own transition.",
+    href: "/docs/api/gestures",
+    example: "hover",
+  },
+  {
+    title: "Presence",
+    description: "Enter and exit animations built on Svelte transitions. No wrapper component.",
+    href: "/docs/api/presence",
+    example: "exit-animation",
+  },
+  {
+    title: "Layout",
+    description: "FLIP layout changes and shared elements that CSS alone can't animate.",
+    href: "/docs/api/layout-animations",
+    example: "flip",
+  },
+];
+
+const snippet = `<script>
+  import { mercury } from '@omicrxn/mercury';
+  let open = $state(false);
+</script>
+
+<button
+  onclick={() => (open = !open)}
+  {@attach mercury({
+    animate: { rotate: open ? 180 : 0 },
+    whileTap: { scale: 0.9 },
+    transition: { type: 'spring', bounce: 0.4 }
+  })}
+>
+  Flip
+</button>`;
+---
+
+<PageLayout
+  site={{ title: config.title, description: config.description }}
+  logo={config.logo}
+  favicon={config.favicon}
+  appleIcon={config.appleIcon}
+  banner={config.banner}
+  analytics={config.analytics}
+  navigation={data.navigation}
+  fontCssVars={data.fontCssVars}
+  themeMode={config.theme.mode}
+  searchEnabled={config.search.enabled}
+  siteUrl={config.site}
+  ogEnabled={config.og.enabled}
+  structuredDataEnabled={config.structuredData}
+  transparentHeader
+  page={{
+    title: "Mercury — Motion-powered animations for Svelte",
+    description: config.description,
+    route: "/",
+  }}
+>
+  <section class="hero relative -mt-16 flex min-h-svh w-full flex-col items-center justify-center overflow-hidden bg-black px-6 pt-16 text-white">
+    <div class="relative z-10 flex flex-col items-center gap-8 text-center">
+      <Fragment set:html={wordmark} />
+
+      <a href="https://uialchemy.com" class="reveal -mt-4 text-sm font-light text-white underline underline-offset-4" style="--delay: 1.6s">
+        a UI Alchemy project by Omicrxn
+      </a>
+
+      <p class="reveal max-w-xl text-balance text-lg font-light text-white/80 sm:text-xl" style="--delay: 1.9s">
+        Motion-powered animations for Svelte. Attachments, presence, and layout — made the Svelte way.
+      </p>
+
+      <div class="reveal" style="--delay: 2.2s">
+        <HeroActions client:load />
+      </div>
+    </div>
+
+    <a href="#features" class="reveal absolute bottom-8 z-10 text-xs uppercase tracking-[0.3em] text-white/50 hover:text-white" style="--delay: 2.6s">
+      Explore ↓
+    </a>
+  </section>
+
+  <section id="features" class="mx-auto w-full max-w-6xl scroll-mt-16 px-6 py-24">
+    <div class="mb-12 max-w-2xl">
+      <p class="mb-3 text-xs uppercase tracking-[0.3em] text-muted-foreground">Built on Motion</p>
+      <h2 class="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+        Every Motion feature, none of the wrappers.
+      </h2>
+      <p class="mt-4 text-muted-foreground">
+        Mercury works directly on your elements through Svelte attachments and transitions, so it
+        fits into existing components without changing how you write them. Try the demos below.
+      </p>
+    </div>
+
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      {
+        features.map((feature) => (
+          <article class="flex flex-col overflow-hidden rounded-2xl border border-border bg-background">
+            <div class="demo flex h-56 items-center justify-center border-b border-border bg-muted/40 p-4">
+              {feature.example === "bouncing-easing" && <BouncingEasing client:visible />}
+              {feature.example === "hover" && <Hover client:visible />}
+              {feature.example === "exit-animation" && <ExitAnimation client:visible />}
+              {feature.example === "flip" && <Flip client:visible />}
+            </div>
+            <div class="flex flex-1 flex-col gap-2 p-5">
+              <h3 class="text-base font-semibold text-foreground">{feature.title}</h3>
+              <p class="flex-1 text-sm text-muted-foreground">{feature.description}</p>
+              <div class="mt-2 flex gap-4 text-sm">
+                <a href={feature.href} class="font-medium text-foreground hover:underline">API →</a>
+                <a href={`/docs/examples/${feature.example}`} class="text-muted-foreground hover:text-foreground">
+                  Source
+                </a>
+              </div>
+            </div>
+          </article>
+        ))
+      }
+    </div>
+  </section>
+
+  <section class="mx-auto grid w-full max-w-6xl items-center gap-12 px-6 pb-24 lg:grid-cols-2">
+    <div>
+      <p class="mb-3 text-xs uppercase tracking-[0.3em] text-muted-foreground">One attachment</p>
+      <h2 class="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+        State in, motion out.
+      </h2>
+      <p class="mt-4 text-muted-foreground">
+        Attachments re-run when their reactive dependencies change, so <code>animate</code> is
+        naturally state-driven. Derive it from <code>$state</code> and Mercury animates on every
+        change — with Motion's engine doing the work.
+      </p>
+      <div class="mt-8 flex flex-wrap gap-3">
+        <a href="/docs/getting-started" class="rounded-full bg-foreground px-5 py-2 text-sm font-medium text-background">
+          Get started
+        </a>
+        <a href="/docs/examples" class="rounded-full border border-border px-5 py-2 text-sm font-medium text-foreground hover:bg-muted">
+          All examples
+        </a>
+      </div>
+    </div>
+    <div class="min-w-0">
+      <CodeBlock code={snippet} lang="svelte" title="Flip.svelte" />
+    </div>
+  </section>
+
+  <footer slot="footer" class="border-t border-border">
+    <div class="mx-auto flex w-full max-w-6xl flex-col items-center justify-between gap-4 px-6 py-8 text-sm text-muted-foreground sm:flex-row">
+      <p>
+        Mercury is part of <a href="https://uialchemy.com" class="text-foreground hover:underline">UI Alchemy</a>,
+        by <a href="https://omicrxn.com" class="text-foreground hover:underline">Omicrxn</a>. MIT licensed.
+      </p>
+      <div class="flex gap-5">
+        <a href="/docs" class="hover:text-foreground">Docs</a>
+        <a href="/docs/examples" class="hover:text-foreground">Examples</a>
+        <a href="/llms.txt" class="hover:text-foreground">llms.txt</a>
+        <a href="https://github.com/Omicrxn/mercury" class="hover:text-foreground">GitHub</a>
+      </div>
+    </div>
+  </footer>
+</PageLayout>
+
+<style is:global>
+  /* Velázquez, Mercury and Argus (c. 1659), revealed through the UI Alchemy animated mask. */
+  .hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    /* A soft vignette keeps the title readable over the brighter canvas. The
+       painting is a wide panorama, so bias the crop left to keep Mercury (and
+       his winged hat) in frame on narrower screens. */
+    background-image:
+      radial-gradient(ellipse 60% 55% at center, rgb(0 0 0 / 0.5), transparent),
+      url(/landing/mercury-argus.webp);
+    background-size: cover;
+    background-position: center, 22% center;
+    mask-image: url(/landing/mask-bg.gif);
+    mask-size: cover;
+    mask-position: center;
+    opacity: 0.7;
+  }
+
+  .wordmark {
+    width: min(520px, 80vw);
+    height: auto;
+    color: #fff;
+  }
+
+  .wordmark path {
+    stroke: #fff;
+    stroke-width: 2;
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    animation: wordmark-draw 2.2s ease-in-out forwards;
+  }
+
+  @keyframes wordmark-draw {
+    0% {
+      stroke-dashoffset: 1;
+      fill: transparent;
+    }
+    10% {
+      stroke-dashoffset: 1;
+    }
+    80% {
+      fill: transparent;
+    }
+    100% {
+      stroke-dashoffset: 0;
+      fill: #fff;
+    }
+  }
+
+  .reveal {
+    opacity: 0;
+    animation: reveal 0.8s cubic-bezier(0.22, 1, 0.36, 1) var(--delay, 0s) forwards;
+  }
+
+  @keyframes reveal {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .wordmark path,
+    .reveal {
+      animation: none;
+      opacity: 1;
+      stroke-dashoffset: 0;
+    }
+  }
+</style>
