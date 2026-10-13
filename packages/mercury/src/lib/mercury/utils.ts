@@ -47,20 +47,8 @@ export const mapTransitionToMotion = (
 	return options as AnimationOptions;
 };
 
-export const mapTransitionToAnimeJS = (
-	mercuryTransition?: AnimationTransition,
-	callbacks?: AnimationCallbacks
-) => ({
-	duration: (mercuryTransition?.duration ?? 0.3) * 1000,
-	autoplay: mercuryTransition?.autoplay,
-	delay: (mercuryTransition?.delay ?? 0) * 1000,
-	loop: mercuryTransition?.repeat,
-	alternate: mercuryTransition?.repeatType === 'reverse',
-	reversed: mercuryTransition?.repeatType === 'mirror',
-	loopDelay: (mercuryTransition?.repeatDelay ?? 0) * 1000,
-	// AnimeJS uses different lifecycle names; translate from Motion's.
-	onBegin: callbacks?.onPlay,
-	onComplete: callbacks?.onComplete,
-	onUpdate: callbacks?.onUpdate,
-	onLoop: callbacks?.onRepeat
-});
+export function prefersReducedMotion(): boolean {
+	return (
+		typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+	);
+}

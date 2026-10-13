@@ -60,7 +60,7 @@ yarn add @omicrxn/mercury
 
 ## Acknowledgments
 
-Mercury is built on the shoulders of giants. Special thanks to the creators and maintainers of [Svelte](https://svelte.dev/), [Motion](https://motion.dev/), and [Anime.js](https://github.com/juliangarnier/anime/), and to [@Char2sGu](https://github.com/Char2sGu) for helping integrate layout projections into the library.
+Mercury is built on the shoulders of giants. Special thanks to the creators and maintainers of [Svelte](https://svelte.dev/) and [Motion](https://motion.dev/), and to [@Char2sGu](https://github.com/Char2sGu) for helping integrate layout projections into the library.
 
 ## License
 

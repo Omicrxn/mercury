@@ -9,12 +9,7 @@
 	const leafDepth = path.length - 1;
 
 	const layoutGroup = layout(() => isHovered, {
-		transition: { duration: 0.15, type: 'spring', bounce: 0.15, stiffness: 320, damping: 32 },
-		states: {
-			enterFrom: { opacity: 1 },
-			leaveTo: { opacity: 0 },
-			swapAt: { opacity: 0 }
-		}
+		transition: { duration: 0.15, type: 'spring', bounce: 0.15, stiffness: 320, damping: 32 }
 	});
 </script>
 

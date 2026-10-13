@@ -20,13 +20,13 @@ Animate elements directly, coordinate enter/exit with `presence`, handle layout 
 | `animate={{ ... }}` (static) | the element's CSS |
 | `initial` / `exit` | `initial` / `exit` on `transition:presence` |
 | `<AnimatePresence>` | not needed — Svelte transitions track unmounts natively |
-| `layout` / `layoutId` | `layout()` + `layout.props(id?)` |
+| `layout` / `layoutId` | `layout.props(id?)` + `layout(trigger)` |
 
 ## Features
 
 - **Attachment-based API** — `{@attach mercury(...)}` applies animations directly to DOM elements
 - **Presence animations** — enter/exit with `transition:presence` (`initial`, `exit`, `mode`)
-- **Layout animations** — FLIP transitions and shared `layoutId`-style morphs via `layout()` + `layout.props()`
+- **Layout animations** — Motion's layout engine: size/position transitions and shared `layoutId` morphs via `layout()` + `layout.props()`
 - **Gestures** — `whileHover`, `whileTap`, drag, and scroll-triggered animations
 - **Powered by Motion** — full [easing](https://motion.dev/docs/easing-functions), springs, keyframes, callbacks, and playback controls
 - Works alongside Svelte transitions, actions, and other DOM features
@@ -95,15 +95,15 @@ For simple cases, use the flat form: `transition:presence={{ opacity: 0, y: 25 }
 	import { layout } from '@omicrxn/mercury';
 
 	let justify = $state('start');
-	const layoutGroup = layout(() => justify, { transition: { duration: 0.4 } });
+	layout(() => justify, { transition: { duration: 0.4 } });
 </script>
 
-<div {@attach layoutGroup} style="justify-content: {justify};">
-	<div {...layout.props()} class="h-16 w-16 rounded-md bg-blue-300" />
+<div class="flex" style="justify-content: {justify};">
+	<div {...layout.props()} class="h-16 w-16 rounded-md bg-blue-300"></div>
 </div>
 ```
 
-Pass an id to `layout.props('id')` on two different elements to morph between them (Motion's `layoutId`).
+`layout(trigger)` declares which state changes the layout (Motion's `layoutDependency`); `layout.props()` marks the elements that animate (Motion's `layout`). Pass an id to `layout.props('id')` on two different elements to morph between them (Motion's `layoutId`), attach the group with `{@attach}` to scope it to a container, or wrap a one-off change in `layout.animate(() => { ... })`.
 
 ### Gestures
 
@@ -123,7 +123,7 @@ Also supports `drag`, `dragOptions`, and scroll-triggered `scroll.enter` / `scro
 | Export | Description |
 | --- | --- |
 | `mercury` | Attachment for `animate`, gestures, callbacks, and playback controls |
-| `layout` | Attachment for layout groups; use `layout.props(id?)` on children |
+| `layout` | Layout animations: `layout(trigger, options)`, `layout.props(id?, options?)`, `layout.animate(update, options)` |
 | `presence` | Svelte transition for enter/exit animations |
 | `AnimationInstance` | Imperative playback handle from the `instance` callback |
 
@@ -131,12 +131,12 @@ Also supports `drag`, `dragOptions`, and scroll-triggered `scroll.enter` / `scro
 | --- | --- |
 | [Animate](https://mercury.uialchemy.com/docs/api/animate) | `animate`, `animateOnMount`, transitions, springs, keyframes, callbacks |
 | [Presence](https://mercury.uialchemy.com/docs/api/presence) | `initial`, `exit`, `mode`, `\|global` modifier |
-| [Layout](https://mercury.uialchemy.com/docs/api/layout-animations) | FLIP layout, shared layout ids |
+| [Layout](https://mercury.uialchemy.com/docs/api/layout-animations) | layout triggers, shared layout ids, position-only, `layout.animate` |
 | [Gestures](https://mercury.uialchemy.com/docs/api/gestures) | hover, tap, drag, scroll |
 
 ## Acknowledgments
 
-Mercury is built on the shoulders of giants. Special thanks to the creators and maintainers of [Svelte](https://svelte.dev/), [Motion](https://motion.dev/), and [Anime.js](https://github.com/juliangarnier/anime/), and to [@Char2sGu](https://github.com/Char2sGu) for helping integrate layout projections into the library.
+Mercury is built on the shoulders of giants. Special thanks to the creators and maintainers of [Svelte](https://svelte.dev/) and [Motion](https://motion.dev/), and to [@Char2sGu](https://github.com/Char2sGu) for helping integrate layout projections into the library.
 
 ## License
 

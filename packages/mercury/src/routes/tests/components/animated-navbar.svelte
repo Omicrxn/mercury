@@ -19,9 +19,7 @@
 	const layoutGroup = layout(
 		() => [selectedTab, horizontal],
 		{
-			transition: { duration: 0.35, ease },
-			children: '[data-layout-id="selected-indicator"]',
-			states: { swapAt: { opacity: 1 } }
+			transition: { duration: 0.35, ease }
 		}
 	);
 </script>
@@ -56,16 +54,17 @@
 				{#each tabs as tab, index (index)}
 					{@const isSelected = selectedTab === index}
 					<li class="relative" role="presentation">
-						<div
-							{...layout.props('selected-indicator')}
-							class={[
-								'absolute inset-0 z-0 rounded-full',
-								'bg-[linear-gradient(135deg,#ff0088_0%,#e6007a_100%)]',
-								'shadow-[0_0_20px_rgba(255,0,136,0.45),0_0_40px_rgba(255,0,136,0.15),inset_0_1px_0_rgba(255,255,255,0.2)]',
-								!isSelected && 'hidden'
-							]}
-							aria-hidden={!isSelected}
-						></div>
+						{#if isSelected}
+							<div
+								{...layout.props('selected-indicator')}
+								class={[
+									'absolute inset-0 z-0 rounded-full',
+									'bg-[linear-gradient(135deg,#ff0088_0%,#e6007a_100%)]',
+									'shadow-[0_0_20px_rgba(255,0,136,0.45),0_0_40px_rgba(255,0,136,0.15),inset_0_1px_0_rgba(255,255,255,0.2)]'
+								]}
+								aria-hidden="true"
+							></div>
+						{/if}
 
 						<button
 							type="button"

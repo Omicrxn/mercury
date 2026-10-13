@@ -17,7 +17,7 @@ import {
 	stopMercury
 } from './presence-coordinator.js';
 import { mapTransitionToMotion } from './utils.js';
-import { prefersReducedMotion } from './layout-anime.js';
+import { prefersReducedMotion } from './utils.js';
 
 type PresenceDirection = 'in' | 'out' | 'both';
 type PlayDirection = 'in' | 'out';

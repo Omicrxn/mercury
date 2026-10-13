@@ -7,26 +7,28 @@ description: Enhance your UI transitions with powerful layout animations using M
 
 Layout animations enable you to animate properties and scenarios typically not supported by standard CSS animations. While standard animations effectively animate individual properties like opacity or scale, they can’t handle structural changes—such as switching flex-direction, updating grid-template-columns, or smoothly animating between two separate elements. Mercury’s layout animations effortlessly manage these complex cases.
 
+They run on Motion's layout engine — the one behind Motion's `layout` and `layoutId` props — so elements animate with transforms, children marked for layout don't get stretched, and border radius stays round while an element changes size.
+
 ## Basic Usage
 
 Layout animations have two parts:
 
-1. **`layout(trigger, options)`** — creates a layout group. The `trigger` is a getter for the reactive state that causes layout changes; `options.transition` controls the timing. Attach the returned group to the **container** with `{@attach layoutGroup}`.
-2. **`layout.props(id?)`** — spread onto each **child** that should animate when the layout changes.
+1. **`layout(trigger, options)`** — declares _when_ to animate. The `trigger` is a getter for the reactive state that causes layout changes; `options.transition` controls the timing.
+2. **`layout.props(id?)`** — spread onto each element that should animate when the layout changes.
 
 ```svelte
 <script lang="ts">
 	import { layout } from '@omicrxn/mercury';
 
 	let justify = $state('start');
-	const layoutGroup = layout(() => justify, { transition: { duration: 0.4 } });
+	layout(() => justify, { transition: { duration: 0.4 } });
 </script>
 
-<div {@attach layoutGroup} style="justify-content: {justify};">
+<div class="flex" style="justify-content: {justify};">
 	<div
 		{...layout.props()}
 		class="box h-16 w-16 rounded-md border border-slate-500 bg-blue-200"
-	/>
+	></div>
 </div>
 <button
 	onclick={() => (justify = justify === 'start' ? 'end' : 'start')}
@@ -34,11 +36,54 @@ Layout animations have two parts:
 >
 ```
 
-This is Mercury's equivalent of Motion's `layout` prop: when the trigger changes, Mercury measures every marked element before and after the DOM update and FLIP-animates the difference (position and size), including structural changes CSS can't animate — `justify-content`, `flex-direction`, `grid-template-columns`, reordering, and so on.
+When the trigger changes, Mercury measures every marked element before and after the DOM update and animates the difference (position and size), including structural changes CSS can't animate — `justify-content`, `flex-direction`, `grid-template-columns`, reordering, and so on.
+
+Call `layout()` in your component's `<script>`, not inside the markup.
+
+## Mapping from Motion
+
+| motion/react | Mercury |
+| --- | --- |
+| `<motion.div layout />` | `<div {...layout.props()} />` |
+| `<motion.div layoutId="card" />` | `<div {...layout.props('card')} />` |
+| `<motion.div layout="position" />` | `<div {...layout.props({ type: 'position' })} />` |
+| `layoutDependency={value}` | `layout(() => value)` |
+| `transition={{ layout: { … } }}` | `layout(trigger, { transition: { … } })` |
+
+`layout.props()` only sets `data-layout` and `data-layout-id` — the same attributes Motion's vanilla `animateLayout` uses — so you can also write them by hand: `<div data-layout>`, `<div data-layout-id="card">`.
 
 :::warning[Why the trigger?]
-Svelte has no automatic DOM change detection, and Mercury works directly on HTML elements rather than wrapper components. The trigger getter passed as the first argument to `layout()` is how Mercury knows when to record and animate layout changes.
+Motion for React measures elements every time a component re-renders. Svelte doesn't re-render components — it updates the DOM directly — so Mercury needs to know which state to watch. The trigger is Motion's `layoutDependency`, made mandatory.
 :::
+
+### The trigger
+
+The trigger is tracked deeply, so arrays and objects can be passed as they are — pushing, reordering or editing an item is enough:
+
+```svelte
+<script lang="ts">
+	let items = $state([{ id: 1 }, { id: 2 }, { id: 3 }]);
+	let columns = $state(2);
+
+	layout(() => [items, columns]);
+</script>
+```
+
+A change that doesn't move anything costs a measurement but animates nothing.
+
+### Scoping a group
+
+By default a `layout()` call covers every marked element on the page. To limit it to one container — cheaper on big pages — attach it:
+
+```svelte
+<script lang="ts">
+	const layoutGroup = layout(() => justify, { transition: { duration: 0.4 } });
+</script>
+
+<div {@attach layoutGroup} style="justify-content: {justify};">
+	<div {...layout.props()} class="box"></div>
+</div>
+```
 
 ## Layout ID (Shared Layout Animations)
 
@@ -47,21 +92,107 @@ To animate between two **different** elements — Motion's `layoutId` — give t
 ```svelte
 <script lang="ts">
 	let showSecond = $state(false);
-	const layoutGroup = layout(() => showSecond, { transition: { duration: 0.4 } });
+	layout(() => showSecond, { transition: { duration: 0.4 } });
 </script>
 
-<div {@attach layoutGroup}>
-	<button onclick={() => (showSecond = !showSecond)}>Animate</button>
-	{#if showSecond}
-		<div {...layout.props('rectangle')} class="second-element">
-			<div {...layout.props('rectangle-square')} class="size-4 rounded-md bg-blue-200"></div>
-		</div>
-	{:else}
-		<div {...layout.props('rectangle')} class="element">
-			<div {...layout.props('rectangle-square')} class="size-4 rounded-md bg-red-500 m-4"></div>
-		</div>
-	{/if}
-</div>
+<button onclick={() => (showSecond = !showSecond)}>Animate</button>
+{#if showSecond}
+	<div {...layout.props('rectangle')} class="second-element">
+		<div {...layout.props('rectangle-square')} class="size-4 rounded-md bg-blue-200"></div>
+	</div>
+{:else}
+	<div {...layout.props('rectangle')} class="element">
+		<div {...layout.props('rectangle-square')} class="size-4 rounded-md bg-red-500 m-4"></div>
+	</div>
+{/if}
 ```
 
 Both elements share the layout id (`rectangle`), so swapping the `{#if}` branches morphs one into the other instead of cutting. Nested shared elements (like `rectangle-square` above) each get their own id.
+
+If the original element stays in the DOM while a second one with the same id is added — a card opening into a modal — the two crossfade, and removing the second one animates back to the original.
+
+:::warning[Render shared elements conditionally]
+Only one element per layout id should be visible at a time. Use `{#if}` to move it — an active-tab indicator, for example — rather than rendering one per item and hiding the others with CSS.
+:::
+
+## Position only
+
+By default an element animates both its position and its size, which scales its content while it's in motion. Mark the content for layout as well and Mercury corrects for the parent's scale. If it should only ever move — text, icons — use `type: 'position'`:
+
+```svelte
+<div {...layout.props('card')} style:width={expanded ? '320px' : '160px'}>
+	<p {...layout.props({ type: 'position' })}>Never stretches</p>
+</div>
+```
+
+| `type` | Animates |
+| --- | --- |
+| _(default)_ | Position and size |
+| `'position'` | Position only; size changes apply instantly |
+| `'size'` | Size only |
+| `'preserve-aspect'` | Position and size when the aspect ratio stays the same, otherwise position only |
+
+`layout.props` accepts an id, options, or both: `layout.props('card', { type: 'position' })`.
+
+## Options
+
+```ts
+layout(trigger, {
+	transition: { type: 'spring', bounce: 0.2, duration: 0.5 },
+	shared: {
+		indicator: { type: 'spring', bounce: 0.4 }
+	},
+	callbacks: {
+		onPlay: () => {},
+		onComplete: () => {}
+	}
+});
+```
+
+- **`transition`** — the [transition](/api/animate) for every element that changes layout.
+- **`shared`** — overrides `transition` for single layout ids, keyed by the id passed to `layout.props(id)`.
+- **`callbacks`** — `onPlay` runs when a change starts layout animations, `onComplete` once they have all ended.
+
+Pass a function instead of an object — `layout(trigger, () => ({ transition }))` — to read the options fresh on every change.
+
+Layout animations are skipped for users who prefer reduced motion: the layout updates instantly.
+
+## Animating a one-off change
+
+`layout.animate(update, options)` animates the layout changes made inside `update` — no trigger needed. Use it for one-off changes, or for DOM changes Svelte doesn't know about:
+
+```svelte
+<script lang="ts">
+	import { layout } from '@omicrxn/mercury';
+
+	let columns = $state(4);
+	let grid = $state<HTMLElement>();
+</script>
+
+<div bind:this={grid} style:grid-template-columns="repeat({columns}, 1fr)">
+	{#each items as item (item)}
+		<div {...layout.props()}>{item}</div>
+	{/each}
+</div>
+
+<button
+	onclick={() =>
+		layout.animate(() => (columns = 2), {
+			transition: { type: 'spring', bounce: 0.2 },
+			scope: grid
+		})}
+>
+	2 columns
+</button>
+```
+
+It takes the same options as `layout()`, plus **`scope`** — an element to limit the animation to (the whole document by default). It returns a promise that resolves with Motion's playback controls for the animations it started:
+
+```ts
+const animation = await layout.animate(() => (open = true));
+await animation.finished;
+```
+
+## Border radius
+
+Mercury keeps an element's `border-radius` round while its size animates, and morphs it between shared elements with different radii. This works for radii in pixels or percentages, whether they come from a class or an inline style.

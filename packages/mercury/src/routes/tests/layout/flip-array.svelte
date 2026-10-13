@@ -3,10 +3,7 @@
 	let items = $state<{ id: number; name: string }[]>([]);
 	let justify = $state('start');
 
-	const layoutGroup = layout(
-		() => [items.length, items.map((item) => item.id).join(','), justify],
-		{ transition: { duration: 0.4 } }
-	);
+	const layoutGroup = layout(() => [items, justify], { transition: { duration: 0.4 } });
 
 	const flip = () => {
 		if (justify === 'start') {

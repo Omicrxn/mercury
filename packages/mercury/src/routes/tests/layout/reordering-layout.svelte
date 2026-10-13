@@ -4,7 +4,7 @@
 	const initialOrder = ['#ff0088', '#dd00ee', '#9911ff', '#0d63f8'];
 	let order = $state(initialOrder);
 
-	const layoutGroup = layout(() => order.join(','), { transition: { duration: 0.4 } });
+	const layoutGroup = layout(() => order, { transition: { duration: 0.4 } });
 
 	$effect(() => {
 		void order;

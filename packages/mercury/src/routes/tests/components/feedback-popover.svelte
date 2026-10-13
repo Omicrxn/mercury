@@ -15,8 +15,7 @@
 	const { ease } = spring.applyToOptions({ bounce: 0.15, stiffness: 320, damping: 32 });
 
 	const layoutGroup = layout(() => open, {
-		transition: { duration: CLOSE_DURATION_MS / 1000, ease },
-		states: { swapAt: { opacity: 1 } }
+		transition: { duration: CLOSE_DURATION_MS / 1000, ease }
 	});
 
 	function resetPopoverState() {
