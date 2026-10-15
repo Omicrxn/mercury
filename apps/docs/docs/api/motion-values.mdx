@@ -1,0 +1,88 @@
+---
+title: Motion values
+description: Drive styles from Motion's motion values — scroll progress, springs and derived values — without re-running Svelte code.
+---
+
+## Overview
+
+A [motion value](https://motion.dev/docs/motion-value) holds a value that changes over time — a scroll position, a pointer coordinate, a spring — and notifies whatever renders it, outside Svelte's reactivity. Mercury renders motion values on an element through the `style` option:
+
+```svelte
+<script lang="ts">
+	import { mercury } from '@omicrxn/mercury';
+	import { motionValue } from 'motion';
+
+	const x = motionValue(0);
+</script>
+
+<div {@attach mercury({ style: { x } })} />
+<button onclick={() => x.set(x.get() + 50)}>Move</button>
+```
+
+`style` is Motion's `style` prop with motion values: transforms (`x`, `scale`, `rotate`…), any CSS property, and CSS variables. Static styles belong in Svelte's own `style` attribute. A value in `style` can still be animated by `animate` or a gesture.
+
+Motion's value helpers work as they do in React — they are the vanilla versions of its hooks:
+
+| motion/react                     | Motion / Mercury                                          |
+| -------------------------------- | --------------------------------------------------------- |
+| `useMotionValue(0)`              | `motionValue(0)`                                          |
+| `useTransform(() => x.get() * 2)` | `transformValue(() => x.get() * 2)`                      |
+| `useTransform(x, [0, 1], [0, 100])` | `mapValue(x, [0, 1], [0, 100])`                        |
+| `useSpring(x)`                   | `springValue(x)`                                          |
+| `useMotionTemplate`              | `transformValue(() => \`blur(${blur.get()}px)\`)`         |
+| `useMotionValueEvent(x, 'change', f)` | `x.on('change', f)` (returns the unsubscribe)        |
+| `useScroll()`                    | [`scrollValues()`](#scroll) from Mercury                  |
+| `useAnimationFrame(f)`           | `frame.update(f, true)`, stopped with `cancelFrame(f)`    |
+| `useReducedMotion()`             | `prefersReducedMotion.current` from `svelte/motion`       |
+
+Everything but `scrollValues` is imported from `motion`.
+
+## Text
+
+Render a motion value as an element's text with `text` (Motion's `<motion.span>{value}</motion.span>`):
+
+```svelte
+<script lang="ts">
+	import { animate, motionValue, transformValue } from 'motion';
+
+	const count = motionValue(0);
+	const rounded = transformValue(() => Math.round(count.get()));
+	$effect(() => {
+		const controls = animate(count, 100, { duration: 2 });
+		return () => controls.stop();
+	});
+</script>
+
+<span {@attach mercury({ text: rounded })}>0</span>
+```
+
+## Scroll
+
+`scrollValues()` is Motion's `useScroll()`: it returns motion values for the scroll position and progress (0–1) of the page, a scrollable `container`, or a `target` element's progress through it. Call it in a component's `<script>`; it stops tracking when the component is destroyed.
+
+```svelte
+<script lang="ts">
+	import { mercury, scrollValues } from '@omicrxn/mercury';
+	import { springValue } from 'motion';
+
+	const { scrollYProgress } = scrollValues();
+	const scaleX = springValue(scrollYProgress, { stiffness: 300, damping: 40 });
+</script>
+
+<div class="progress-bar" {@attach mercury({ style: { scaleX } })}></div>
+```
+
+<Component path="scroll-progress" />
+
+Options:
+
+- `container`: the scrollable element. Defaults to the page.
+- `target`: track this element's progress through the container instead.
+- `offset`: Motion's [scroll offsets](https://motion.dev/docs/scroll#offset), e.g. `['start end', 'end start']` — from the target's top meeting the container's bottom, to its bottom meeting the container's top.
+- `axis`: `'y'` (default) or `'x'`.
+
+`container` and `target` take an element, a `{ current }` ref, or a getter — `() => element` — so they can point at elements bound with `bind:this`; tracking starts once they're set.
+
+Returned values: `scrollX`, `scrollY` (pixels) and `scrollXProgress`, `scrollYProgress` (0–1).
+
+For animations that play when an element scrolls into view, see [`whileInView`](/api/gestures#in-view). For scroll-linked animations without motion values, Motion's [`scroll()`](https://motion.dev/docs/scroll) works on any element.

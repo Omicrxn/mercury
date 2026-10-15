@@ -1,0 +1,51 @@
+---
+title: Configuration
+description: Default transitions, reduced motion and skipping animations — Motion's MotionConfig.
+---
+
+## motionConfig
+
+`motionConfig()` is Motion's `<MotionConfig>` as an attachment. Put it on a container, and every [`mercury()`](/api/animate) element inside uses its settings:
+
+```svelte
+<script lang="ts">
+	import { mercury, motionConfig } from '@omicrxn/mercury';
+</script>
+
+<main {@attach motionConfig({ transition: { type: 'spring', duration: 0.4, bounce: 0.1 } })}>
+	<!-- springs by default -->
+	<div {@attach mercury({ animate: { x: 100 } })}></div>
+	<!-- its own transition still wins -->
+	<div {@attach mercury({ animate: { x: 100 }, transition: { duration: 0.2 } })}></div>
+</main>
+```
+
+- `transition` — the default transition.
+- `reducedMotion` — `'user'` (default) follows the operating system's setting; `'always'` and `'never'` force it.
+- `skipAnimations` — jump every animation to its end, e.g. for visual regression tests.
+- `transformPagePoint` — maps pointer coordinates for drag and pan inside a transformed (e.g. scaled) container.
+
+The nearest `motionConfig` above an element applies. Settings are read when an element mounts and whenever its own attachment re-runs.
+
+## Reduced motion
+
+Mercury respects the user's `prefers-reduced-motion` setting everywhere, more strictly than Motion's defaults:
+
+- Position and size (`x`, `y`, `width`, `height`, `top`…) jump to their target, and so do layout animations.
+- Every other value — opacity, color, `scale`, `rotate` — gets a short fade instead of its transition: no springs, delays, staggers or loops, so `repeat: Infinity` animations settle.
+- [`presence`](/api/presence)'s shorthand adds and removes elements without animating.
+
+Drag still follows the pointer. To exempt motion that is essential — a progress indicator, say — wrap it in `motionConfig({ reducedMotion: 'never' })`. To show the reduced version regardless of the setting, use `'always'`.
+
+To branch on the setting in your own code, use Svelte's `prefersReducedMotion` from `svelte/motion`.
+
+## Global settings
+
+Motion's `MotionGlobalConfig` applies to every animation on the page, Mercury's included:
+
+```ts
+import { MotionGlobalConfig } from 'motion';
+
+// e.g. in end-to-end tests
+MotionGlobalConfig.skipAnimations = true;
+```

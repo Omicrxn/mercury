@@ -212,12 +212,31 @@ The example below also uses `layout.animate()` to toggle a CSS class directly on
 
 <Component path="layout-animate" />
 
+## Marking elements with `mercury()`
+
+Elements that already have a [`mercury()`](/api/animate) attachment can be marked through it instead, with Motion's prop names:
+
+```svelte
+<div {@attach mercury({ layout: true, whileHover: { scale: 1.05 } })}></div>
+<div {@attach mercury({ layoutId: 'underline' })}></div>
+<p {@attach mercury({ layout: 'position' })}>Moves without stretching</p>
+```
+
+`layout` takes `true`, `'position'`, `'size'` or `'preserve-aspect'`. They also accept Motion's other layout props:
+
+- `onLayoutAnimationStart` / `onLayoutAnimationComplete` — this element's layout animation started or finished.
+- `layoutScroll` — on a scrollable container, accounts for its scroll offset when measuring the children.
+- `layoutRoot` — on a `position: fixed` container, measures the children relative to it.
+- `layoutCrossfade: false` — shared elements swap without crossfading.
+
+The layout animation itself still runs when the group's trigger changes. A layout animation and the element's other animations share its motion values, so a hovered element can move to a new layout while it scales.
+
 ## Mapping from Motion
 
 | motion/react                       | Mercury                                           |
 | ---------------------------------- | ------------------------------------------------- |
-| `<motion.div layout />`            | `<div {...layout.props()} />`                     |
-| `<motion.div layoutId="card" />`   | `<div {...layout.props('card')} />`               |
+| `<motion.div layout />`            | `<div {...layout.props()} />` or `mercury({ layout: true })` |
+| `<motion.div layoutId="card" />`   | `<div {...layout.props('card')} />` or `mercury({ layoutId: 'card' })` |
 | `<motion.div layout="position" />` | `<div {...layout.props({ type: 'position' })} />` |
 | `layoutDependency={value}`         | `layout(() => value)`                             |
 | `transition={{ layout: { … } }}`   | `layout(trigger, { transition: { … } })`          |

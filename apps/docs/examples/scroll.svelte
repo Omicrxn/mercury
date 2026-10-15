@@ -19,13 +19,9 @@
 		<div
 			class="box shrink-0"
 			{@attach mercury({
-				scroll: {
-					enter: { x: 64, rotate: 180 },
-					exit: { x: 0, rotate: 0 },
-					transition: { duration: 0.6, ease: 'easeInOut' },
-					amount: 0.5,
-					root: scrollRoot
-				}
+				whileInView: { x: 64, rotate: 180 },
+				viewport: { root: scrollRoot, amount: 0.5 },
+				transition: { duration: 0.6, ease: 'easeInOut' }
 			})}
 		></div>
 	{/if}

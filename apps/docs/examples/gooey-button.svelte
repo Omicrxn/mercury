@@ -13,7 +13,7 @@
 			class="gooey-blob absolute bottom-20 left-0 rounded-full size-12 bg-foreground"
 			{@attach mercury({
 				animate: { y: show ? 0 : 80 },
-				animateOnMount: false,
+				initial: false,
 				transition: { duration: 0.3, delay: show ? 0 : 0.1, ease: 'easeInOut' }
 			})}
 		>
@@ -25,7 +25,7 @@
 				class="gooey-panel opacity-0 w-48 h-32 min-w-16 min-h-16 bg-foreground text-background rounded-md p-4"
 				{@attach mercury({
 					animate: { opacity: show ? 1 : 0 },
-					animateOnMount: false,
+					initial: false,
 					transition: { duration: show ? 0.5 : 0.3, delay: show ? 0.2 : 0, ease: 'easeOut' }
 				})}
 			>
@@ -34,7 +34,7 @@
 					class="grid grid-cols-2 grid-rows-3 gap-3 justify-items-stretch"
 					{@attach mercury({
 						animate: { y: show ? 0 : 20 },
-						animateOnMount: false,
+						initial: false,
 						transition: { duration: show ? 0.5 : 0.3, delay: show ? 0.2 : 0, ease: 'easeOut' }
 					})}
 				>

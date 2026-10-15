@@ -1,98 +1,160 @@
 ---
 title: Presence (Enter / Exit)
-description: Effortlessly animate component mounting and unmounting using Mercury's presence features.
+description: Animate elements as they're added and removed, like Motion's AnimatePresence.
 ---
 
 ## Overview
 
-Mercury's `presence` is the equivalent of Motion's `<AnimatePresence>` — without the wrapper component. It is a Svelte transition, so you attach it directly to the element whose mounting and unmounting you want to animate:
+Mercury's `presence` is the equivalent of Motion's `<AnimatePresence>` — without the wrapper component. It's a Svelte transition, so it goes directly on the element whose mounting and unmounting you want to animate, and Svelte keeps the element in the page until its exit has played.
+
+There are two ways to describe the animation:
+
+- **Motion-style:** `initial`, `animate` and `exit` on the element's [`mercury()`](/api/animate) attachment, with `presence` marking it as a presence child. This supports everything Motion's `exit` does — variants, `custom`, orchestrated children.
+- **Shorthand:** `initial` and `exit` on `presence` itself, animating to and from the element's CSS. No attachment needed.
+
+## Motion-style
+
+```svelte
+{#if show}
+	<div
+		transition:presence
+		{@attach mercury({
+			initial: { opacity: 0, scale: 0.8 },
+			animate: { opacity: 1, scale: 1 },
+			exit: { opacity: 0, scale: 0.8 },
+			transition: { type: 'spring', bounce: 0.2 }
+		})}
+	/>
+{/if}
+```
+
+This maps one-to-one from Motion:
+
+```jsx
+// motion/react
+<AnimatePresence>
+	{show && (
+		<motion.div
+			initial={{ opacity: 0, scale: 0.8 }}
+			animate={{ opacity: 1, scale: 1 }}
+			exit={{ opacity: 0, scale: 0.8 }}
+			transition={{ type: 'spring', bounce: 0.2 }}
+		/>
+	)}
+</AnimatePresence>
+```
+
+The exit runs through Motion's animation state, so it can be a [variant](/api/variants), and children with variants exit with it — staggered, or before or after it with `when`:
+
+```svelte
+<script lang="ts">
+	const menu: Variants = {
+		open: { opacity: 1, transition: { staggerChildren: 0.05 } },
+		closed: { opacity: 0, transition: { when: 'afterChildren', staggerChildren: 0.03 } }
+	};
+	const item: Variants = { open: { opacity: 1, x: 0 }, closed: { opacity: 0, x: -16 } };
+</script>
+
+{#if open}
+	<ul
+		transition:presence
+		{@attach mercury({ variants: menu, initial: 'closed', animate: 'open', exit: 'closed' })}
+	>
+		{#each items as label (label)}
+			<li {@attach mercury({ variants: item })}>{label}</li>
+		{/each}
+	</ul>
+{/if}
+```
+
+Svelte removes the element as soon as the whole exit — children included — has finished.
+
+### Exit variants and `custom`
+
+An exiting element no longer receives new props, but its exit may depend on state that changed since — like which way a slideshow is going. As with `<AnimatePresence custom>`, the `custom` on `presence` is passed to the exit's dynamic variants:
+
+```svelte
+<script lang="ts">
+	const slide: Variants = {
+		enter: (dir: number) => ({ x: dir * 120, opacity: 0 }),
+		center: { x: 0, opacity: 1 },
+		exit: (dir: number) => ({ x: dir * -120, opacity: 0 })
+	};
+</script>
+
+{#key index}
+	<div
+		transition:presence={{ mode: 'popLayout', custom: direction }}
+		{@attach mercury({
+			custom: direction,
+			variants: slide,
+			initial: 'enter',
+			animate: 'center',
+			exit: 'exit'
+		})}
+	>
+		{slides[index]}
+	</div>
+{/key}
+```
+
+<Component path="slideshow" />
+
+## Shorthand
+
+Without an attachment, describe the hidden state on `presence`:
 
 ```svelte
 {#if show}
 	<div
 		class="card"
 		transition:presence={{
-			initial: { opacity: 0, scale: 0.8 },
-			exit: { opacity: 0, scale: 0.8 },
+			initial: { opacity: 0, y: 25 },
+			exit: { opacity: 0, y: 25 },
 			transition: { duration: 0.3 }
 		}}
-	/>
+	>
+		Hello
+	</div>
 {/if}
 ```
 
-- **`initial`** — the hidden state the element enters **from**. On enter, Mercury animates from these values to the element's settled CSS styles.
-- **`exit`** — the values the element animates **to** before it is removed.
-- **`transition`** — shared timing for both directions. Each spec can override it with its own `transition` (e.g. `exit: { opacity: 0, transition: { duration: 0.15 } }`).
-- **`mode`** — `'sync' | 'wait' | 'popLayout'`, matching `<AnimatePresence mode>`.
+- **`initial`** — the hidden state the element enters **from**. It animates from these values to its own CSS styles.
+- **`exit`** — the values the element animates **to** before it's removed.
+- **`transition`** — shared by both directions. Each side can override it with its own `transition`, e.g. `exit: { opacity: 0, transition: { duration: 0.15 } }`.
 
-The mental model is one sentence: **your CSS is the resting state, `initial` and `exit` are the hidden states, and `mercury({ animate })` is for state-driven animation.** Because the enter target is the element's own styles, there is no `animate` key on `presence` — `animate` always means the [mercury attachment](/api/animate).
+Your CSS stays the resting state: once an enter finishes, Mercury hands the animated properties back to the element's styles, so an element that entered from `height: 0` keeps following its content, and an `opacity` class keeps applying. Transform values (`x`, `y`, `scale`, `rotate`…) settle at their identity.
 
-## Mapping from Motion
-
-```jsx
-// motion/react
-<AnimatePresence>
-	{isSilent && (
-		<motion.div
-			initial={{ width: 0, opacity: 0, filter: 'blur(4px)' }}
-			animate={{ width: 40, opacity: 1, filter: 'blur(0px)' }}
-			exit={{ width: 0, opacity: 0, filter: 'blur(4px)' }}
-			transition={{ type: 'spring', bounce: 0.35 }}
-			className="... w-10"
-		/>
-	)}
-</AnimatePresence>
-```
-
-In Mercury, the static `animate` values move into CSS (`w-10`, default opacity, no filter), and `initial`/`exit` move onto the transition:
+For simple cases, skip `initial`/`exit` and pass the hidden state directly. Enters animate **from** it, exits **to** it:
 
 ```svelte
-{#if isSilent}
-	<div
-		class="absolute left-[5px] h-[18px] w-10 rounded-full bg-[#FD4F30]"
-		transition:presence={{
-			initial: { width: 0, opacity: 0, filter: 'blur(4px)' },
-			exit: { width: 0, opacity: 0, filter: 'blur(4px)' },
-			transition: { type: 'spring', bounce: 0.35 }
-		}}
-	/>
-{/if}
-```
-
-| motion/react | Mercury |
-| --- | --- |
-| `<AnimatePresence>` wrapper | not needed — Svelte transitions track unmounts natively |
-| `initial={{ ... }}` | `initial` on `transition:presence` |
-| `animate={{ ... }}` (static) | the element's CSS |
-| `animate={{ ... }}` (state-driven) | `{@attach mercury({ animate })}` |
-| `exit={{ ... }}` | `exit` on `transition:presence` |
-| `<AnimatePresence mode="...">` | `mode` on `transition:presence` |
-| `<AnimatePresence initial={false}>` | the default (local transitions) |
-| `<AnimatePresence initial>` | `transition:presence\|global` |
-
-## First render (`initial={false}`)
-
-Svelte transitions are _local_ by default: they don't play when an **ancestor** block mounts, only when the element's own block is added or removed. This is exactly `<AnimatePresence initial={false}>` — a component appearing for the first time renders its children in their resting state, and only subsequent toggles animate.
-
-If you _do_ want the enter to play when an ancestor mounts (Motion's default), opt in with the `|global` modifier:
-
-```svelte
-<div transition:presence|global={{ initial: { opacity: 0 }, exit: { opacity: 0 } }} />
-```
-
-## The flat form
-
-For simple cases you can skip `initial`/`exit` and pass the hidden state directly. Enters animate **from** it, exits animate **to** it:
-
-```svelte
-<!-- the flat form: one hidden state for both directions -->
 <div transition:presence={{ opacity: 0, y: 25 }} />
 
 <!-- or per direction -->
 <div in:presence={{ opacity: 0 }} out:presence={{ opacity: 0, y: 25 }} />
 ```
 
-For transform values (`x`, `y`, `scale`, `rotate`, …) the settled target is the identity (no transform); other properties use the element's computed style.
+## Options
+
+These go on `presence` with either style:
+
+- **`mode`** — `'sync' | 'wait' | 'popLayout'`, matching `<AnimatePresence mode>`.
+- **`custom`** — data for the exit's dynamic variants (see above).
+- **`onExitComplete`** — called once the exit has finished, right before the element is removed.
+
+```svelte
+<div transition:presence={{ onExitComplete: () => console.log('gone') }} />
+```
+
+## First render (`initial={false}`)
+
+Svelte transitions are _local_ by default: they don't play when an **ancestor** block mounts, only when the element's own block is added or removed. For the shorthand that's exactly `<AnimatePresence initial={false}>`; opt in to Motion's default with `|global`:
+
+```svelte
+<div transition:presence|global={{ initial: { opacity: 0 }, exit: { opacity: 0 } }} />
+```
+
+With the Motion-style attachment, `initial` plays whenever the element mounts, like a `motion.div`. Use `initial: false` to skip it.
 
 ## Modes (`sync`, `wait` and `popLayout`)
 
@@ -101,8 +163,6 @@ Quoting [Motion's documentation](https://motion.dev/docs/react-animate-presence#
 > - “sync”: Children animate in/out as soon as they’re added/removed.
 > - “wait”: The entering child will wait until the exiting child has animated out. Note: Currently only renders a single child at a time.
 > - “popLayout”: Exiting children will be “popped” out of the page layout. This allows surrounding elements to move to their new layout immediately.
-
-In Mercury the mode is a parameter of the transition itself:
 
 ```svelte
 {#key currentTab}
@@ -120,19 +180,18 @@ In Mercury the mode is a parameter of the transition itself:
 ```
 
 - **`mode: 'sync'`** (default) — entering and exiting elements animate at the same time.
-- **`mode: 'popLayout'`** — snapshots the exiting element's box and pins it with `position: absolute`, so siblings reflow immediately while it animates out in place. Mercury sets the direct parent to `position: relative` when it is `static`.
-- **`mode: 'wait'`** — the next enter in the same parent slot waits until the exit animation finishes. Mercury coordinates the delay automatically for `presence` enters and `{@attach mercury(...)}` enter animations in that slot.
+- **`mode: 'wait'`** — the entering element stays out of the page (`display: none`) until the exiting one has animated out and been removed, then animates in. Mercury coordinates this for `presence` and `mercury()` enters under the same parent element.
+- **`mode: 'popLayout'`** — the exiting element is pinned where it is with `position: absolute` at its measured size and offset, so siblings reflow immediately while it animates out. Its parent becomes `position: relative` while any child is popped, if it was `static`.
 
 ## Interruptions
 
 Presence animations are interruptible, like Motion's:
 
-- If an element is re-inserted while its exit is still running (a quick toggle back), Mercury animates it from wherever the exit left off back to its settled state instead of replaying the enter from `initial`.
-- If an exit starts mid-enter, the enter is stopped and the exit animates from the current state.
-- When an element uses both `{@attach mercury(...)}` and `presence`, Mercury stops the mercury animation before running the exit so the two don't fight over the same properties.
+- If an element is re-inserted while its exit is still running (a quick toggle back), it animates from wherever the exit left off back to its resting state, instead of replaying the enter.
+- If an exit starts mid-enter, it animates from the current state.
 
 :::note
-`presence` respects the user’s `prefers-reduced-motion` setting. When reduced motion is requested the element is added/removed instantly without animating.
+`presence` respects the user's `prefers-reduced-motion` setting: the shorthand adds and removes elements without animating, and Motion-style exits follow Mercury's [reduced motion](/api/configuration#reduced-motion) rules.
 :::
 
 ## Caveats & differences from Motion
@@ -156,18 +215,18 @@ Svelte does **not** play a _local_ `out:` transition when a **parent** block (`{
 
 Rule of thumb: if the element's own `{#if}` toggles, local `presence` is fine; if an ancestor block is removed, use `presence|global`.
 
+### `exit` needs `presence`
+
+Like Motion's `exit` outside `<AnimatePresence>`, an `exit` on the attachment does nothing unless the element has `transition:presence` or `out:presence`: without a transition, Svelte removes the element immediately.
+
 ### `mode` is set per element, not on a wrapper
 
-Motion sets `mode` once on `<AnimatePresence>`. In Mercury the mode lives on each element's `presence` params. For a list, set the same `mode` on every item.
+Motion sets `mode` once on `<AnimatePresence>`. In Mercury the mode lives on each element's `presence`. For a list, set the same `mode` on every item.
 
 ### `popLayout` reflows siblings instantly
 
-Motion pairs `popLayout` with the `layout` prop so neighbours _animate_ to their new positions (FLIP). Mercury's `popLayout` only pops the exiting node out of flow; surrounding elements reflow **immediately**. For a smooth reflow, add Mercury's [`layout`](/api/layout-animations) to the siblings.
-
-### No `onExitComplete` hook
-
-There is no single "all exits finished" callback like Motion's `onExitComplete`. Because the node is removed as the exit ends, a Motion `transition.onComplete` may not fire for exits — don't rely on it to detect exit completion.
+Motion pairs `popLayout` with the `layout` prop so neighbours _animate_ to their new positions. Mercury's `popLayout` pops the exiting element out of flow; for a smooth reflow, add Mercury's [`layout`](/api/layout-animations) to the siblings.
 
 ### `wait` coordinates through the shared parent
 
-`wait` mode renders one child at a time and sequences the next enter after the current exit, coordinating through the **shared parent element**. The entering and exiting nodes must live under the same DOM parent for the sequencing to work — keyed swaps (`{#key}`) and `{#if}` blocks normally satisfy this.
+`wait` sequences the next enter after the current exit through the **shared parent element**. The entering and exiting elements must live under the same DOM parent — keyed swaps (`{#key}`) and `{#if}` / `{:else}` blocks normally satisfy this.

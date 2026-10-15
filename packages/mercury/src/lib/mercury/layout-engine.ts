@@ -9,6 +9,7 @@ import {
 // if a Motion release drops one, it's `undefined` here and `failSoft` kicks in,
 // instead of the app failing to link the module.
 import * as motion from 'motion';
+import { getVisualElement } from './node.js';
 
 /**
  * Two-phase driver for Motion's layout projection engine — the engine behind
@@ -63,7 +64,7 @@ type Session = {
 	resolve: (animation: GroupAnimation) => void;
 };
 
-const LAYOUT_SELECTOR = '[data-layout],[data-layout-id]';
+const LAYOUT_SELECTOR = '[data-layout],[data-layout-id],[data-layout-scroll],[data-layout-root]';
 
 /** Every projection node Mercury has created, keyed by element for reuse. */
 const layoutNodes = new WeakMap<HTMLElement, IProjectionNode>();
@@ -116,20 +117,6 @@ function flushPendingFrame() {
 	frameSteps.preRender.process(frameData);
 	frameSteps.render.process(frameData);
 	frameData.isProcessing = false;
-}
-
-function createVisualElement() {
-	return new motion.HTMLVisualElement(
-		{
-			props: {},
-			presenceContext: null,
-			visualState: {
-				latestValues: {},
-				renderState: { transform: {}, transformOrigin: {}, style: {}, vars: {} }
-			}
-		} as unknown as ConstructorParameters<typeof HTMLVisualElement>[0],
-		{ allowProjection: true }
-	);
 }
 
 const RADIUS_KEYS = [
@@ -213,6 +200,9 @@ function readNodeOptions(element: HTMLElement, transition: Transition | undefine
 		layout: layoutAttr !== null ? true : undefined,
 		// `data-layout="position" | "size" | "preserve-aspect"` narrows what animates.
 		animationType: !layoutAttr || layoutAttr === 'true' ? 'both' : layoutAttr,
+		layoutScroll: element.hasAttribute('data-layout-scroll'),
+		layoutRoot: element.hasAttribute('data-layout-root'),
+		crossfade: element.getAttribute('data-layout-crossfade') !== 'false',
 		transition
 	} as Parameters<IProjectionNode['setOptions']>[0];
 }
@@ -224,22 +214,22 @@ function readNodeOptions(element: HTMLElement, transition: Transition | undefine
  * children hang off the root and stretch when the ancestor animates.
  */
 function getProjectionParent(element: HTMLElement): IProjectionNode | undefined {
-	const ancestor = element.parentElement?.closest(LAYOUT_SELECTOR);
-	if (!(ancestor instanceof HTMLElement)) return undefined;
-	return layoutNodes.get(ancestor) ?? createNode(ancestor, undefined);
+	for (let ancestor = element.parentElement; ancestor; ancestor = ancestor.parentElement) {
+		// Draggable elements have a node without being marked.
+		const node = layoutNodes.get(ancestor);
+		if (node) return node;
+		if (ancestor.matches(LAYOUT_SELECTOR)) return createNode(ancestor, undefined);
+	}
+	return undefined;
 }
 
 function createNode(element: HTMLElement, transition: Transition | undefined): IProjectionNode {
 	const parent = getProjectionParent(element);
 
-	let visualElement = motion.visualElementStore.get(element) as HTMLVisualElement | undefined;
-	if (!visualElement) {
-		visualElement = createVisualElement();
-		// Values `animate()` (mercury's `animate`, gestures…) has been rendering on
-		// this element move to the VisualElement, so the layout animation composes
-		// with them instead of overwriting them.
-		motion.handOffElementState(element, visualElement);
-	}
+	// The VisualElement every Mercury animation of this element shares — its
+	// `mercury()` node's if it has one — so the layout animation composes with
+	// them instead of overwriting them.
+	const visualElement = getVisualElement(element) as HTMLVisualElement;
 
 	// A first-time element may carry a projection transform in its inline style
 	// that isn't tracked in latestValues; clear it so the first measurement isn't
@@ -255,12 +245,46 @@ function createNode(element: HTMLElement, transition: Transition | undefined): I
 	layoutNodes.set(element, node);
 	knownElements.add(element);
 
+	// The projection node itself calls the VisualElement's `onLayoutAnimationStart` /
+	// `onLayoutAnimationComplete` props.
 	node.addEventListener('animationComplete', () => {
 		// Shared elements animate as one: the lead completes for its whole stack.
 		(node.getStack()?.members ?? [node]).forEach(releaseRadius);
 	});
 
 	return node;
+}
+
+/**
+ * Give a draggable element a projection node, which drag measures its layout and
+ * constraints with. Returns whether it was created for drag, rather than already
+ * there for layout animations.
+ */
+export function ensureProjectionNode(element: Element, visualElement: unknown): boolean {
+	if (!(element instanceof HTMLElement)) return false;
+	try {
+		const existing = layoutNodes.get(element);
+		const node = existing ?? createNode(element, undefined);
+		node.setOptions({ alwaysMeasureLayout: true, visualElement } as never);
+		(visualElement as HTMLVisualElement).projection = node;
+		return !existing;
+	} catch (error) {
+		failSoft(error);
+		return false;
+	}
+}
+
+/** Drop a projection node `ensureProjectionNode` created, unless layout animations now use it. */
+export function releaseProjectionNode(element: Element, visualElement: unknown) {
+	if (!(element instanceof HTMLElement) || element.matches(LAYOUT_SELECTOR)) return;
+	const node = layoutNodes.get(element);
+	if (!node) return;
+	try {
+		dropNode(element, node);
+	} catch (error) {
+		failSoft(error);
+	}
+	(visualElement as HTMLVisualElement).projection = undefined;
 }
 
 function prepareNode(element: HTMLElement, transition: Transition | undefined): IProjectionNode {

@@ -1,93 +1,104 @@
 ---
 title: Animate
-description: Easily animate your Svelte components using Mercury
+description: Animate elements with Motion's animation props, using the mercury attachment.
 ---
 
 ## Overview
 
-The `animate` property lets you control animations applied to your components with Mercury. It is the equivalent of Motion's `animate` prop: the element animates to these values on mount, and again whenever they change.
-
-Mercury's mental model in one sentence: **your CSS is the resting state, `animate` is state-driven animation, and [`presence`](/api/presence) (`initial` / `exit`) handles mounting and unmounting.**
-
-### Usage
-
-Include the `animate` property within the `mercury()` attachment like this:
+`mercury()` is Mercury's equivalent of a `<motion.div>`. It is a Svelte [attachment](https://svelte.dev/docs/svelte/@attach) that takes the props of a Motion component — `initial`, `animate`, `exit`, `transition`, `variants`, the `while*` gestures, `drag` and the rest — and applies them to the element it's on:
 
 ```svelte
-<div
-  {@attach mercury({
-    animate: { scale: 2, x: 50 }
-  })}
-/>
+<script lang="ts">
+	import { mercury } from '@omicrxn/mercury';
+</script>
+
+<div {@attach mercury({ animate: { scale: 1.5, x: 50 } })} />
 ```
 
-Because attachments re-run when their reactive dependencies change, `animate` is naturally state-driven — derive it from `$state` and Mercury animates on every change:
+Under the hood each element gets a Motion `VisualElement` and Motion's own animation state machine, the same engine `motion/react` runs on. Gesture states, variants and their propagation to children, `transitionEnd`, reduced motion and value velocity all behave as they do in Motion.
+
+## State-driven animation
+
+Attachments re-run when the state they read changes. Each run updates the same Motion node — like a React re-render of a motion component — so derive `animate` from `$state` and Mercury animates whatever changed:
 
 ```svelte
-{@attach mercury({
-	animate: { width: isSilent ? 148 : 128 },
-	transition: { type: 'spring', bounce: 0.5 }
-})}
-```
+<script lang="ts">
+	let isSilent = $state(false);
+</script>
 
-## animateOnMount
-
-By default `animate` plays once on mount — animating from the element's current styles to the `animate` values — and then again whenever `animate` changes. `animateOnMount` controls **only that first run**:
-
-- **`animateOnMount: true`** (default) — the mount animation plays.
-- **`animateOnMount: false`** — the element renders directly in its `animate` state on mount (keyframe arrays snap to their last frame) with no entrance animation; only subsequent changes animate. This is the equivalent of Motion's `initial={false}`.
-
-```svelte
-<!-- no wiggle on mount; wiggles on every isSilent change -->
-{@attach mercury({
-	animateOnMount: false,
-	animate: {
-		rotate: isSilent ? [0, -15, 5, -2, 0] : [0, 20, -15, 12.5, -10, 10, -7.5, 7.5, -5, 5, 0],
-		x: isSilent ? 9 : 0
-	}
-})}
-```
-
-:::warning[animateOnMount is not a from-state]
-`animateOnMount` only chooses whether the first transition to `animate` runs — it cannot give the element a hidden _starting_ style. The attachment runs after the element is already in the DOM, so it can't paint a hidden state before the first frame. If you need the element to enter **from** an explicit hidden state (flash-free), that's a presence concern — use `initial` on [`transition:presence`](/api/presence).
-:::
-
-## Supported Features
-
-Mercury is powered by Motion. To explore the full set of animatable values and capabilities, check the Motion documentation:
-
-- [Motion Docs](https://motion.dev/docs/animate)
-
-## Stagger
-
-Instead of using stagger functions from the animation libraries, Mercury simplifies staggering animations by individually delaying elements:
-
-```svelte
-{#each { length: 3 }, i}
-	<div
-		{@attach mercury({
-			animate: { opacity: 1, y: [64, 0] },
-			transition: { delay: i * 0.05 } //use the index to target the element delayed.
-		})}
-	/>
-{/each}
-```
-
-## Keyframes
-
-Mercury supports keyframe animations by providing arrays of values:
-
-```svelte
 <div
 	{@attach mercury({
-		animate: { y: [64, 0] } // will be animated to y: 64 and then to y:0
+		animate: { width: isSilent ? 148 : 128 },
+		transition: { type: 'spring', bounce: 0.5 }
 	})}
 />
 ```
 
+Values that didn't change don't replay, gestures in progress carry on, and an interrupted animation continues from its current value and velocity.
+
+## initial
+
+`initial` is the state the element renders before it animates to `animate` on mount:
+
+```svelte
+<div
+	{@attach mercury({
+		initial: { opacity: 0, y: 16 },
+		animate: { opacity: 1, y: 0 }
+	})}
+/>
+```
+
+Set `initial: false` to render the element directly in its `animate` state, so only later changes animate (keyframe arrays start at their last frame):
+
+```svelte
+<!-- no wiggle on mount; wiggles on every isSilent change -->
+<div
+	{@attach mercury({
+		initial: false,
+		animate: {
+			rotate: isSilent ? [0, -15, 5, -2, 0] : [0, 20, -15, 12.5, -10, 10, -7.5, 7.5, -5, 5, 0]
+		}
+	})}
+/>
+```
+
+Without `initial`, the element animates from its current styles.
+
+:::note[Server-rendered pages]
+Mercury applies `initial` before the browser paints an element that Svelte adds. Markup that came from the server is painted before Svelte hydrates it, so it shows its CSS styles first. For a flash-free entrance on server-rendered content, give the element its hidden state in CSS as well (`class="opacity-0"`), or animate it in with [`presence`](/api/presence).
+:::
+
+## exit
+
+`exit` is the state the element animates to before it's removed. Like Motion's `exit`, which needs `<AnimatePresence>`, it needs [`presence`](/api/presence) on the element so Svelte keeps it in the page until the exit has played:
+
+```svelte
+{#if show}
+	<div
+		transition:presence
+		{@attach mercury({
+			initial: { opacity: 0, scale: 0.9 },
+			animate: { opacity: 1, scale: 1 },
+			exit: { opacity: 0, scale: 0.9 }
+		})}
+	/>
+{/if}
+```
+
+## Keyframes
+
+Arrays animate through each value in turn. `null` as the first keyframe means "the current value":
+
+```svelte
+<div {@attach mercury({ animate: { y: [64, 0], scale: [null, 1.2, 1] } })} />
+```
+
+Position keyframes with `times` (one 0–1 value per keyframe) in the transition.
+
 ## Transition
 
-Control the animation’s transition properties (duration, easing, repeat) with the transition parameter:
+`transition` takes Motion's [transition options](https://motion.dev/docs/animate#transitions) — `duration`, `delay`, `ease`, `times`, `repeat`, springs, `inertia`, and more:
 
 ```svelte
 <div
@@ -98,86 +109,53 @@ Control the animation’s transition properties (duration, easing, repeat) with 
 />
 ```
 
-## Easing
-
-Easings control animation pacing throughout an animation's duration. Mercury uses Motion's easing system — pass any [Motion easing](https://motion.dev/docs/easing-functions) via the `ease` property on `transition`:
-
-- **Named easings:** `linear`, `easeIn`, `easeOut`, `easeInOut`, `circIn`, `circOut`, `circInOut`, `backIn`, `backOut`, `backInOut`, `anticipate`
-- **Cubic bezier:** `ease: [0.39, 0.24, 0.3, 1]`
-- **Custom functions:** `ease: (progress) => progress * progress`
-- **Steps:** import `steps` from `motion` and pass the result as `ease`
-
-```svelte
-{@attach mercury({
-	animate: { scale: 1.5 },
-	transition: { ease: 'circInOut', duration: 1 }
-})}
-```
-
-## Repetition
-
-Control how animations repeat with these parameters:
-
-- `repeat`: Number of repetitions (`Infinity` supported).
-- `repeatType`: `loop`, `reverese` or `mirror`
-- `repeatDelay`: Delay in seconds between repetitions.
+Override it per value, with `default` for the rest:
 
 ```svelte
 <div
 	{@attach mercury({
-		animate: {
-			backgroundColor: ['#ff0088', '#0d63f8']
-		},
-		transition: {
-			duration: 2,
-			repeat: Infinity,
-			repeatType: 'reverse',
-			ease: 'linear'
-		}
-	})}
-></div>
-```
-
-## Springs
-
-Spring-based animations mimic physical springs, often providing the most natural animation experience. Set `type: 'spring'` on the `transition`:
-
-```svelte
-<div
-	class="box h-16 w-16 rounded-md border border-slate-500 bg-blue-200"
-	{@attach mercury({
-		animate: { rotate: 90 },
-		transition: { type: 'spring', duration: 0.8, bounce: 0.35, repeat: Infinity, repeatDelay: 0.2 }
+		animate: { x: 100, opacity: 1 },
+		transition: { default: { type: 'spring' }, opacity: { duration: 0.2, ease: 'linear' } }
 	})}
 />
 ```
 
-Just like Motion, Mercury springs can be configured in **two ways** — and the two sets of options are mutually exclusive.
-
-### Duration-based springs
-
-Set with a `duration` and a `bounce` value. These are the easiest to reason about: you pick how long it takes and how bouncy it feels.
-
-- `duration`: Total duration of the spring, in seconds.
-- `bounce`: Bounciness, from `0` (no bounce) to `1` (very bouncy). Defaults to `0.25`.
-- `visualDuration`: Optional. Time (in seconds) the animation takes to *visually* reach its target. When set, it overrides `duration` and makes springs easier to coordinate with other time-based animations.
+A target can carry its own `transition`, which wins over the attachment's: `whileHover: { scale: 1.1, transition: { duration: 0.1 } }`. `transitionEnd` sets values once the animation has finished:
 
 ```svelte
-{@attach mercury({
-	animate: { y: 0 },
-	transition: { type: 'spring', duration: 0.6, bounce: 0.2 }
-})}
+<div {@attach mercury({ animate: { opacity: 0, transitionEnd: { display: 'none' } } })} />
 ```
 
-### Physics-based springs
+### Easing
 
-Set with `stiffness`, `damping`, and `mass`. These incorporate the velocity of any in-progress gesture or animation for natural, interruptible motion.
+Pass any [Motion easing](https://motion.dev/docs/easing-functions) as `ease`:
 
-- `stiffness`: Spring stiffness. Higher values create more sudden movement.
-- `damping`: Opposing force. `0` oscillates forever.
-- `mass`: Mass of the moving object. Higher values feel more lethargic.
-- `velocity`: Initial velocity of the spring.
-- `restSpeed` / `restDelta`: Thresholds that determine when the spring is considered "at rest" and the animation ends.
+- **Named easings:** `linear`, `easeIn`, `easeOut`, `easeInOut`, `circIn`, `circOut`, `circInOut`, `backIn`, `backOut`, `backInOut`, `anticipate`
+- **Cubic bezier:** `ease: [0.39, 0.24, 0.3, 1]`
+- **Functions:** `ease: (progress) => progress * progress`, or Motion's `steps(4)`, `cubicBezier()`…
+- **Per keyframe:** an array of easings, one between each pair of keyframes
+
+### Repetition
+
+- `repeat`: number of repetitions (`Infinity` supported).
+- `repeatType`: `'loop'`, `'reverse'` or `'mirror'`.
+- `repeatDelay`: delay in seconds between repetitions.
+
+```svelte
+<div
+	{@attach mercury({
+		animate: { backgroundColor: ['#ff0088', '#0d63f8'] },
+		transition: { duration: 2, repeat: Infinity, repeatType: 'reverse', ease: 'linear' }
+	})}
+></div>
+```
+
+### Springs
+
+Set `type: 'spring'`. Like Motion, springs are configured in one of two ways:
+
+- **Duration-based** — `duration` (or `visualDuration`, the time to visually reach the target) and `bounce` (`0` to `1`, default `0.25`).
+- **Physics-based** — `stiffness`, `damping` and `mass`, plus `velocity`, `restSpeed` and `restDelta`. These pick up the velocity of an interrupted animation or gesture.
 
 ```svelte
 {@attach mercury({
@@ -190,29 +168,57 @@ Set with `stiffness`, `damping`, and `mass`. These incorporate the velocity of a
 `duration` and `bounce` are ignored the moment any of `stiffness`, `damping`, or `mass` is set. Pick one configuration style per spring.
 :::
 
-## Callbacks
+## Stagger
 
-Pass a `callbacks` object to hook into the animation lifecycle. These mirror [Motion's playback lifecycle](https://motion.dev/docs/animate#controls) one-to-one:
+Give each element its own delay:
 
-- `onPlay`: Fires when the animation starts playing.
-- `onComplete`: Fires when the animation finishes.
-- `onUpdate`: Fires with the latest value on each frame (single-value animations).
-- `onRepeat`: Fires on each repetition.
-- `onStop`: Fires when the animation is stopped.
+```svelte
+{#each { length: 3 }, i}
+	<div
+		{@attach mercury({
+			animate: { opacity: 1, y: [64, 0] },
+			transition: { delay: i * 0.05 }
+		})}
+	/>
+{/each}
+```
+
+To stagger children from a parent — and in reverse on the way out — use [variants](/api/variants) with `staggerChildren`.
+
+## Animatable values
+
+Anything Motion animates: transforms as independent values (`x`, `y`, `scale`, `rotate`, `skewX`…), colors, CSS variables (`'--progress'`), `filter`, `clipPath`, `boxShadow`, `width` / `height` (including to and from `'auto'`), and SVG attributes such as `pathLength`, `pathOffset`, `cx` or `d` on SVG elements:
+
+```svelte
+<svg viewBox="0 0 100 100">
+	<path
+		d="M10 50 L90 50"
+		{@attach mercury({ initial: { pathLength: 0 }, animate: { pathLength: 1 } })}
+	/>
+</svg>
+```
+
+See [Motion's docs](https://motion.dev/docs/animate) for the full list.
+
+## Events
+
+These mirror Motion's component events:
+
+- `onAnimationStart(definition)` — an animation started.
+- `onAnimationComplete(definition)` — it finished. `definition` is the target or variant label.
+- `onUpdate(latest)` — every frame, with the latest values.
 
 ```svelte
 {@attach mercury({
 	animate: { x: 100 },
-	callbacks: {
-		onPlay: () => console.log('started'),
-		onComplete: () => console.log('done')
-	}
+	onAnimationStart: () => console.log('started'),
+	onAnimationComplete: (definition) => console.log('done', definition)
 })}
 ```
 
 ## Playback controls
 
-Use the `instance` callback to capture the running animation and drive it imperatively. The instance exposes `play()`, `pause()`, `stop()`, and `cancel()`, plus a `completed` flag and an `onComplete` promise helper:
+For imperative control, pass `instance`. It's called with the playback controls of the animations each change starts — `play()`, `pause()`, `stop()`, `cancel()`, a `finished` promise, a `completed` flag, and Motion's underlying `controls`:
 
 ```svelte
 <script lang="ts">
@@ -230,3 +236,6 @@ Use the `instance` callback to capture the running animation and drive it impera
 
 <button onclick={() => animation?.play()}>Play</button>
 <button onclick={() => animation?.pause()}>Pause</button>
+```
+
+For timelines and sequences, use Motion's [`animate()`](https://motion.dev/docs/animate) directly — on an element Mercury animates it shares the same motion values.

@@ -1,142 +1,147 @@
 # Mercury
 
-**Mercury** is a Svelte 5 animation library powered by [Motion](https://motion.dev/). It brings Framer Motion–style ergonomics to Svelte using **attachments** and **transitions** — no wrapper components required.
-
-Animate elements directly, coordinate enter/exit with `presence`, handle layout changes with shared-element transitions, and add gesture-driven interactions.
+**Mercury** is [Motion](https://motion.dev/) for Svelte 5. It runs Motion's own engine — its animation state, variants, gestures, drag and layout projection — behind Svelte **attachments** and **transitions**, so Motion's props work in Svelte with no wrapper components.
 
 ## Documentation
 
 - [Introduction](https://mercury.uialchemy.com/docs)
 - [Getting Started](https://mercury.uialchemy.com/docs/getting-started)
+- [Coming from Motion](https://mercury.uialchemy.com/docs/api/coming-from-motion)
 - [Examples](https://mercury.uialchemy.com/docs/examples)
 
 ## Mental model
 
-**Your CSS is the resting state, `animate` is state-driven animation, and `presence` handles mounting and unmounting.**
-
 | motion/react | Mercury |
 | --- | --- |
-| `animate={{ ... }}` (state-driven) | `{@attach mercury({ animate })}` |
-| `animate={{ ... }}` (static) | the element's CSS |
-| `initial` / `exit` | `initial` / `exit` on `transition:presence` |
-| `<AnimatePresence>` | not needed — Svelte transitions track unmounts natively |
-| `layout` / `layoutId` | `layout.props(id?)` + `layout(trigger)` |
+| `<motion.div initial animate exit whileHover drag …>` | `<div {@attach mercury({ initial, animate, exit, whileHover, drag, … })}>` |
+| `<AnimatePresence>` | `transition:presence` on the element |
+| `layout` / `layoutId` | `mercury({ layout, layoutId })` or `layout.props(id?)`, in a `layout(trigger)` group |
+| `<MotionConfig>` | `{@attach motionConfig({ … })}` |
+| `useScroll()` | `scrollValues()` |
+| `useDragControls()` | `createDragControls()` |
 
 ## Features
 
-- **Attachment-based API** — `{@attach mercury(...)}` applies animations directly to DOM elements
-- **Presence animations** — enter/exit with `transition:presence` (`initial`, `exit`, `mode`)
-- **Layout animations** — Motion's layout engine: size/position transitions and shared `layoutId` morphs via `layout()` + `layout.props()`
-- **Gestures** — `whileHover`, `whileTap`, drag, and scroll-triggered animations
-- **Powered by Motion** — full [easing](https://motion.dev/docs/easing-functions), springs, keyframes, callbacks, and playback controls
-- Works alongside Svelte transitions, actions, and other DOM features
+- **Motion's props** — `initial`, `animate`, `exit`, `transition` (springs, keyframes, per-value transitions), `transitionEnd`
+- **Variants** — named states that propagate to children, with `staggerChildren`, `delayChildren` and `when`
+- **Gestures** — `whileHover`, `whileTap`, `whileFocus`, `whileInView` / `viewport`, pan, and Motion's full drag gesture (constraints, elasticity, momentum, snap to origin, drag controls)
+- **Presence animations** — enter/exit with `transition:presence` (`mode`, `custom`, `onExitComplete`)
+- **Layout animations** — Motion's layout engine: size/position transitions and shared `layoutId` morphs
+- **Motion values** — render motion values with `style`, scroll-linked values with `scrollValues()`
+- **Reduced motion** — respected everywhere, configurable with `motionConfig`
 
 ## Requirements
 
-- Svelte 5+
+- Svelte 5
+- Motion 14 (peer dependency)
 
 ## Installation
 
 ```bash
-npm install @omicrxn/mercury
+npm install @omicrxn/mercury motion
 # or
-pnpm add @omicrxn/mercury
-# or
-yarn add @omicrxn/mercury
+pnpm add @omicrxn/mercury motion
 ```
 
 ## Usage
 
-### Basic animation
+### Animate
 
 ```svelte
 <script lang="ts">
 	import { mercury } from '@omicrxn/mercury';
+	let open = $state(false);
 </script>
 
 <div
-	class="h-16 w-16 rounded-md bg-blue-300"
 	{@attach mercury({
-		animate: { scale: 1.5 },
-		transition: { ease: 'circInOut', duration: 1 }
+		initial: { opacity: 0 },
+		animate: { opacity: 1, scale: open ? 1.5 : 1 },
+		whileHover: { scale: 1.1 },
+		whileTap: { scale: 0.95 },
+		transition: { type: 'spring', bounce: 0.25 }
 	})}
 ></div>
 ```
 
-Because attachments re-run when their reactive dependencies change, derive `animate` from `$state` and Mercury animates on every change.
+Attachments re-run when the state they read changes. Each run updates the element's Motion node — like a React re-render — so only what changed animates and gestures in progress carry on.
 
-### Enter / exit animations
+### Variants
+
+```svelte
+<ul {@attach mercury({ initial: 'closed', animate: open ? 'open' : 'closed', variants: list })}>
+	{#each items as item (item.id)}
+		<li {@attach mercury({ variants: listItem })}>{item.label}</li>
+	{/each}
+</ul>
+```
+
+### Enter / exit
 
 ```svelte
 <script lang="ts">
+	import { mercury, presence } from '@omicrxn/mercury';
 	let show = $state(true);
 </script>
 
 {#if show}
 	<div
-		class="card"
-		transition:presence={{
+		transition:presence
+		{@attach mercury({
 			initial: { opacity: 0, y: 25 },
-			exit: { opacity: 0, y: 25 },
-			transition: { duration: 0.3 }
-		}}
+			animate: { opacity: 1, y: 0 },
+			exit: { opacity: 0, y: 25 }
+		})}
 	>
 		Hello
 	</div>
 {/if}
 ```
 
-For simple cases, use the flat form: `transition:presence={{ opacity: 0, y: 25 }}`.
+Or without an attachment, animating to and from the element's CSS: `transition:presence={{ initial: { opacity: 0 }, exit: { opacity: 0 } }}`.
 
 ### Layout animations
 
 ```svelte
 <script lang="ts">
-	import { layout } from '@omicrxn/mercury';
+	import { layout, mercury } from '@omicrxn/mercury';
 
 	let justify = $state('start');
 	layout(() => justify, { transition: { duration: 0.4 } });
 </script>
 
 <div class="flex" style="justify-content: {justify};">
-	<div {...layout.props()} class="h-16 w-16 rounded-md bg-blue-300"></div>
+	<div {@attach mercury({ layout: true })} class="h-16 w-16 rounded-md bg-blue-300"></div>
 </div>
 ```
 
-`layout(trigger)` declares which state changes the layout (Motion's `layoutDependency`); `layout.props()` marks the elements that animate (Motion's `layout`). Pass an id to `layout.props('id')` on two different elements to morph between them (Motion's `layoutId`), attach the group with `{@attach}` to scope it to a container, or wrap a one-off change in `layout.animate(() => { ... })`.
+`layout(trigger)` declares which state changes the layout (Motion's `layoutDependency`). Elements marked with `layout` / `layoutId` (or `layout.props()`) animate to their new size and position; two elements with the same `layoutId` morph into each other. Attach the group with `{@attach}` to scope it to a container, or wrap a one-off change in `layout.animate(() => { ... })`.
 
-### Gestures
+### Drag
 
 ```svelte
-<div
-	{@attach mercury({
-		whileHover: { scale: 1.1, transition: { type: 'spring', stiffness: 150 } },
-		whileTap: { scale: 0.95 }
-	})}
-></div>
+<div bind:this={container}>
+	<div {@attach mercury({ drag: true, dragConstraints: container, whileDrag: { scale: 1.1 } })}></div>
+</div>
 ```
-
-Also supports `drag`, `dragOptions`, and scroll-triggered `scroll.enter` / `scroll.exit`. See the [gestures docs](https://mercury.uialchemy.com/docs/api/gestures).
 
 ## API
 
 | Export | Description |
 | --- | --- |
-| `mercury` | Attachment for `animate`, gestures, callbacks, and playback controls |
+| `mercury` | Attachment taking Motion's component props |
+| `presence` | Svelte transition: Motion's `AnimatePresence` for one element |
 | `layout` | Layout animations: `layout(trigger, options)`, `layout.props(id?, options?)`, `layout.animate(update, options)` |
-| `presence` | Svelte transition for enter/exit animations |
-| `AnimationInstance` | Imperative playback handle from the `instance` callback |
+| `motionConfig` | Attachment: Motion's `MotionConfig` for the elements inside |
+| `scrollValues` | Motion's `useScroll()`: scroll position and progress as motion values |
+| `createDragControls` | Motion's `useDragControls()` |
+| `GooeyEffect` | SVG "gooey" filter component |
 
-| Docs | Topics |
-| --- | --- |
-| [Animate](https://mercury.uialchemy.com/docs/api/animate) | `animate`, `animateOnMount`, transitions, springs, keyframes, callbacks |
-| [Presence](https://mercury.uialchemy.com/docs/api/presence) | `initial`, `exit`, `mode`, `\|global` modifier |
-| [Layout](https://mercury.uialchemy.com/docs/api/layout-animations) | layout triggers, shared layout ids, position-only, `layout.animate` |
-| [Gestures](https://mercury.uialchemy.com/docs/api/gestures) | hover, tap, drag, scroll |
+Motion's own utilities — `motionValue`, `transformValue`, `springValue`, `stagger`, easing functions, `animate()` — are imported from `motion`.
 
 ## Acknowledgments
 
-Mercury is built on the shoulders of giants. Special thanks to the creators and maintainers of [Svelte](https://svelte.dev/) and [Motion](https://motion.dev/), and to [@Char2sGu](https://github.com/Char2sGu) for helping integrate layout projections into the library.
+Mercury is built on the shoulders of giants. Special thanks to the creators and maintainers of [Svelte](https://svelte.dev/) and [Motion](https://motion.dev/) — Mercury's drag and pan gestures are ported from Motion's (MIT) — and to [@Char2sGu](https://github.com/Char2sGu) for helping integrate layout projections into the library.
 
 ## License
 

@@ -16,7 +16,8 @@
 				aria-label="Drag the box, or move it with the arrow keys"
 				{@attach mercury({
 					drag: true,
-					dragOptions: { bounds: container, rubberband: 0.12 }
+					dragConstraints: container,
+					dragElastic: 0.12
 				})}
 				class="box draggable touch-none select-none focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-blue-500"
 			></button>

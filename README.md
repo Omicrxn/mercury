@@ -14,7 +14,7 @@ Mercury aims to bring layout-aware, fine-grained animations to Svelte in a way t
 - **Shared layout transitions** – Mercury enables elements to animate seamlessly across layouts using `layoutId`s, making complex interactions feel effortless.
 - **Presence animations** – Full support for presence animations brings component mount/unmount animations similar to what Framer Motion offers, but in a Svelte-native way.
 - **Minimal friction** – The API is designed to be declarative, composable, and minimal. It scales from simple transitions to advanced UI flows without boilerplate.
-- **Powered by Motion** – Mercury is built on [Motion](https://motion.dev/), so you get its mature animation engine for gestures, presence, and tweens. You can use Motion's utilities, motion values, and [easing functions](https://motion.dev/docs/easing-functions) seamlessly alongside Mercury.
+- **Powered by Motion** – Mercury runs [Motion](https://motion.dev/)'s own engine and takes Motion's props — `initial`, `animate`, `exit`, variants, `while*` gestures, drag, layout — so Motion's documentation applies. You can use Motion's utilities, motion values, and [easing functions](https://motion.dev/docs/easing-functions) seamlessly alongside Mercury.
 
 ## Philosophy
 
@@ -30,16 +30,17 @@ Mercury makes advanced animations accessible to Svelte developers—without intr
 ## Documentation
 
 - [Docs](https://mercury.uialchemy.com/docs)
+- [Coming from Motion](https://mercury.uialchemy.com/docs/api/coming-from-motion)
 - [Examples](https://mercury.uialchemy.com/docs/examples)
 
 ## Installation
 
 ```bash
-npm install @omicrxn/mercury
+npm install @omicrxn/mercury motion
 # or
-pnpm add @omicrxn/mercury
+pnpm add @omicrxn/mercury motion
 # or
-yarn add @omicrxn/mercury
+yarn add @omicrxn/mercury motion
 ```
 
 ## Usage
@@ -52,7 +53,9 @@ yarn add @omicrxn/mercury
 <div
 	class="h-16 w-16 rounded-md bg-blue-300"
 	{@attach mercury({
-		animate: { scale: 1.5 },
+		initial: { opacity: 0 },
+		animate: { opacity: 1, scale: 1.5 },
+		whileHover: { scale: 1.6 },
 		transition: { ease: 'circInOut', duration: 1 }
 	})}
 ></div>

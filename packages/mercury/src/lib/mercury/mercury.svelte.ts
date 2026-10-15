@@ -1,86 +1,80 @@
-import {
-	animate as motionAnimate,
-	type AnimationOptions,
-	type DOMKeyframesDefinition
-} from 'motion';
-import type { AnimationInstance, AnimationParams } from './animation-interface.js';
-import { handleGestures } from './gestures/index.js';
-import {
-	hasPendingWaitExit,
-	registerMercuryControls,
-	runAfterPendingExit,
-	stopMercury
-} from './presence-coordinator.js';
-import { mapTransitionToMotion } from './utils.js';
-import { clearPresence } from './animate-presence.js';
+import type { MercuryOptions } from './animation-interface.js';
+import { toRef } from './gestures/events.js';
+import { attachNode, type LegacyOptions } from './node.js';
 
-/** Elements that have had a mercury `animate` applied at least once (for `animateOnMount: false`). */
-const initialized = new WeakSet<HTMLElement>();
+/* eslint-disable @typescript-eslint/no-explicit-any */
+type Props = Record<string, any>;
 
-export const mercury = (options?: AnimationParams) => {
-	return (element: HTMLElement) => {
-		let animation: AnimationInstance | undefined;
-		let disposed = false;
+/** Map Mercury's Svelte-friendly options (and deprecated ones) onto Motion props. */
+function toMotionProps(options: MercuryOptions = {}): { props: Props; legacy: LegacyOptions } {
+	const {
+		animateOnMount,
+		dragOptions,
+		scroll,
+		callbacks,
+		instance,
+		onTapEnd,
+		text,
+		viewport,
+		dragConstraints,
+		...rest
+	} = options;
+	const props: Props = { ...rest };
+	const legacy: LegacyOptions = { onTapEnd, instance };
 
-		clearPresence(element);
+	if (text !== undefined) props.children = text;
+	if (viewport) props.viewport = { ...viewport, root: toRef(viewport.root) };
+	// An element (e.g. from `bind:this`) becomes the `{ current }` ref Motion expects.
+	if (dragConstraints !== undefined)
+		props.dragConstraints = toRef(dragConstraints) ?? dragConstraints;
 
-		if (options?.animate && options.animateOnMount === false && !initialized.has(element)) {
-			initialized.add(element);
-			// animateOnMount: false — render the settled `animate` state on first
-			// application (keyframe arrays snap to their last frame), animate on updates.
-			motionAnimate(element, options.animate as DOMKeyframesDefinition, { duration: 0 });
-		} else if (options?.animate) {
-			initialized.add(element);
-			const { animate, transition, callbacks } = options;
+	if (animateOnMount === false && props.initial === undefined) props.initial = false;
 
-			const startAnimation = () => {
-				if (disposed) return;
-
-				const controls = motionAnimate(
-					element,
-					animate,
-					mapTransitionToMotion(transition, callbacks) as AnimationOptions
-				);
-
-				registerMercuryControls(element, controls);
-
-				const instance: AnimationInstance = {
-					completed: false,
-					play: () => controls.play(),
-					pause: () => controls.pause(),
-					stop: () => controls.stop(),
-					cancel: () => controls.cancel(),
-					onComplete: (onResolve, onReject) =>
-						controls.then(() => {
-							onResolve();
-							instance.completed = true;
-						}, onReject)
-				};
-
-				animation = instance;
-				options.instance?.(instance);
+	if (callbacks) {
+		props.onAnimationStart ??= callbacks.onPlay && (() => callbacks.onPlay!());
+		props.onAnimationComplete ??= callbacks.onComplete && (() => callbacks.onComplete!());
+		props.onUpdate ??= callbacks.onUpdate;
+		if (callbacks.onRepeat || callbacks.onStop) {
+			props.transition = {
+				...props.transition,
+				onRepeat: callbacks.onRepeat,
+				onStop: callbacks.onStop
 			};
-
-			const scheduleEnter = () => {
-				if (disposed) return;
-				if (hasPendingWaitExit(element)) {
-					runAfterPendingExit(element, startAnimation);
-				} else {
-					startAnimation();
-				}
-			};
-
-			// One microtask so out:presence can register wait in the same commit.
-			queueMicrotask(scheduleEnter);
 		}
+	}
 
-		const cleanupGestures = handleGestures(element, options);
+	if (dragOptions) {
+		const { axis, bounds, rubberband } = dragOptions;
+		if (props.drag === true && (axis === 'x' || axis === 'y')) props.drag = axis;
+		if (axis === 'lock') props.dragDirectionLock ??= true;
+		if (bounds && props.dragConstraints === undefined) {
+			props.dragConstraints = toRef(bounds) ?? bounds;
+		}
+		if (rubberband !== undefined && props.dragElastic === undefined) {
+			props.dragElastic = rubberband === true ? undefined : rubberband === false ? 0 : rubberband;
+		}
+	}
 
-		return () => {
-			disposed = true;
-			stopMercury(element);
-			animation?.stop();
-			cleanupGestures();
-		};
-	};
+	if (scroll) {
+		const { enter, exit, root, margin, amount, transition } = scroll;
+		if (enter && props.whileInView === undefined) {
+			props.whileInView = transition ? { ...enter, transition } : enter;
+		}
+		props.viewport ??= { root: toRef(root), margin, amount };
+		if (exit) legacy.scrollExit = { target: exit, transition };
+	}
+
+	return { props, legacy };
+}
+
+/**
+ * Animate an element with Motion: `{@attach mercury({ initial, animate, exit, whileHover, drag, … })}`.
+ *
+ * Takes Motion's `motion.*` component props. Attachments re-run when the state they read
+ * changes; each run updates the same Motion node, so only what changed animates and
+ * gestures in progress carry on — like a React re-render of a motion component.
+ */
+export const mercury = (options?: MercuryOptions) => {
+	const { props, legacy } = toMotionProps(options);
+	return (element: Element) => attachNode(element, props, legacy);
 };

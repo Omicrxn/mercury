@@ -9,14 +9,40 @@ The following guide will walk you through the process of installing Mercury.
 
 ## Installation
 
-You can easily install Mercury with npm or your preferred package manager:
+Install Mercury together with [Motion](https://motion.dev), which it runs on:
 
 ```package-install
-npm install @omicrxn/mercury
+npm install @omicrxn/mercury motion
 ```
+
+Mercury requires Svelte 5. Motion is a peer dependency, so your app and Mercury share one copy of it — import Motion's utilities (`stagger`, `motionValue`, easing functions…) straight from `motion`.
 
 ## Animating Elements
 
-Mercury leverages Svelte Attachments to provide intuitive animation handling. Here’s a basic example demonstrating its usage:
+Mercury brings Motion's animation props to Svelte attachments. Add `mercury()` to an element and give it the props you'd give a `<motion.div>`:
+
+```svelte
+<script lang="ts">
+	import { mercury } from '@omicrxn/mercury';
+</script>
+
+<div
+	{@attach mercury({
+		initial: { opacity: 0, scale: 0.95 },
+		animate: { opacity: 1, scale: 1 },
+		whileHover: { scale: 1.05 },
+		transition: { type: 'spring', duration: 0.3, bounce: 0 }
+	})}
+></div>
+```
 
 <Component path="basic-animation" />
+
+From here:
+
+- [Animate](/api/animate) — `initial`, `animate`, transitions, springs and keyframes.
+- [Variants](/api/variants) — named states orchestrated across children.
+- [Gestures](/api/gestures) — hover, tap, focus, in-view, pan and drag.
+- [Presence](/api/presence) — enter and exit animations.
+- [Layout animations](/api/layout-animations) — size, position and shared-element transitions.
+- [Coming from Motion](/api/coming-from-motion) — every `motion/react` API and its Mercury equivalent.

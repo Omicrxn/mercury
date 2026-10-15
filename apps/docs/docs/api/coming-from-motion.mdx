@@ -1,0 +1,71 @@
+---
+title: Coming from Motion
+description: Every motion/react API and its Mercury equivalent.
+---
+
+Mercury is Motion for Svelte: it runs Motion's own engine — its `VisualElement`, animation state, gestures, drag and layout projection — and maps Motion's React API onto Svelte attachments and transitions. Motion's options keep their names and behave the same, so Motion's documentation applies.
+
+## Components and props
+
+| motion/react                              | Mercury                                                              |
+| ----------------------------------------- | -------------------------------------------------------------------- |
+| `<motion.div {...props} />`               | `<div {@attach mercury({ ...props })} />` (any HTML or SVG element)  |
+| `initial`, `animate`, `transition`        | same — see [Animate](/api/animate)                                   |
+| `variants`, `custom`, `inherit`           | same — see [Variants](/api/variants)                                 |
+| `exit`                                    | same, with `transition:presence` on the element — see [Presence](/api/presence) |
+| `whileHover`, `whileTap`, `whileFocus`, `whileInView`, `whileDrag` | same — see [Gestures](/api/gestures)        |
+| `onHoverStart/End`, `onTap`, `onTapStart`, `onTapCancel` | same                                                  |
+| `viewport`, `onViewportEnter/Leave`       | same; `viewport.root` also takes an element                          |
+| `onPan`, `onPanStart`, `onPanEnd`, `onPanSessionStart` | same                                                    |
+| `drag`, `dragConstraints`, `dragElastic`, `dragMomentum`, `dragTransition`, `dragSnapToOrigin`, `dragDirectionLock`, `dragPropagation`, `dragListener`, `onDrag*`, `onDirectionLock`, `onMeasureDragConstraints` | same; `dragConstraints` also takes an element |
+| `useDragControls()`                        | `createDragControls()`                                              |
+| `style={{ x }}` with motion values        | `mercury({ style: { x } })` — see [Motion values](/api/motion-values) |
+| `<motion.span>{motionValue}</motion.span>` | `mercury({ text: motionValue })`                                    |
+| `onAnimationStart`, `onAnimationComplete`, `onUpdate` | same                                                     |
+| `transformTemplate`, `values`             | same                                                                 |
+| `globalTapTarget`, `propagate`            | same                                                                 |
+
+## Presence
+
+| motion/react                              | Mercury                                                              |
+| ----------------------------------------- | -------------------------------------------------------------------- |
+| `<AnimatePresence>`                       | `transition:presence` on each child (or `out:presence`)              |
+| `<AnimatePresence mode="wait">`           | `transition:presence={{ mode: 'wait' }}`                             |
+| `<AnimatePresence custom={…}>`            | `transition:presence={{ custom: … }}`                                |
+| `<AnimatePresence onExitComplete={…}>`    | `transition:presence={{ onExitComplete: … }}`                        |
+| `<AnimatePresence initial={false}>`       | the default for `presence`; `initial: false` on the attachment      |
+| `<AnimatePresence propagate>`             | `presence\|global` on the nested element                             |
+
+## Layout
+
+| motion/react                              | Mercury                                                              |
+| ----------------------------------------- | -------------------------------------------------------------------- |
+| `layout`, `layoutId`                      | `mercury({ layout, layoutId })` or `layout.props(id?, { type })`, plus a `layout(trigger)` group |
+| `layoutDependency`                        | the trigger of `layout(() => value)`                                 |
+| `layoutScroll`, `layoutRoot`, `layoutCrossfade` | same, on `mercury()`                                           |
+| `onLayoutAnimationStart/Complete`         | same, on `mercury()`                                                 |
+| `<LayoutGroup>`                           | a `layout()` group attached to a container                           |
+| `transition={{ layout: … }}`              | `layout(trigger, { transition })`, per id with `shared`              |
+
+See [Layout animations](/api/layout-animations).
+
+## Config and hooks
+
+| motion/react                              | Mercury / Motion                                                     |
+| ----------------------------------------- | -------------------------------------------------------------------- |
+| `<MotionConfig>`                          | `{@attach motionConfig({ … })}` — see [Configuration](/api/configuration) |
+| `useReducedMotion()`                      | `prefersReducedMotion` from `svelte/motion`                          |
+| `useMotionValue`, `useTransform`, `useSpring`, `useMotionTemplate` | `motionValue`, `transformValue` / `mapValue`, `springValue` from `motion` |
+| `useScroll()`                             | `scrollValues()`                                                     |
+| `useInView()`                             | `inView()` from `motion`, or `whileInView`                           |
+| `useAnimate()`                            | `animate()` from `motion` — on an element Mercury animates, it shares the same motion values |
+| `useAnimationFrame()`                     | `frame.update(callback, true)` from `motion`                         |
+| `stagger()`, easing functions, `spring()` | import from `motion`                                                 |
+
+## Svelte-specific
+
+- **Attachments re-run, nodes don't.** When the state an attachment reads changes, the element's Motion node gets the new props — like a React re-render. Nothing restarts that didn't change.
+- **Presence is a transition.** Svelte decides when an element leaves; `presence` makes it wait for the exit. Mind [`|global`](/api/presence#exits-inside-a-conditional-parent-need-global) for exits inside a removed parent block.
+- **Layout needs a trigger.** Svelte updates the DOM without re-rendering components, so a `layout()` group names the state that changes the layout.
+- **Server rendering.** `initial` styles apply when Svelte mounts the element, so server-rendered markup shows its CSS first — see [Animate](/api/animate#initial).
+- **Keyboard drag.** Mercury adds arrow-key movement to draggable elements (`dragKeyboard`).

@@ -21,6 +21,11 @@ import LayoutId from '../../../../examples/layout-id.svelte';
 import LayoutIdCards from '../../../../examples/layout-id-cards.svelte';
 import Scroll from '../../../../examples/scroll.svelte';
 import Tap from '../../../../examples/tap.svelte';
+import Variants from '../../../../examples/variants.svelte';
+import Slideshow from '../../../../examples/slideshow.svelte';
+import DragControls from '../../../../examples/drag-controls.svelte';
+import ScrollProgress from '../../../../examples/scroll-progress.svelte';
+import Focus from '../../../../examples/focus.svelte';
 
 export const examples = {
 	'basic-animation': { component: BasicAnimation, isPremium: false },
@@ -45,7 +50,12 @@ export const examples = {
 	'layout-id': { component: LayoutId, isPremium: false },
 	'layout-id-cards': { component: LayoutIdCards, isPremium: true },
 	scroll: { component: Scroll, isPremium: false },
-	tap: { component: Tap, isPremium: false }
+	tap: { component: Tap, isPremium: false },
+	variants: { component: Variants, isPremium: false },
+	slideshow: { component: Slideshow, isPremium: false },
+	'drag-controls': { component: DragControls, isPremium: false },
+	'scroll-progress': { component: ScrollProgress, isPremium: false },
+	focus: { component: Focus, isPremium: false }
 };
 
 export type ExampleSlug = keyof typeof examples;

@@ -1,0 +1,84 @@
+---
+title: Variants
+description: Name animation states and orchestrate them across a tree of elements.
+---
+
+## Overview
+
+Variants are named targets. Define them in `variants` and refer to them by name in `initial`, `animate`, `exit` and the `while*` gestures — exactly like Motion:
+
+```svelte
+<script lang="ts">
+	import { mercury, type Variants } from '@omicrxn/mercury';
+
+	let open = $state(false);
+	const variants: Variants = {
+		open: { opacity: 1, height: 'auto' },
+		closed: { opacity: 0, height: 0 }
+	};
+</script>
+
+<div {@attach mercury({ variants, initial: 'closed', animate: open ? 'open' : 'closed' })} />
+```
+
+## Propagation
+
+A variant label flows down to every descendant with a `mercury()` attachment that has `variants` but doesn't set the prop itself. So changing the parent's `animate` animates the whole tree, and children inherit gestures too (`whileHover: 'hover'` on the parent animates children's `hover` variants).
+
+Parents and children are found through the DOM, so they can live in different components. Set `inherit: false` on a child to cut it off from its parent's labels.
+
+## Orchestration
+
+A variant's `transition` can sequence its children:
+
+- `delayChildren` — delay before the children start (a number, or Motion's `stagger()`).
+- `staggerChildren` — delay between each child, in document order.
+- `staggerDirection` — `-1` staggers from the last child.
+- `when` — `'beforeChildren'` or `'afterChildren'` runs the parent's own animation first or last.
+
+```svelte
+<script lang="ts">
+	const list: Variants = {
+		open: { transition: { staggerChildren: 0.06, delayChildren: 0.05 } },
+		closed: { transition: { staggerChildren: 0.04, staggerDirection: -1 } }
+	};
+	const item: Variants = {
+		open: { opacity: 1, y: 0 },
+		closed: { opacity: 0, y: 12 }
+	};
+</script>
+
+<ul {@attach mercury({ initial: 'closed', animate: open ? 'open' : 'closed', variants: list })}>
+	{#each items as label (label)}
+		<li {@attach mercury({ variants: item })}>{label}</li>
+	{/each}
+</ul>
+```
+
+<Component path="variants" />
+
+Children added later (say, a new `{#each}` item) animate into the parent's current variant on their own. Several added at once are staggered when the parent's `delayChildren` is Motion's `stagger()`: `delayChildren: stagger(0.05)`.
+
+## Dynamic variants
+
+A variant can be a function of `custom`, returning a target:
+
+```svelte
+<script lang="ts">
+	const variants: Variants = {
+		visible: (i: number) => ({ opacity: 1, transition: { delay: i * 0.1 } })
+	};
+</script>
+
+{#each items as item, i (item.id)}
+	<li {@attach mercury({ custom: i, variants, initial: { opacity: 0 }, animate: 'visible' })} />
+{/each}
+```
+
+Functions also receive the element's current values and velocities as their second and third arguments.
+
+For exits, the `custom` passed to [`presence`](/api/presence) wins, because an exiting element no longer receives props — the [slideshow example](/api/presence#exit-variants-and-custom) relies on this.
+
+## Multiple labels
+
+Pass an array to apply several variants at once: `animate: ['visible', 'highlighted']`.
