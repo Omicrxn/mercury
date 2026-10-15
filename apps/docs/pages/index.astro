@@ -2,11 +2,8 @@
 import CodeBlock from "blume/components/content/CodeBlock.astro";
 import PageLayout from "blume/components/layout/PageLayout.astro";
 import data from "blume:data";
-import BouncingEasing from "../examples/bouncing-easing.svelte";
-import ExitAnimation from "../examples/exit-animation.svelte";
-import Flip from "../examples/flip.svelte";
-import Hover from "../examples/hover.svelte";
 import logoSvg from "../public/logo.svg?raw";
+import FeatureDemo from "./_home/FeatureDemo.svelte";
 import HeroActions from "./_home/HeroActions.svelte";
 
 const { config } = data;
@@ -24,32 +21,58 @@ const wordmark = logoSvg
 const features = [
   {
     title: "Animate",
-    description: "Declare targets with an attachment. Springs, keyframes, and easings come from Motion.",
+    description:
+      "initial, animate and transition, as on a motion.div. Springs, keyframes, easings and per-value transitions, driven by $state.",
     href: "/docs/api/animate",
     example: "bouncing-easing",
   },
   {
+    title: "Variants",
+    description:
+      "Name your states once. Labels flow down to children, with staggerChildren, delayChildren and when to orchestrate them.",
+    href: "/docs/api/variants",
+    example: "variants",
+  },
+  {
     title: "Gestures",
-    description: "Hover, tap, drag, and scroll — each with its own transition.",
+    description:
+      "whileHover, whileTap, whileFocus, whileInView, pan, and Motion's full drag — constraints, elasticity, momentum and drag controls.",
     href: "/docs/api/gestures",
-    example: "hover",
+    example: "drag-controls",
   },
   {
     title: "Presence",
-    description: "Enter and exit animations built on Svelte transitions. No wrapper component.",
+    description:
+      "Exit animations on Svelte transitions — exit variants, custom, and sync, wait or popLayout modes. No wrapper component.",
     href: "/docs/api/presence",
-    example: "exit-animation",
+    example: "slideshow",
   },
   {
     title: "Layout",
-    description: "FLIP layout changes and shared elements that CSS alone can't animate.",
+    description:
+      "Motion's layout engine: size and position changes, and shared layoutId elements that morph from one into the other.",
     href: "/docs/api/layout-animations",
-    example: "flip",
+    example: "layout-id",
   },
+  {
+    title: "Motion values",
+    description:
+      "Scroll progress, springs and derived values that render straight to styles, without re-running a line of Svelte.",
+    href: "/docs/api/motion-values",
+    example: "scroll-progress",
+  },
+] as const;
+
+const mapping = [
+  ["<motion.div animate whileHover drag>", "{@attach mercury({ animate, whileHover, drag })}"],
+  ["<AnimatePresence>", "transition:presence"],
+  ["layout / layoutId", "mercury({ layout, layoutId })"],
+  ["<MotionConfig>", "{@attach motionConfig({ … })}"],
+  ["useScroll()", "scrollValues()"],
 ];
 
 const snippet = `<script>
-  import { mercury } from '@omicrxn/mercury';
+  import { mercury, presence } from '@omicrxn/mercury';
   let open = $state(false);
 </script>
 
@@ -57,12 +80,26 @@ const snippet = `<script>
   onclick={() => (open = !open)}
   {@attach mercury({
     animate: { rotate: open ? 180 : 0 },
+    whileHover: { scale: 1.05 },
     whileTap: { scale: 0.9 },
     transition: { type: 'spring', bounce: 0.4 }
   })}
 >
-  Flip
-</button>`;
+  Toggle
+</button>
+
+{#if open}
+  <div
+    transition:presence
+    {@attach mercury({
+      initial: { opacity: 0, y: 8 },
+      animate: { opacity: 1, y: 0 },
+      exit: { opacity: 0, y: 8 }
+    })}
+  >
+    Hello
+  </div>
+{/if}`;
 ---
 
 <PageLayout
@@ -115,20 +152,18 @@ const snippet = `<script>
         Every Motion feature, none of the wrappers.
       </h2>
       <p class="mt-4 text-muted-foreground">
-        Mercury works directly on your elements through Svelte attachments and transitions, so it
-        fits into existing components without changing how you write them. Try the demos below.
+        Mercury runs Motion's own engine — its animation state, variants, gestures, drag and layout
+        projection — and puts it on your elements through Svelte attachments and transitions. Motion's
+        props keep their names, so you already know the API. Every demo below is live: try them.
       </p>
     </div>
 
-    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {
         features.map((feature) => (
           <article class="flex flex-col overflow-hidden rounded-2xl border border-border bg-background">
-            <div class="demo flex h-56 items-center justify-center border-b border-border bg-muted/40 p-4">
-              {feature.example === "bouncing-easing" && <BouncingEasing client:visible />}
-              {feature.example === "hover" && <Hover client:visible />}
-              {feature.example === "exit-animation" && <ExitAnimation client:visible />}
-              {feature.example === "flip" && <Flip client:visible />}
+            <div class="demo h-64 border-b border-border bg-muted/40">
+              <FeatureDemo example={feature.example} client:visible />
             </div>
             <div class="flex flex-1 flex-col gap-2 p-5">
               <h3 class="text-base font-semibold text-foreground">{feature.title}</h3>
@@ -153,13 +188,28 @@ const snippet = `<script>
         State in, motion out.
       </h2>
       <p class="mt-4 text-muted-foreground">
-        Attachments re-run when their reactive dependencies change, so <code>animate</code> is
-        naturally state-driven. Derive it from <code>$state</code> and Mercury animates on every
-        change — with Motion's engine doing the work.
+        Derive <code>animate</code> from <code>$state</code> and the element animates whenever it
+        changes. Each re-run of the attachment updates the same Motion node, like a React re-render:
+        only what changed animates, and a hover or drag in progress carries on. Add{" "}
+        <code>transition:presence</code> and the element plays its <code>exit</code> before Svelte
+        removes it.
       </p>
+      <dl class="mt-8 divide-y divide-border rounded-xl border border-border text-sm">
+        {
+          mapping.map(([motion, mercury]) => (
+            <div class="grid gap-1 px-4 py-2.5 sm:grid-cols-2 sm:gap-4">
+              <dt class="font-mono text-xs leading-5 text-muted-foreground">{motion}</dt>
+              <dd class="font-mono text-xs leading-5 text-foreground">{mercury}</dd>
+            </div>
+          ))
+        }
+      </dl>
       <div class="mt-8 flex flex-wrap gap-3">
         <a href="/docs/getting-started" class="rounded-full bg-foreground px-5 py-2 text-sm font-medium text-background">
           Get started
+        </a>
+        <a href="/docs/api/coming-from-motion" class="rounded-full border border-border px-5 py-2 text-sm font-medium text-foreground hover:bg-muted">
+          Coming from Motion
         </a>
         <a href="/docs/examples" class="rounded-full border border-border px-5 py-2 text-sm font-medium text-foreground hover:bg-muted">
           All examples
@@ -167,7 +217,7 @@ const snippet = `<script>
       </div>
     </div>
     <div class="min-w-0">
-      <CodeBlock code={snippet} lang="svelte" title="Flip.svelte" />
+      <CodeBlock code={snippet} lang="svelte" title="Toggle.svelte" />
     </div>
   </section>
 

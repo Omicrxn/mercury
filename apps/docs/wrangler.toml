@@ -8,3 +8,7 @@ routes = [
 [assets]
 directory = "./dist"
 not_found_handling = "404-page"
+# Blume links and canonical URLs have no trailing slash (/docs, /docs/api/animate).
+# The default ("auto-trailing-slash") answers those with a redirect to /docs/,
+# adding a round trip to every navigation; serve folder index pages directly.
+html_handling = "drop-trailing-slash"
