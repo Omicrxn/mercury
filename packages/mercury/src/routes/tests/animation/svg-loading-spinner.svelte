@@ -7,10 +7,12 @@
 
 	<div class="flex items-center justify-center rounded-lg p-10">
 		<div
-			class="size-[50px] rounded-full border-4 border-slate-300 border-t-blue-400 will-change-transform"
+			role="status"
+			aria-label="Loading"
+			class="size-[50px] rounded-full border-4 border-slate-300 border-t-blue-400"
 			{@attach mercury({
 				animate: { rotate: 360 },
-				transition: { duration: 1.5, repeat: Infinity, ease: 'linear' }
+				transition: { duration: 0.8, repeat: Infinity, ease: 'linear' }
 			})}
 		></div>
 	</div>

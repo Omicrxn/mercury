@@ -16,6 +16,7 @@ export const mapTransitionToMotion = (
 	callbacks?: AnimationCallbacks
 ): AnimationOptions => {
 	const options: Record<string, unknown> = {
+		reduceMotion: prefersReducedMotion(),
 		type: mercuryTransition?.type,
 		duration: mercuryTransition?.duration,
 		visualDuration: mercuryTransition?.visualDuration,
@@ -42,6 +43,14 @@ export const mapTransitionToMotion = (
 
 	for (const key of Object.keys(options)) {
 		if (options[key] === undefined) delete options[key];
+	}
+
+	if (options.reduceMotion) {
+		options.type = 'keyframes';
+		options.duration = Math.min(mercuryTransition?.duration ?? 0.2, 0.2);
+		options.delay = 0;
+		options.repeat = 0;
+		options.repeatDelay = 0;
 	}
 
 	return options as AnimationOptions;

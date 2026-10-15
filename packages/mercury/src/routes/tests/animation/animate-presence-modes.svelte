@@ -3,10 +3,6 @@
 	import type { Snippet } from 'svelte';
 
 	let state = $state(true);
-
-	const defaultEase = [0.26, 0.02, 0.23, 0.94] as [number, number, number, number];
-	const waitEnterEase = [0.02, 0.35, 0.25, 0.99] as [number, number, number, number];
-	const waitExitEase = [0.46, 0.04, 0.97, 0.44] as [number, number, number, number];
 </script>
 
 {#snippet syncIcon()}
@@ -72,17 +68,17 @@
 		{@attach mercury({
 			animate: { opacity: 1, scale: 1 },
 			transition: {
-				duration: 0.3,
-				ease: mode === 'wait' ? waitEnterEase : defaultEase
+				duration: 0.25,
+				ease: [0.19, 1, 0.22, 1]
 			}
 		})}
 		out:presence={{
 			opacity: 0,
-			scale: 0.8,
+			scale: 0.95,
 			mode,
 			transition: {
-				duration: 0.3,
-				ease: mode === 'wait' ? waitExitEase : defaultEase
+				duration: 0.18,
+				ease: [0.19, 1, 0.22, 1]
 			}
 		}}
 	>
@@ -93,7 +89,6 @@
 {#snippet modeExample(mode: PresenceMode, icon: Snippet)}
 	<div class="mode-section">
 		<div class="icon-container">
-			<!-- keyed child, like React's key={String(state)} in AnimatePresence -->
 			{#key state}
 				{@render presenceCircle(mode, icon)}
 			{/key}
@@ -110,9 +105,13 @@
 	</div>
 
 	<button
+		type="button"
 		class="switch-button"
 		onclick={() => (state = !state)}
-		{@attach mercury({ whileTap: { scale: 0.95 } })}
+		{@attach mercury({
+			whileHover: { scale: 1.02, transition: { duration: 0.15, ease: [0.25, 0.46, 0.45, 0.94] } },
+			whileTap: { scale: 0.97, transition: { duration: 0.15, ease: [0.25, 0.46, 0.45, 0.94] } }
+		})}
 	>
 		Switch
 	</button>
@@ -128,7 +127,7 @@
 		flex-direction: column;
 		align-items: center;
 		gap: 40px;
-		padding: 64px;
+		padding: 24px;
 		color: var(--white);
 		background-color: #18181b;
 		border-radius: 12px;
@@ -136,7 +135,8 @@
 
 	.modes-container {
 		display: flex;
-		gap: 60px;
+		gap: 24px;
+		flex-wrap: wrap;
 		justify-content: center;
 		align-items: center;
 		width: 100%;
@@ -174,7 +174,11 @@
 		font-size: 14px;
 		font-weight: 500;
 		cursor: pointer;
-		outline: none;
+	}
+
+	.switch-button:focus-visible {
+		outline: 2px solid var(--white);
+		outline-offset: 4px;
 	}
 
 	.circle {
@@ -184,11 +188,10 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		will-change: transform;
 		box-sizing: border-box;
 		flex-shrink: 0;
 		opacity: 0;
-		transform: scale(0.6);
+		transform: scale(0.95);
 		background-color: transparent;
 		color: var(--white);
 		border: 2px solid var(--white);

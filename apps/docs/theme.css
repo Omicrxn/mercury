@@ -4,13 +4,49 @@
 @source "./examples";
 @source "./pages";
 
+/* Shared palette for the Mercury demos. Demos reference these tokens (as
+   utilities like bg-demo-fill, or var(--demo-fill) in component styles)
+   instead of raw colors, so every demo follows the site's light/dark theme. */
+:root {
+	--demo-fill: #c7d2fe;
+	--demo-fill-hover: #a5b4fc;
+	--demo-fill-foreground: #1e293b;
+	--demo-stroke: #64748b;
+	--demo-stroke-muted: #94a3b8;
+	--demo-surface: #f8fafc;
+	--demo-container: #e2e8f0;
+	--demo-accent: #3b82f6;
+}
+
+:root[data-theme="dark"] {
+	--demo-fill: #818cf8;
+	--demo-fill-hover: #a5b4fc;
+	--demo-fill-foreground: #0f172a;
+	--demo-stroke: #cbd5e1;
+	--demo-stroke-muted: #525252;
+	--demo-surface: #171717;
+	--demo-container: #262626;
+	--demo-accent: #60a5fa;
+}
+
+@theme inline {
+	--color-demo-fill: var(--demo-fill);
+	--color-demo-fill-hover: var(--demo-fill-hover);
+	--color-demo-fill-foreground: var(--demo-fill-foreground);
+	--color-demo-stroke: var(--demo-stroke);
+	--color-demo-stroke-muted: var(--demo-stroke-muted);
+	--color-demo-surface: var(--demo-surface);
+	--color-demo-container: var(--demo-container);
+	--color-demo-accent: var(--demo-accent);
+}
+
 /* Shared styles for the Mercury demos. */
 .box,
 .circle {
 	width: 4rem;
 	height: 4rem;
-	border: 2px solid #64748b;
-	background-color: #c7d2fe;
+	border: 2px solid var(--demo-stroke);
+	background-color: var(--demo-fill);
 	border-radius: 0.375rem;
 }
 
@@ -20,20 +56,9 @@
 
 .container {
 	padding: 0.5rem;
-	border: 2px solid #64748b;
+	border: 2px solid var(--demo-stroke);
 	border-radius: 0.375rem;
-	background-color: #e2e8f0;
-}
-
-:where(.dark, [data-theme="dark"]) .box,
-:where(.dark, [data-theme="dark"]) .circle {
-	border-color: #f8fafc;
-	background-color: #818cf8;
-}
-
-:where(.dark, [data-theme="dark"]) .container {
-	border-color: #f8fafc;
-	background-color: #94a3b8;
+	background-color: var(--demo-container);
 }
 
 .draggable {
@@ -50,8 +75,8 @@
 	width: 20px;
 	height: 20px;
 	background-image:
-		radial-gradient(circle at center, #000 1px, transparent 0),
-		radial-gradient(circle at center, #000 1px, transparent 0);
+		radial-gradient(circle at center, var(--demo-fill-foreground) 1px, transparent 0),
+		radial-gradient(circle at center, var(--demo-fill-foreground) 1px, transparent 0);
 	background-size: 5px 5px;
 }
 

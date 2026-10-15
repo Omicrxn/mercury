@@ -1,9 +1,12 @@
 <script lang="ts">
 	import { layout } from '$lib/index.js';
-	let items = $state<{ id: number; name: string }[]>([]);
+	let items = $state([{ id: 1 }, { id: 2 }, { id: 3 }]);
+	let nextId = 4;
 	let justify = $state('start');
 
-	const layoutGroup = layout(() => [items, justify], { transition: { duration: 0.4 } });
+	const layoutGroup = layout(() => [items, justify], {
+		transition: { type: 'spring', duration: 0.3, bounce: 0 }
+	});
 
 	const flip = () => {
 		if (justify === 'start') {
@@ -14,7 +17,10 @@
 	};
 
 	function shuffle() {
-		items = [...items].sort(() => Math.random() - 0.5);
+		for (let index = items.length - 1; index > 0; index--) {
+			const other = Math.floor(Math.random() * (index + 1));
+			[items[index], items[other]] = [items[other], items[index]];
+		}
 	}
 
 	const buttonClass =
@@ -27,12 +33,12 @@
 
 		<div
 			{@attach layoutGroup}
-			class="flex min-h-24 w-full gap-2 rounded-md border border-slate-500 border-dashed bg-slate-50 p-4"
+			class="flex min-h-24 w-full flex-wrap gap-2 rounded-md border border-slate-500 border-dashed bg-slate-50 p-4"
 			style="justify-content: {justify};"
 		>
 			{#each items as item (item.id)}
 				<div
-					{...layout.props(item.id.toString())}
+					{...layout.props({ type: 'position' })}
 					class="box flex size-16 shrink-0 items-center justify-center rounded-md border border-slate-500 bg-blue-200 font-medium text-slate-800"
 				>
 					{item.id}
@@ -44,7 +50,7 @@
 			<button
 				class={buttonClass}
 				onclick={() => {
-					items = [...items, { id: Math.ceil(Math.random() * 100), name: 'test' }];
+					items.push({ id: nextId++ });
 				}}
 			>
 				Add item
@@ -52,7 +58,7 @@
 			<button
 				class={buttonClass}
 				onclick={() => {
-					items = items.filter((_, index) => index !== 1);
+					items.splice(Math.floor(items.length / 2), 1);
 				}}
 			>
 				Remove middle item

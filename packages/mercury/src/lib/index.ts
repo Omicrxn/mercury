@@ -6,6 +6,7 @@ export type {
 	LayoutOptions,
 	LayoutProps,
 	LayoutPropsOptions,
+	LayoutTransition,
 	LayoutType
 } from './mercury/layout.svelte.js';
 export { presence } from './mercury/animate-presence.js';

@@ -19,14 +19,14 @@
 	}
 
 	const bounce: AnimationTransition = {
-		duration: 1.2,
+		duration: 0.7,
 		ease: bounceEase
 	};
 
 	const spring: AnimationTransition = {
 		type: 'spring',
 		stiffness: 700,
-		damping: 30
+		damping: 38
 	};
 
 	let isOn = $state(true);
@@ -34,13 +34,16 @@
 
 <div class="flex flex-col gap-4">
 	<h2 class="text-xl font-bold">Bouncing Easing</h2>
-	<div
-		class="w-[80px] h-[200px] bg-slate-200 flex items-start justify-center rounded-full p-3 cursor-pointer"
+	<button
+		type="button"
+		aria-label="Toggle bouncing ball"
+		aria-pressed={isOn}
+		class="flex h-[176px] w-20 cursor-pointer items-start justify-center rounded-full border-2 border-slate-500 bg-slate-200 p-3 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-blue-500 dark:border-slate-50 dark:bg-slate-400"
 		onclick={() => (isOn = !isOn)}
 	>
 		<div
-			class="rounded-full size-16 shrink-0 bg-blue-200 border border-slate-500 will-change-transform"
-			{@attach mercury({ animate: { y: isOn ? 0 : 120 }, transition: isOn ? spring : bounce })}
+			class="box size-12! shrink-0 rounded-full!"
+			{@attach mercury({ animate: { y: isOn ? 0 : 96 }, transition: isOn ? spring : bounce })}
 		></div>
-	</div>
+	</button>
 </div>

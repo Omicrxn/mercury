@@ -1,8 +1,10 @@
 <script lang="ts">
-	import { layout } from '$lib/mercury/layout.svelte.js';
+	import { layout } from '$lib/index.js';
 	let justify = $state('start');
 
-	const layoutGroup = layout(() => justify, { transition: { duration: 0.4 } });
+	const layoutGroup = layout(() => justify, {
+		transition: { type: 'spring', duration: 0.3, bounce: 0 }
+	});
 
 	const flip = () => {
 		if (justify === 'start') {
@@ -26,13 +28,13 @@
 			style="justify-content: {justify};"
 		>
 			<div
-				{...layout.props('test-1')}
+				{...layout.props({ type: 'position' })}
 				class="box flex size-16 shrink-0 items-center justify-center rounded-md border border-slate-500 bg-blue-200 font-medium text-slate-800"
 			>
 				Test
 			</div>
 			<div
-				{...layout.props('test-2')}
+				{...layout.props({ type: 'position' })}
 				class="box size-16 shrink-0 rounded-md border border-slate-500 bg-blue-200"
 			></div>
 		</div>

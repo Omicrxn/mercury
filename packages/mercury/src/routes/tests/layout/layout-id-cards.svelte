@@ -1,290 +1,354 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
-	import { layout, mercury } from '$lib/index.js';
-	let activeGame = $state<{
-		title: string;
-		description: string;
-		longDescription: string;
-		image: string;
-	} | null>();
-	let GAMES = [
-		{
-			title: 'The Oddysey',
-			description: 'Explore unknown galaxies.',
-			longDescription:
-				'Throughout their journey, players will encounter diverse alien races, each with their own unique cultures and technologies. Engage in thrilling space combat, negotiate complex diplomatic relations, and make critical decisions that affect the balance of power in the galaxy.',
-			image:
-				'https://animations-on-the-web-git-how-i-use-3066e1-emilkowalski-s-team.vercel.app/how-i-use-framer-motion/how-i-code-animations/space.png',
-			selected: false
-		},
-		{
-			title: 'Angry Rabbits',
-			description: 'They are coming for you.',
-			longDescription:
-				'The rabbits are angry and they are coming for you. You have to defend yourself with your carrot gun. The game is not simple, you have to be fast and accurate to survive.',
-			image:
-				'https://animations-on-the-web-git-how-i-use-3066e1-emilkowalski-s-team.vercel.app/how-i-use-framer-motion/how-i-code-animations/rabbit.png',
-			selected: false
-		},
-		{
-			title: 'Ghost town',
-			description: 'Find the ghosts.',
-			longDescription:
-				'You are in a ghost town and you have to find the ghosts. But be careful, they are dangerous.',
-			image:
-				'https://animations-on-the-web-git-how-i-use-3066e1-emilkowalski-s-team.vercel.app/how-i-use-framer-motion/how-i-code-animations/ghost.webp',
-			selected: false
-		},
-		{
-			title: 'Pirates in the jungle',
-			description: 'Find the treasure.',
-			longDescription:
-				'You are a pirate and you have to find the treasure in the jungle. But be careful, there are traps and wild animals.',
-			image:
-				'https://animations-on-the-web-git-how-i-use-3066e1-emilkowalski-s-team.vercel.app/how-i-use-framer-motion/how-i-code-animations/pirate.png',
-			selected: false
-		},
+	import { tick } from 'svelte';
+	import { layout, mercury, presence } from '$lib/index.js';
+	import orbit from './assets/orbit.svg?url';
+	import rabbit from './assets/rabbit.svg?url';
+	import ghost from './assets/ghost.svg?url';
+	import island from './assets/island.svg?url';
+	import summit from './assets/summit.svg?url';
 
+	const id = $props.id();
+	const games = [
 		{
-			title: 'Lost in the mountains',
-			description: 'Find your way home.',
-			longDescription:
-				'You are lost in the mountains and you have to find your way home. But be careful, there are dangerous animals and you can get lost.',
-			image:
-				'https://animations-on-the-web-git-how-i-use-3066e1-emilkowalski-s-team.vercel.app/how-i-use-framer-motion/how-i-code-animations/boy.webp',
-			selected: false
+			id: 'orbit',
+			title: 'The Odyssey',
+			description: 'Explore unknown galaxies.',
+			image: orbit,
+			story:
+				'Chart a course through distant star systems. Meet curious travelers, discover forgotten planets, and find your way back to Earth.'
+		},
+		{
+			id: 'rabbit',
+			title: 'Angry Rabbits',
+			description: 'A garden worth defending.',
+			image: rabbit,
+			story:
+				'Keep a crew of hungry rabbits out of your garden. Build clever defenses, collect carrots, and make it through the harvest.'
+		},
+		{
+			id: 'ghost',
+			title: 'Ghost Town',
+			description: 'Follow the lanterns.',
+			image: ghost,
+			story:
+				'Explore quiet streets after sunset. Solve the puzzles left by the town’s residents and help a few friendly ghosts get home.'
+		},
+		{
+			id: 'island',
+			title: 'Hidden Island',
+			description: 'Find the lost treasure.',
+			image: island,
+			story:
+				'Sail to a tiny island with a very big secret. Follow an old map through palm groves, hidden coves, and forgotten ruins.'
+		},
+		{
+			id: 'summit',
+			title: 'The Long Way Home',
+			description: 'One trail at a time.',
+			image: summit,
+			story:
+				'Pack your bag and head into the mountains. Discover quiet trails, shelter from passing storms, and find your way across the summit.'
 		}
 	];
-	function onKeyDown(event) {
-		if (event.key === 'Escape') {
-			activeGame = null;
+	let activeGame = $state<(typeof games)[number] | null>(null);
+	let closeButton = $state<HTMLButtonElement>();
+	let list = $state<HTMLUListElement>();
+
+	const sharedId = (part: string, gameId: string) => `${id}-${part}-${gameId}`;
+	const layoutGroup = layout(() => activeGame, {
+		transition: { type: 'spring', duration: 0.32, bounce: 0 }
+	});
+
+	async function openGame(game: (typeof games)[number]) {
+		activeGame = game;
+		await tick();
+		if (activeGame?.id === game.id) closeButton?.focus({ preventScroll: true });
+	}
+
+	async function closeGame() {
+		const previous = activeGame;
+		activeGame = null;
+		await tick();
+		if (previous && !activeGame) {
+			list
+				?.querySelector<HTMLButtonElement>(`[data-game="${previous.id}"]`)
+				?.focus({ preventScroll: true });
 		}
 	}
 
-	onMount(() => {
-		window.addEventListener('keydown', onKeyDown);
-
-		return () => window.removeEventListener('keydown', onKeyDown);
-	});
-
-	const layoutGroup = layout(() => activeGame, { transition: { duration: 0.4 } });
+	function onKeyDown(event: KeyboardEvent) {
+		if (!activeGame) return;
+		if (event.key === 'Escape') {
+			event.preventDefault();
+			void closeGame();
+		}
+		if (event.key === 'Tab') {
+			event.preventDefault();
+			closeButton?.focus();
+		}
+	}
 </script>
 
-<div {@attach layoutGroup} class="layout-root">
+<svelte:window onkeydown={onKeyDown} />
+
+<div {@attach layoutGroup} class="cards-demo">
+	<ul class="game-list" bind:this={list} inert={activeGame !== null}>
+		{#each games as game (game.id)}
+			<li>
+				{#if activeGame?.id !== game.id}
+					<button
+						type="button"
+						class="game-card"
+						data-game={game.id}
+						aria-label={`View ${game.title}`}
+						aria-haspopup="dialog"
+						onclick={() => openGame(game)}
+						{...layout.props(sharedId('card', game.id))}
+					>
+						<img
+							{...layout.props(sharedId('image', game.id))}
+							src={game.image}
+							width="56"
+							height="56"
+							alt=""
+						/>
+						<span class="game-copy">
+							<span
+								{...layout.props(sharedId('title', game.id), { type: 'position' })}
+								class="game-title">{game.title}</span
+							>
+							<span
+								{...layout.props(sharedId('description', game.id), { type: 'position' })}
+								class="game-description">{game.description}</span
+							>
+						</span>
+						<span class="view-label" aria-hidden="true">View</span>
+					</button>
+				{/if}
+			</li>
+		{/each}
+	</ul>
+
 	{#if activeGame}
-		<div class="overlay" />
-		<div class="active-game">
+		<button
+			type="button"
+			class="backdrop"
+			aria-label="Close game details"
+			tabindex="-1"
+			onclick={closeGame}
+			transition:presence={{
+				initial: { opacity: 0, transition: { duration: 0.18 } },
+				exit: { opacity: 0, transition: { duration: 0.14 } }
+			}}
+		></button>
+		<div class="detail-position">
 			<div
-				{...layout.props(`card-${activeGame.title}`)}
-				class="inner"
-				style="border-radius: 12px"
+				{...layout.props(sharedId('card', activeGame.id))}
+				class="game-detail"
+				role="dialog"
+				aria-modal="true"
+				aria-labelledby={`${id}-title`}
+				aria-describedby={`${id}-story`}
+				tabindex="-1"
 			>
-				<div class="header">
+				<div class="detail-header">
 					<img
-						{...layout.props(`image-${activeGame.title}`)}
-						height={56}
-						width={56}
-						alt="Game"
+						{...layout.props(sharedId('image', activeGame.id))}
 						src={activeGame.image}
-						style="border-radius: 12px"
+						width="80"
+						height="80"
+						alt=""
 					/>
-					<div class="header-inner">
-						<div class="content-wrapper">
-							<h2
-								{...layout.props(`title-${activeGame.title}`)}
-								class="game-title"
-							>
-								{activeGame.title}
-							</h2>
-							<p
-								{...layout.props(`description-${activeGame.title}`)}
-								class="game-description"
-							>
-								{activeGame.description}
-							</p>
-						</div>
-						<button
-							{...layout.props(`button-${activeGame.title}`)}
-							class="button">Get</button
+					<div class="game-copy">
+						<h2
+							id={`${id}-title`}
+							{...layout.props(sharedId('title', activeGame.id), { type: 'position' })}
+							class="game-title"
+						>
+							{activeGame.title}
+						</h2>
+						<p
+							{...layout.props(sharedId('description', activeGame.id), { type: 'position' })}
+							class="game-description"
+						>
+							{activeGame.description}
+						</p>
+					</div>
+				</div>
+				<div {...layout.props({ type: 'position' })}>
+					<div
+						class="detail-body"
+						style="opacity: 0"
+						{@attach mercury({
+							animate: { opacity: 1 },
+							transition: { duration: 0.18, delay: 0.12, ease: 'easeOut' }
+						})}
+						out:presence|global={{ opacity: 0, transition: { duration: 0.1 } }}
+					>
+						<p id={`${id}-story`} class="story">
+							{activeGame.story}
+						</p>
+						<button bind:this={closeButton} type="button" class="close-button" onclick={closeGame}
+							>Back to games</button
 						>
 					</div>
 				</div>
-				<p
-					{...layout.props()}
-					{@attach mercury({
-						animate: {
-							opacity: 1
-						},
-						transition: {
-							duration: 0.1,
-							delay: 0.3
-						}
-					})}
-					class="long-description"
-				>
-					{activeGame.longDescription}
-				</p>
 			</div>
 		</div>
 	{/if}
-
-	<ul class="list">
-		{#each GAMES as game (game.title)}
-			{#if activeGame?.title !== game.title}
-				{#key game.title}
-					<li
-						{...layout.props(`card-${game.title}`)}
-						onclick={() => (activeGame = game)}
-						style="border-radius: 8px;"
-					>
-						<img
-							{...layout.props(`image-${game.title}`)}
-							height={56}
-							width={56}
-							alt="Game"
-							src={game.image}
-							style="border-radius: 12px;"
-						/>
-						<div class="game-wrapper">
-							<div class="content-wrapper">
-								<h2 {...layout.props(`title-${game.title}`)} class="game-title">
-									{game.title}
-								</h2>
-								<p
-									{...layout.props(`description-${game.title}`)}
-									class="game-description"
-								>
-									{game.description}
-								</p>
-							</div>
-							<button {...layout.props(`button-${game.title}`)} class="button"
-								>Get</button
-							>
-						</div>
-					</li>
-				{/key}
-			{/if}
-		{/each}
-	</ul>
 </div>
 
 <style>
-	.layout-root {
+	.cards-demo {
 		position: relative;
+		isolation: isolate;
 		width: 100%;
+		max-width: 520px;
+		margin: auto;
+		color: #1e293b;
 	}
-
-	.list {
-		position: relative;
-		display: flex;
-		width: 100%;
-		flex-direction: column;
-		align-items: center;
+	.game-list {
+		display: grid;
+		gap: 4px;
 		padding: 0;
-		margin: 48px 0;
+		margin: 0;
+		list-style: none;
 	}
-
-	.list li {
+	.game-list li {
+		height: 80px;
+	}
+	.game-card {
 		display: flex;
-		width: 386px;
+		align-items: center;
+		gap: 12px;
+		width: 100%;
+		height: 80px;
+		padding: 12px;
+		border: 1px solid #e2e8f0;
+		border-radius: 14px;
+		background: #f8fafc;
+		text-align: left;
 		cursor: pointer;
-		align-items: center;
-		gap: 16px;
-		padding: 0;
+		transition: background-color 150ms ease;
 	}
-
-	.game-wrapper {
+	img {
+		display: block;
+		flex-shrink: 0;
+		border-radius: 12px;
+		object-fit: cover;
+	}
+	.game-copy {
 		display: flex;
-		flex-grow: 1;
-		align-items: center;
-		justify-content: space-between;
-		border-bottom: 1px solid #d4d6d861;
-	}
-
-	.list li:last-of-type .game-wrapper {
-		border: none;
-	}
-
-	.content-wrapper {
-		display: flex;
+		flex: 1;
+		min-width: 0;
 		flex-direction: column;
-		padding: 16px 0;
+		gap: 4px;
 	}
-
-	.active-game .content-wrapper {
-		padding: 0;
-	}
-
 	.game-title {
+		display: block;
+		margin: 0;
 		font-size: 14px;
-		font-weight: 500;
+		font-weight: 600;
+		line-height: 1.3;
 	}
-
 	.game-description {
-		font-size: 14px;
-		color: #63635d;
+		display: block;
+		margin: 0;
+		font-size: 12px;
+		color: #64748b;
+		line-height: 1.4;
 	}
-
-	.button {
-		border-radius: 9999px;
-		background: #f1f0ef;
-		padding: 4px 12px;
+	.game-card .game-title,
+	.game-card .game-description {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+	.view-label {
 		font-size: 12px;
 		font-weight: 600;
-		color: #007aff;
+		color: #4f46e5;
 	}
-
-	.active-game {
+	.backdrop {
 		position: absolute;
-		inset: 0;
-		display: grid;
-		place-items: center;
-		z-index: 10;
-	}
-
-	.active-game .inner {
-		display: flex;
-		height: fit-content;
-		width: 500px;
+		inset: -12px;
+		z-index: 1;
+		border: 0;
+		border-radius: 20px;
+		background: rgb(15 23 42 / 24%);
 		cursor: pointer;
-		flex-direction: column;
-		align-items: flex-start;
-		gap: 16px;
-		overflow: hidden;
-		background: white;
-		padding: 16px;
 	}
-
-	.header {
-		display: flex;
-		width: 100%;
-		align-items: center;
-		gap: 16px;
-	}
-
-	.header-inner {
-		display: flex;
-		flex-grow: 1;
-		align-items: center;
-		justify-content: space-between;
-	}
-
-	.long-description {
-		font-size: 14px;
-		color: #63635d;
-		opacity: 0;
-	}
-
-	.overlay {
-		pointer-events: none;
+	.detail-position {
 		position: absolute;
-		inset: 0;
-		z-index: 10;
-		background: rgba(0, 0, 0, 0.2);
+		top: 50%;
+		left: 0;
+		width: 100%;
+		transform: translateY(-50%);
+		z-index: 2;
+		pointer-events: none;
 	}
-
-	body {
-		-webkit-font-smoothing: antialiased;
-		-moz-osx-font-smoothing: grayscale;
+	.game-detail {
+		overflow: hidden;
+		width: 100%;
+		box-sizing: border-box;
+		border: 1px solid #e2e8f0;
+		border-radius: 20px;
+		padding: 20px;
+		background: #f8fafc;
+		pointer-events: auto;
+	}
+	.detail-header {
+		display: flex;
+		align-items: center;
+		gap: 16px;
+	}
+	.story {
+		margin: 20px 0;
+		font-size: 14px;
+		line-height: 1.65;
+		color: #475569;
+	}
+	.close-button {
+		min-height: 44px;
+		padding: 0 16px;
+		border: 0;
+		border-radius: 10px;
+		color: #fff;
+		background: #4f46e5;
+		font-size: 13px;
+		font-weight: 600;
+		cursor: pointer;
+		transition: background-color 150ms ease;
+	}
+	button:focus-visible {
+		outline: 2px solid #6366f1;
+		outline-offset: 3px;
+	}
+	@media (hover: hover) and (pointer: fine) {
+		.game-card:hover {
+			background: #eef2ff;
+		}
+		.close-button:hover {
+			background: #4338ca;
+		}
+	}
+	@media (max-width: 420px) {
+		.view-label {
+			display: none;
+		}
+		.game-card {
+			gap: 8px;
+			padding: 10px;
+		}
+		.game-detail {
+			padding: 16px;
+		}
+		.detail-header {
+			gap: 10px;
+		}
+		.detail-header img {
+			width: 56px;
+			height: 56px;
+		}
 	}
 </style>

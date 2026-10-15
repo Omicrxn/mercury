@@ -1,8 +1,10 @@
 <script lang="ts">
-	import { layout } from '$lib/mercury/layout.svelte.js';
+	import { layout } from '$lib/index.js';
 	let showSecond = $state(false);
 
-	const layoutGroup = layout(() => showSecond, { transition: { duration: 0.4 } });
+	const layoutGroup = layout(() => showSecond, {
+		transition: { type: 'spring', duration: 0.3, bounce: 0 }
+	});
 
 	const buttonClass =
 		'rounded-md border border-slate-500 bg-blue-200 px-4 py-2 text-sm font-medium text-slate-800 transition-colors hover:bg-blue-300';

@@ -9,8 +9,8 @@
 			<div
 				class="box w-16 h-16 bg-blue-200 rounded-md opacity-0 border border-slate-500"
 				{@attach mercury({
-					animate: { opacity: 1, y: [64, 0] },
-					transition: { delay: i * 0.05 }
+					animate: { opacity: 1, y: [16, 0] },
+					transition: { delay: i * 0.05, duration: 0.25, ease: [0.19, 1, 0.22, 1] }
 				})}
 			></div>
 		{/each}

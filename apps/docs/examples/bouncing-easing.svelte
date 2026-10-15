@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { mercury, type AnimationTransition } from '@omicrxn/mercury';
+	import { mercury } from '@omicrxn/mercury';
+	import type { AnimationTransition } from '@omicrxn/mercury';
 
 	// From https://easings.net/#easeOutBounce
 	function bounceEase(x: number) {
@@ -18,27 +19,31 @@
 	}
 
 	const bounce: AnimationTransition = {
-		duration: 1.2,
+		duration: 0.7,
 		ease: bounceEase
 	};
 
 	const spring: AnimationTransition = {
 		type: 'spring',
 		stiffness: 700,
-		damping: 30
+		damping: 38
 	};
 
 	let isOn = $state(true);
 </script>
 
-<div class="flex flex-col h-full w-full items-center justify-center gap-4">
-	<div
-		class="w-[60px] h-[150px] dark:bg-slate-400 border-2 dark:border-slate-50 border-slate-500 bg-slate-200 flex items-start justify-center rounded-full p-3 cursor-pointer"
+<div class="flex flex-col gap-4">
+	<h2 class="text-xl font-bold">Bouncing Easing</h2>
+	<button
+		type="button"
+		aria-label="Toggle bouncing ball"
+		aria-pressed={isOn}
+		class="flex h-[176px] w-20 cursor-pointer items-start justify-center rounded-full border-2 border-demo-stroke bg-demo-container p-3 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-demo-accent"
 		onclick={() => (isOn = !isOn)}
 	>
 		<div
-			class="box rounded-full! size-12! shrink-0 will-change-transform"
-			{@attach mercury({ animate: { y: isOn ? 0 : 80 }, transition: isOn ? spring : bounce })}
+			class="box size-12! shrink-0 rounded-full!"
+			{@attach mercury({ animate: { y: isOn ? 0 : 96 }, transition: isOn ? spring : bounce })}
 		></div>
-	</div>
+	</button>
 </div>

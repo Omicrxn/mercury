@@ -1,69 +1,64 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import StatefulButton from './stateful-button/button.svelte';
-	import { onClickOutside } from 'runed';
-	import { layout, mercury } from '$lib/index.js';
-	import { spring } from 'motion';
-
-	const CLOSE_DURATION_MS = 400;
+	import { layout, presence } from '$lib/index.js';
 
 	let open = $state(false);
-	let formState = $state('idle');
+	let formState = $state<'idle' | 'loading' | 'success'>('idle');
 	let feedback = $state('');
 	let popover = $state<HTMLElement | null>(null);
-
-	const { ease } = spring.applyToOptions({ bounce: 0.15, stiffness: 320, damping: 32 });
+	let successTimer: ReturnType<typeof setTimeout> | undefined;
+	let closeTimer: ReturnType<typeof setTimeout> | undefined;
 
 	const layoutGroup = layout(() => open, {
-		transition: { duration: CLOSE_DURATION_MS / 1000, ease }
+		transition: { type: 'spring', duration: 0.28, bounce: 0 }
 	});
 
-	function resetPopoverState() {
+	function clearSubmission() {
+		clearTimeout(successTimer);
+		clearTimeout(closeTimer);
+	}
+
+	function openPopover() {
+		clearSubmission();
 		formState = 'idle';
 		feedback = '';
+		open = true;
 	}
 
 	function closePopover() {
+		clearSubmission();
 		open = false;
-		setTimeout(resetPopoverState, CLOSE_DURATION_MS);
 	}
 
-	onClickOutside(
-		() => popover,
-		() => closePopover()
-	);
+	function handleClickOutside(event: MouseEvent) {
+		if (open && popover && !event.composedPath().includes(popover)) closePopover();
+	}
 
 	function submit() {
-		//This is just a simulation of a real submit
+		if (!open || formState !== 'idle' || !feedback.trim()) return;
 		formState = 'loading';
-		console.log('submitted');
-		setTimeout(() => {
-			console.log('success');
-
-			formState = 'success';
-		}, 1500);
-		setTimeout(() => {
-			console.log('close');
-
-			closePopover();
-		}, 3300);
+		successTimer = setTimeout(() => (formState = 'success'), 1000);
+		closeTimer = setTimeout(closePopover, 2600);
 	}
 
-	const handleKeyDown = (event: KeyboardEvent) => {
-		if (event.key === 'Escape' && open) {
-			closePopover();
-		}
-
-		if ((event.ctrlKey || event.metaKey) && event.key === 'Enter' && open && formState === 'idle') {
+	function handleKeyDown(event: KeyboardEvent) {
+		if (event.key === 'Escape' && open) closePopover();
+		if ((event.ctrlKey || event.metaKey) && event.key === 'Enter' && open) {
+			event.preventDefault();
 			submit();
 		}
-	};
+	}
 
 	onMount(() => {
+		window.addEventListener('click', handleClickOutside, true);
 		window.addEventListener('keydown', handleKeyDown);
-		return () => window.removeEventListener('keydown', handleKeyDown);
+		return () => {
+			window.removeEventListener('click', handleClickOutside, true);
+			window.removeEventListener('keydown', handleKeyDown);
+			clearSubmission();
+		};
 	});
-
 </script>
 
 <div class="feedback-wrapper">
@@ -71,42 +66,38 @@
 		{#if !open}
 			<button
 				type="button"
-				onclick={() => {
-					open = true;
-					formState = 'idle';
-					feedback = '';
-				}}
+				onclick={openPopover}
 				class="feedback-button"
-				style:border-radius={8}
-				{...layout.props('wrapper')}
+				style:border-radius="8px"
+				{...layout.props('feedback-shell')}
 			>
-				<span {...layout.props('title')}>Feedback</span>
+				<span {...layout.props('feedback-title', { type: 'position' })}>Feedback</span>
 			</button>
 		{:else}
 			<div
-				{...layout.props('wrapper')}
+				{...layout.props('feedback-shell')}
 				class="feedback-popover"
-				style:border-radius={12}
+				style:border-radius="12px"
 				bind:this={popover}
 			>
-			<span
-				{...layout.props('title')}
-				aria-hidden
-				class="placeholder"
-				data-success={formState === 'success' ? 'true' : 'false'}
-				data-feedback={feedback ? 'true' : 'false'}
-			>
-				Feedback
-			</span>
-			{#if formState === 'success'}
-				{#key 'success'}
+				<span
+					{...layout.props('feedback-title', { type: 'position' })}
+					aria-hidden="true"
+					class="placeholder"
+					data-success={formState === 'success' ? 'true' : 'false'}
+					data-feedback={feedback ? 'true' : 'false'}
+				>
+					Feedback
+				</span>
+				{#if formState === 'success'}
 					<div
-						style="opacity: 0; filter: blur(4px); transform: translateY(-32px);"
-						{@attach mercury({
-							animate: { y: 0, opacity: 1, filter: 'blur(0px)' },
-							transition: { type: 'spring', duration: 0.4, bounce: 0 }
-						})}
+						transition:presence={{
+							initial: { y: -8, opacity: 0 },
+							exit: { opacity: 0, transition: { duration: 0.12 } },
+							transition: { type: 'spring', duration: 0.24, bounce: 0 }
+						}}
 						class="success-wrapper"
+						role="status"
 					>
 						<svg
 							width="32"
@@ -129,15 +120,18 @@
 							/>
 						</svg>
 						<h3>Feedback received!</h3>
-						<p>Thanks for helping me improve Sonner.</p>
+						<p>Thanks for helping us improve Mercury.</p>
 					</div>
-				{/key}
-			{:else}
-				{#key 'form'}
+				{:else}
 					<form
+						out:presence={{
+							y: 8,
+							opacity: 0,
+							mode: 'popLayout',
+							transition: { duration: 0.16, ease: 'easeOut' }
+						}}
 						onsubmit={(e) => {
 							e.preventDefault();
-							if (!feedback) return;
 							submit();
 						}}
 						class="feedback-form"
@@ -145,10 +139,12 @@
 						<textarea
 							autofocus
 							placeholder="Feedback"
+							aria-label="Feedback"
+							disabled={formState !== 'idle'}
 							bind:value={feedback}
 							class="textarea"
 							required
-						/>
+						></textarea>
 						<div class="feedback-footer">
 							<svg
 								class="dotted-line"
@@ -223,8 +219,7 @@
 							/>
 						</div>
 					</form>
-				{/key}
-			{/if}
+				{/if}
 			</div>
 		{/if}
 	</div>
@@ -232,7 +227,9 @@
 
 <style>
 	.feedback-wrapper {
-		height: 500px;
+		position: relative;
+		min-height: 216px;
+		height: 280px;
 		display: flex;
 		justify-content: center;
 		align-items: center;
@@ -241,13 +238,15 @@
 
 	.feedback-stage {
 		position: relative;
-		display: inline-block;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 100%;
 	}
 
-	/* Shared shell styles — layout morphs border/background by default; mismatched
-	   values interpolate into pink/blue artifacts during open/close. */
 	.feedback-button,
 	.feedback-popover {
+		position: relative;
 		border: none;
 		background-color: #f5f6f7;
 		box-shadow:
@@ -259,7 +258,7 @@
 	.feedback-button {
 		position: relative;
 		display: flex;
-		height: 36px;
+		min-height: 44px;
 		align-items: center;
 		border-radius: 8px;
 		padding: 0 12px;
@@ -274,7 +273,7 @@
 
 	.feedback-popover {
 		height: 192px;
-		width: 364px;
+		width: min(364px, 100%);
 		overflow: hidden;
 		border-radius: 12px;
 		padding: 4px;
@@ -288,7 +287,8 @@
 		top: 17px;
 		z-index: 10;
 	}
-	.placeholder[data-feedback='true'] {
+	.placeholder[data-feedback='true'],
+	.placeholder[data-success='true'] {
 		opacity: 0 !important;
 	}
 
@@ -373,7 +373,7 @@
 		transform: translateX(1.5px) translateY(-50%) rotate(180deg);
 	}
 
-	:global(.blue-button) {
+	.feedback-footer :global(.blue-button) {
 		margin-left: auto !important;
 		display: flex !important;
 		align-items: center !important;
@@ -381,7 +381,7 @@
 		border-radius: 6px !important;
 		font-weight: 600 !important;
 		font-size: 12px !important;
-		height: 24px !important;
+		min-height: 40px !important;
 		width: 104px !important;
 		overflow: hidden !important;
 		background: linear-gradient(180deg, #1994ff 0%, #157cff 100%) !important;
@@ -392,7 +392,7 @@
 		position: relative !important;
 	}
 
-	:global(.blue-button) span {
+	.feedback-footer :global(.blue-button span) {
 		display: flex !important;
 		width: 100% !important;
 		align-items: center !important;
@@ -401,96 +401,8 @@
 		text-shadow: 0px 1px 1.5px rgba(0, 0, 0, 0.16) !important;
 	}
 
-	.wrapper {
-		height: var(--spinner-size, 20px);
-		width: var(--spinner-size, 20px);
-	}
-
-	.spinner {
-		position: relative;
-		top: 50%;
-		left: 50%;
-		height: var(--spinner-size, 20px);
-		width: var(--spinner-size, 20px);
-	}
-
-	.bar {
-		animation: spin 1.2s linear infinite;
-		background: var(--spinner-color);
-		border-radius: 6px;
-		height: 8%;
-		left: -10%;
-		position: absolute;
-		top: -3.9%;
-		width: 24%;
-	}
-
-	.bar:nth-child(1) {
-		animation-delay: -1.2s;
-		transform: rotate(0.0001deg) translate(146%);
-	}
-
-	.bar:nth-child(2) {
-		animation-delay: -1.1s;
-		transform: rotate(30deg) translate(146%);
-	}
-
-	.bar:nth-child(3) {
-		animation-delay: -1s;
-		transform: rotate(60deg) translate(146%);
-	}
-
-	.bar:nth-child(4) {
-		animation-delay: -0.9s;
-		transform: rotate(90deg) translate(146%);
-	}
-
-	.bar:nth-child(5) {
-		animation-delay: -0.8s;
-		transform: rotate(120deg) translate(146%);
-	}
-
-	.bar:nth-child(6) {
-		animation-delay: -0.7s;
-		transform: rotate(150deg) translate(146%);
-	}
-
-	.bar:nth-child(7) {
-		animation-delay: -0.6s;
-		transform: rotate(180deg) translate(146%);
-	}
-
-	.bar:nth-child(8) {
-		animation-delay: -0.5s;
-		transform: rotate(210deg) translate(146%);
-	}
-
-	.bar:nth-child(9) {
-		animation-delay: -0.4s;
-		transform: rotate(240deg) translate(146%);
-	}
-
-	.bar:nth-child(10) {
-		animation-delay: -0.3s;
-		transform: rotate(270deg) translate(146%);
-	}
-
-	.bar:nth-child(11) {
-		animation-delay: -0.2s;
-		transform: rotate(300deg) translate(146%);
-	}
-
-	.bar:nth-child(12) {
-		animation-delay: -0.1s;
-		transform: rotate(330deg) translate(146%);
-	}
-
-	@keyframes spin {
-		0% {
-			opacity: 1;
-		}
-		100% {
-			opacity: 0.15;
-		}
+	.feedback-button:focus-visible {
+		outline: 2px solid #2090ff;
+		outline-offset: 3px;
 	}
 </style>

@@ -1,37 +1,33 @@
 <script lang="ts">
 	import { mercury } from '$lib/index.js';
-
-	let scrollRoot = $state<HTMLElement | undefined>(undefined);
+	let scrollRoot = $state<HTMLElement>();
 </script>
 
-<div class="flex min-h-screen flex-col justify-center gap-8 p-8">
-	<div class="mx-auto flex w-full max-w-2xl flex-col gap-6">
-		<div class="flex flex-col gap-1">
-			<h2 class="text-xl font-bold">Scroll</h2>
-			<p class="text-sm text-slate-600">Scroll the area below to animate the box.</p>
-		</div>
-
-		<div class="rounded-md border border-slate-500 border-dashed bg-slate-50 p-4">
-			<div
-				bind:this={scrollRoot}
-				class="h-[400px] overflow-y-auto overscroll-contain rounded-md border border-slate-500 bg-white"
-			>
-				<div class="h-[1000px] shrink-0"></div>
-				{#if scrollRoot}
-					<div
-						class="box mb-8 size-16 shrink-0 rounded-md border border-slate-500 bg-blue-200"
-						{@attach mercury({
-							scroll: {
-								enter: { x: 150, rotate: 180 },
-								exit: { x: 0, rotate: 0 },
-								transition: { duration: 1 },
-								root: scrollRoot
-							},
-							transition: { ease: 'circInOut', duration: 1 }
-						})}
-					></div>
-				{/if}
-			</div>
-		</div>
+<!-- svelte-ignore a11y_no_noninteractive_tabindex (The scroll region needs keyboard focus to scroll.) -->
+<div
+	bind:this={scrollRoot}
+	role="region"
+	aria-label="Scroll animation example"
+	tabindex="0"
+	class="flex h-64 w-full flex-col items-center overflow-y-auto overscroll-contain rounded-md border border-slate-300 p-4 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-blue-500 dark:border-slate-600"
+>
+	<div class="flex h-72 w-full shrink-0 flex-col items-center gap-2 pt-8 text-sm font-medium">
+		<p>Scroll down to move and rotate the box</p>
+		<span aria-hidden="true">↓</span>
 	</div>
+	{#if scrollRoot}
+		<div
+			class="box shrink-0"
+			{@attach mercury({
+				scroll: {
+					enter: { x: 64, rotate: 180 },
+					exit: { x: 0, rotate: 0 },
+					transition: { duration: 0.6, ease: 'easeInOut' },
+					amount: 0.5,
+					root: scrollRoot
+				}
+			})}
+		></div>
+	{/if}
+	<div class="h-24 w-full shrink-0" aria-hidden="true"></div>
 </div>

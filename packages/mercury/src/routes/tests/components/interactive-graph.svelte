@@ -1,46 +1,79 @@
 <script lang="ts">
-	import { motionValue, springValue, styleEffect, transformValue } from 'motion';
+	import {
+		animate,
+		motionValue,
+		styleEffect,
+		transformValue,
+		type AnimationPlaybackControls
+	} from 'motion';
 	import { onMount } from 'svelte';
-	import { spring } from 'svelte/motion';
-	const SPRING = {
-		damping: 18
-	};
-	const SLOW_SPRING = {
-		damping: 40
-	};
-	let timeout = $state<number>();
-	let isHovering = $state(false);
-	const clipPathValue = springValue(0, isHovering ? SPRING : SLOW_SPRING);
+
+	const clipPathValue = motionValue(0);
 	const clipPath = transformValue(() => `inset(0px ${clipPathValue.get()}% 0px 0px)`);
-	let graph = $state<SVGElement>()!;
+	let graph = $state<SVGSVGElement | null>(null);
+	let returnAnimation: AnimationPlaybackControls | undefined;
+	let reducedMotion = false;
+
 	onMount(() => {
-		styleEffect(graph, { clipPath });
+		if (!graph) return;
+		const stopEffect = styleEffect(graph, { clipPath });
+		const preference = window.matchMedia('(prefers-reduced-motion: reduce)');
+		const updatePreference = () => {
+			reducedMotion = preference.matches;
+			if (reducedMotion) {
+				returnAnimation?.stop();
+				clipPathValue.set(0);
+			}
+		};
+		updatePreference();
+		preference.addEventListener('change', updatePreference);
+
+		return () => {
+			preference.removeEventListener('change', updatePreference);
+			returnAnimation?.stop();
+			stopEffect();
+			clipPath.destroy();
+			clipPathValue.destroy();
+		};
 	});
-	function onPointerMove(e) {
-		const rect = e.currentTarget.getBoundingClientRect();
-		const distanceFromRight = Math.max(rect.right - e.clientX, 0);
-		const percentageFromRight = Math.min((distanceFromRight / rect.width) * 100, 100);
+
+	function onPointerMove(event: PointerEvent) {
+		if (!(event.currentTarget instanceof HTMLElement)) return;
+		returnAnimation?.stop();
+		const rect = event.currentTarget.getBoundingClientRect();
+		if (!rect.width) return;
+		const percentageFromRight = Math.max(
+			0,
+			Math.min(((rect.right - event.clientX) / rect.width) * 100, 100)
+		);
 		clipPathValue.set(percentageFromRight);
+	}
+
+	function resetGraph() {
+		returnAnimation?.stop();
+		if (reducedMotion) {
+			clipPathValue.set(0);
+			return;
+		}
+		returnAnimation = animate(clipPathValue, 0, { type: 'spring', duration: 0.3, bounce: 0 });
 	}
 </script>
 
 <div
 	class="w-full"
+	role="img"
+	aria-label="Interactive growth chart"
 	onpointermove={onPointerMove}
-	onpointerleave={() => {
-		isHovering = false;
-		timeout = window.setTimeout(() => {
-			clipPathValue.set(0);
-		}, 1000);
-	}}
-	onpointerenter={() => {
-		isHovering = true;
-		if (timeout) {
-			window.clearTimeout(timeout);
-		}
-	}}
+	onpointerleave={resetGraph}
+	onpointercancel={resetGraph}
 >
-	<svg bind:this={graph} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 644 188">
+	<svg
+		bind:this={graph}
+		xmlns="http://www.w3.org/2000/svg"
+		fill="none"
+		viewBox="0 0 644 188"
+		aria-hidden="true"
+	>
 		<path
 			stroke="#0090FF"
 			stroke-width="2"

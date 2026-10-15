@@ -1,15 +1,11 @@
 <script lang="ts">
-	import { mercury, layout } from '$lib/index.js';
-	import { spring } from 'motion';
-	import { onClickOutside } from 'runed';
-
-	const { ease } = spring.applyToOptions({ bounce: 0 });
+	import { mercury, layout, presence } from '$lib/index.js';
 
 	let modal = $state<HTMLDivElement | null>(null);
 	let isModalOpened = $state(false);
 
 	const layoutGroup = layout(() => isModalOpened, {
-		transition: { duration: 0.3, ease }
+		transition: { type: 'spring', duration: 0.3, bounce: 0 }
 	});
 
 	function openModal() {
@@ -20,35 +16,62 @@
 		isModalOpened = false;
 	}
 
-	onClickOutside(
-		() => modal,
-		() => closeModal()
-	);
-
-	$effect(() => {
-		function onKeyDown(event: KeyboardEvent) {
-			if (event.key === 'Escape') closeModal();
+	function handleWindowClick(event: MouseEvent) {
+		if (
+			modal &&
+			event.target instanceof Node &&
+			event.target.isConnected &&
+			!modal.contains(event.target)
+		) {
+			closeModal();
 		}
-		window.addEventListener('keydown', onKeyDown);
-		return () => window.removeEventListener('keydown', onKeyDown);
-	});
+	}
 </script>
 
-<main id="sandbox">
+<svelte:window
+	onclick={handleWindowClick}
+	onkeydown={(event) => {
+		if (event.key === 'Escape') closeModal();
+	}}
+/>
+
+<div id="sandbox">
 	<div id="example-container" {@attach layoutGroup}>
 		{#if !isModalOpened}
 			<button
-				{@attach mercury({ whileTap: { scale: 0.9 }, onTapEnd: openModal })}
-				{...layout.props('openButton')}
+				{...layout.props('drawer-receive')}
+				{@attach mercury({
+					whileHover: {
+						scale: 1.02,
+						transition: { duration: 0.15, ease: [0.25, 0.46, 0.45, 0.94] }
+					},
+					whileTap: { scale: 0.97, transition: { duration: 0.15, ease: [0.25, 0.46, 0.45, 0.94] } }
+				})}
+				onclick={openModal}
 				class="openButton"
-				data-primary-action><span>Receive</span></button
+				data-primary-action
+				><span {...layout.props('drawer-label', { type: 'position' })}>Receive</span></button
 			>
 		{:else}
-			<div class="backdrop" {@attach mercury({ animate: { opacity: 1 } })}></div>
+			<div
+				class="backdrop"
+				transition:presence={{
+					initial: { opacity: 0 },
+					exit: { opacity: 0, transition: { duration: 0.14 } },
+					transition: { duration: 0.18, ease: 'easeOut' }
+				}}
+			></div>
 			<div
 				bind:this={modal}
-				class="modal text-white opacity-0"
-				{@attach mercury({ animate: { opacity: 1 } })}
+				class="modal text-white"
+				role="dialog"
+				aria-label="Confirm receipt"
+				tabindex="-1"
+				transition:presence={{
+					initial: { opacity: 0, y: 8 },
+					exit: { opacity: 0, y: 8, transition: { duration: 0.16, ease: 'easeOut' } },
+					transition: { duration: 0.24, ease: [0.32, 0.72, 0, 1] }
+				}}
 			>
 				<div>
 					<h2 class="title text-2xl">
@@ -74,12 +97,27 @@
 						<button class="cancel" style="border-radius: 50px" onclick={closeModal}>
 							Cancel
 						</button>
-						<button class="save" style="border-radius: 50px" {...layout.props('openButton')}>
-							<span>Receive</span>
+						<button
+							onclick={closeModal}
+							class="save"
+							style="border-radius: 50px"
+							{...layout.props('drawer-receive')}
+						>
+							<span {...layout.props('drawer-label', { type: 'position' })}>Receive</span>
 						</button>
 					</div>
 					<button
-						{@attach mercury({ whileTap: { scale: 0.9 }, onTapEnd: closeModal })}
+						{@attach mercury({
+							whileHover: {
+								scale: 1.02,
+								transition: { duration: 0.15, ease: [0.25, 0.46, 0.45, 0.94] }
+							},
+							whileTap: {
+								scale: 0.97,
+								transition: { duration: 0.15, ease: [0.25, 0.46, 0.45, 0.94] }
+							}
+						})}
+						onclick={closeModal}
 						class="closeButton"
 						aria-label="Close"
 					>
@@ -110,17 +148,23 @@
 			</div>
 		{/if}
 	</div>
-</main>
+</div>
 
 <style>
+	#sandbox {
+		width: 100%;
+		max-width: 640px;
+	}
 	#example-container {
 		display: flex;
 		justify-content: center;
 		align-items: flex-end;
 		padding: 20px;
 		overflow: hidden;
-		position: fixed;
-		inset: 0;
+		position: relative;
+		min-height: 340px;
+		width: 100%;
+		isolation: isolate;
 	}
 
 	#sandbox button {
@@ -158,31 +202,34 @@
 		gap: 10px;
 	}
 
+	.controls button {
+		padding: 10px 12px;
+		white-space: nowrap;
+	}
+
 	.controls button.cancel {
 		background-color: var(--divider);
 		color: #f5f5f5;
 	}
 
 	.backdrop {
-		position: fixed;
+		position: absolute;
 		inset: 0;
 		background: rgba(0, 0, 0, 0.5);
 		backdrop-filter: blur(3px);
 	}
 
 	.modal {
+		position: absolute;
+		bottom: 20px;
 		border: 1px solid #1d2628;
 		background-color: #0b1011;
 		width: 100%;
-		max-width: 400px;
+		max-width: min(400px, calc(100% - 40px));
 		overflow: clip;
 		display: flex;
 		align-items: flex-start;
 		border-radius: 30px;
-		position: fixed;
-		bottom: 20px;
-		left: 50%;
-		transform: translateX(-50%);
 	}
 
 	.modal > div {
@@ -205,8 +252,12 @@
 
 	.closeButton {
 		position: absolute;
-		top: 20px;
-		right: 20px;
+		top: 10px;
+		right: 10px;
+		width: 44px;
+		height: 44px;
+		display: grid;
+		place-items: center;
 		background: none;
 		border: none;
 		padding: 0;

@@ -1,61 +1,66 @@
 <script lang="ts">
-	import { mercury, presence, GooeyEffect } from '@omicrxn/mercury';
+	import { mercury, GooeyEffect } from '@omicrxn/mercury';
 	let show = $state(false);
+	const id = $props.id();
 </script>
 
-<div class="relative w-full h-full flex flex-col justify-end items-start p-8">
-	<GooeyEffect strength={10} />
+<div class="relative w-full min-h-72 flex flex-col justify-end items-start p-8">
+	<GooeyEffect id={`${id}-gooey`} strength={10} />
 
-	<div class="flex flex-col gap-8" style:filter={'url(#gooey-filter)'}>
-		{#if show}
+	<div class="relative w-48 h-52" style:filter={`url(#${id}-gooey)`}>
+		<div
+			style="transform:translateY(80px);"
+			class="gooey-blob absolute bottom-20 left-0 rounded-full size-12 bg-foreground"
+			{@attach mercury({
+				animate: { y: show ? 0 : 80 },
+				animateOnMount: false,
+				transition: { duration: 0.3, delay: show ? 0 : 0.1, ease: 'easeInOut' }
+			})}
+		>
 			<div
-				style="transform:translateY(78px);"
-				class="rounded-full size-12 bg-black"
+				style="transform:translateY(-80px);"
+				id={`${id}-details`}
+				aria-hidden={!show}
+				inert={!show}
+				class="gooey-panel opacity-0 w-48 h-32 min-w-16 min-h-16 bg-foreground text-background rounded-md p-4"
 				{@attach mercury({
-					animate: { y: 0 },
-					transition: { duration: 0.3, ease: 'easeInOut' }
+					animate: { opacity: show ? 1 : 0 },
+					animateOnMount: false,
+					transition: { duration: show ? 0.5 : 0.3, delay: show ? 0.2 : 0, ease: 'easeOut' }
 				})}
-				out:presence={{ y: 78, transition: { delay: 0.1, duration: 0.3, ease: 'easeOut' } }}
 			>
 				<div
-					style="transform:translateY(-78px);"
-					class="opacity-0 w-48 h-32 min-w-16 min-h-16 bg-black text-white rounded-md p-4"
+					style="transform:translateY(20px);"
+					class="grid grid-cols-2 grid-rows-3 gap-3 justify-items-stretch"
 					{@attach mercury({
-						animate: { opacity: 1 },
-						transition: { duration: 0.5, delay: 0.2, ease: 'easeOut' }
+						animate: { y: show ? 0 : 20 },
+						animateOnMount: false,
+						transition: { duration: show ? 0.5 : 0.3, delay: show ? 0.2 : 0, ease: 'easeOut' }
 					})}
-					out:presence={{ opacity: 0, filter: 'blur(4px)', transition: { duration: 0.3, ease: 'easeOut' } }}
 				>
-					<div
-						style="transform:translateY(20px);"
-						class="grid grid-cols-2 grid-rows-3 gap-3 justify-items-stretch"
-						{@attach mercury({
-							animate: { y: 0 },
-							transition: { duration: 0.5, delay: 0.2, ease: 'easeOut' }
-						})}
-						out:presence={{ y: 20, opacity: 0, transition: { duration: 0.3, ease: 'easeOut' } }}
-					>
-						<div class="text-slate-400 text-sm">Next.js</div>
-						<div class="text-slate-400 text-sm text-end">v13.4.8</div>
-						<div>Errors</div>
-						<div class="flex justify-end">
-							<div class="bg-red-900 text-red-400 rounded-full size-6 flex place-content-center">
-								3
-							</div>
+					<div class="text-background/60 text-sm">Next.js</div>
+					<div class="text-background/60 text-sm text-end">v13.4.8</div>
+					<div>Errors</div>
+					<div class="flex justify-end">
+						<div class="bg-red-500/25 text-red-500 rounded-full size-6 flex place-content-center">
+							3
 						</div>
-						<div>Route</div>
-						<div class="text-end text-slate-300">Static</div>
 					</div>
+					<div>Route</div>
+					<div class="text-end text-background/80">Static</div>
 				</div>
 			</div>
-		{/if}
+		</div>
 
-		<div
-			class="rounded-full bg-black size-12 z-10 flex place-items-center p-1 cursor-pointer"
+		<button
+			type="button"
+			aria-label="Toggle route details"
+			aria-expanded={show}
+			aria-controls={`${id}-details`}
+			class="absolute bottom-0 left-0 rounded-full bg-foreground text-foreground size-12 z-10 flex place-items-center p-1 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-demo-accent"
 			onclick={() => (show = !show)}
 			{@attach mercury({
-				whileTap: { scale: 0.6 },
-				transition: { duration: 0.2, type: 'spring' }
+				whileTap: { scale: 0.9, transition: { duration: 0.2, type: 'spring' } }
 			})}
 		>
 			<svg
@@ -77,7 +82,7 @@
 					<circle cx="90" cy="90" r="90" fill="black" />
 				</mask>
 				<g mask="url(#mask0_408_139)">
-					<circle cx="90" cy="90" r="87" fill="black" stroke-width="6" />
+					<circle cx="90" cy="90" r="87" fill="currentColor" stroke-width="6" />
 					<path
 						d="M149.508 157.52L69.142 54H54V125.97H66.1136V69.3836L139.999 164.845C143.333 162.614 146.509 160.165 149.508 157.52Z"
 						fill="url(#paint0_linear_408_139)"
@@ -92,9 +97,10 @@
 						x2="144.5"
 						y2="160.5"
 						gradientUnits="userSpaceOnUse"
+						class="text-background"
 					>
-						<stop stop-color="white" />
-						<stop offset="1" stop-color="white" stop-opacity="0" />
+						<stop stop-color="currentColor" />
+						<stop offset="1" stop-color="currentColor" stop-opacity="0" />
 					</linearGradient>
 					<linearGradient
 						id="paint1_linear_408_139"
@@ -103,12 +109,13 @@
 						x2="120.799"
 						y2="106.875"
 						gradientUnits="userSpaceOnUse"
+						class="text-background"
 					>
-						<stop stop-color="white" />
-						<stop offset="1" stop-color="white" stop-opacity="0" />
+						<stop stop-color="currentColor" />
+						<stop offset="1" stop-color="currentColor" stop-opacity="0" />
 					</linearGradient>
 				</defs>
 			</svg>
-		</div>
+		</button>
 	</div>
 </div>

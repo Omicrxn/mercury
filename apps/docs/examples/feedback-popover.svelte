@@ -1,90 +1,103 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import StatefulButton from './stateful-button.svelte';
-	import { onClickOutside } from 'runed';
-	import { layout, mercury, presence } from '@omicrxn/mercury';
+	import { layout, presence } from '@omicrxn/mercury';
+
 	let open = $state(false);
-	let formState = $state('idle');
+	let formState = $state<'idle' | 'loading' | 'success'>('idle');
 	let feedback = $state('');
 	let popover = $state<HTMLElement | null>(null);
-	onClickOutside(
-		() => popover,
-		() => (open = false)
-	);
-	function submit() {
-		//This is just a simulation of a real submit
-		formState = 'loading';
-		console.log('submitted');
-		setTimeout(() => {
-			console.log('success');
+	let successTimer: ReturnType<typeof setTimeout> | undefined;
+	let closeTimer: ReturnType<typeof setTimeout> | undefined;
 
-			formState = 'success';
-		}, 1500);
-		setTimeout(() => {
-			console.log('close');
+	const layoutGroup = layout(() => open, {
+		transition: { type: 'spring', duration: 0.28, bounce: 0 }
+	});
 
-			open = false;
-		}, 3300);
+	function clearSubmission() {
+		clearTimeout(successTimer);
+		clearTimeout(closeTimer);
 	}
 
-	const handleKeyDown = (event) => {
-		if (event.key === 'Escape') {
-			open = false;
-		}
+	function openPopover() {
+		clearSubmission();
+		formState = 'idle';
+		feedback = '';
+		open = true;
+	}
 
-		if ((event.ctrlKey || event.metaKey) && event.key === 'Enter' && open && formState === 'idle') {
+	function closePopover() {
+		clearSubmission();
+		open = false;
+	}
+
+	function handleClickOutside(event: MouseEvent) {
+		if (open && popover && !event.composedPath().includes(popover)) closePopover();
+	}
+
+	function submit() {
+		if (!open || formState !== 'idle' || !feedback.trim()) return;
+		formState = 'loading';
+		successTimer = setTimeout(() => (formState = 'success'), 1000);
+		closeTimer = setTimeout(closePopover, 2600);
+	}
+
+	function handleKeyDown(event: KeyboardEvent) {
+		if (event.key === 'Escape' && open) closePopover();
+		if ((event.ctrlKey || event.metaKey) && event.key === 'Enter' && open) {
+			event.preventDefault();
 			submit();
 		}
-	};
+	}
 
 	onMount(() => {
+		window.addEventListener('click', handleClickOutside, true);
 		window.addEventListener('keydown', handleKeyDown);
-		return () => window.removeEventListener('keydown', handleKeyDown);
+		return () => {
+			window.removeEventListener('click', handleClickOutside, true);
+			window.removeEventListener('keydown', handleKeyDown);
+			clearSubmission();
+		};
 	});
-	const layoutGroup = layout(() => open, { transition: { duration: 0.35 } });
 </script>
 
-<div {@attach layoutGroup} class="feedback-wrapper">
-	{#key 'button'}
-		<button
-			onclick={() => {
-				open = true;
-				formState = 'idle';
-				feedback = '';
-			}}
-			class="feedback-button"
-			style:border-radius={8}
-			{...layout.props('wrapper')}
-		>
-			<span {...layout.props('title')}>Feedback</span>
-		</button>
-	{/key}
-
-	{#if open}
-		<div
-			{...layout.props('wrapper')}
-			class="feedback-popover"
-			style:border-radius={12}
-			bind:this={popover}
-		>
-			<span
-				{...layout.props('title')}
-				aria-hidden
-				class="placeholder"
-				data-success={formState === 'success' ? 'true' : 'false'}
-				data-feedback={feedback ? 'true' : 'false'}
+<div class="feedback-wrapper">
+	<div {@attach layoutGroup} class="feedback-stage">
+		{#if !open}
+			<button
+				type="button"
+				onclick={openPopover}
+				class="feedback-button"
+				style:border-radius="8px"
+				{...layout.props('feedback-shell')}
 			>
-				Feedback
-			</span>
-			{#if formState === 'success'}
-				{#key 'success'}
+				<span {...layout.props('feedback-title', { type: 'position' })}>Feedback</span>
+			</button>
+		{:else}
+			<div
+				{...layout.props('feedback-shell')}
+				class="feedback-popover"
+				style:border-radius="12px"
+				bind:this={popover}
+			>
+				<span
+					{...layout.props('feedback-title', { type: 'position' })}
+					aria-hidden="true"
+					class="placeholder"
+					data-success={formState === 'success' ? 'true' : 'false'}
+					data-feedback={feedback ? 'true' : 'false'}
+				>
+					Feedback
+				</span>
+				{#if formState === 'success'}
 					<div
-						style="opacity: 0; filter: blur(4px); transform: translateY(-32px);"
-						{@attach mercury({
-							animate: { y: 0, opacity: 1, filter: 'blur(0px)' },
-							transition: { type: 'spring', duration: 0.4, bounce: 0 }
-						})}
+						transition:presence={{
+							initial: { y: -8, opacity: 0 },
+							exit: { opacity: 0, transition: { duration: 0.12 } },
+							transition: { type: 'spring', duration: 0.24, bounce: 0 }
+						}}
 						class="success-wrapper"
+						role="status"
 					>
 						<svg
 							width="32"
@@ -107,22 +120,18 @@
 							/>
 						</svg>
 						<h3>Feedback received!</h3>
-						<p>Thanks for helping me improve Sonner.</p>
+						<p>Thanks for helping us improve Mercury.</p>
 					</div>
-				{/key}
-			{:else}
-				{#key 'form'}
+				{:else}
 					<form
-					out:presence={{
-						y: 8,
-						opacity: 0,
-						filter: 'blur(4px)',
-						mode: 'popLayout',
-						transition: { type: 'spring', duration: 0.4, bounce: 0 }
-					}}
+						out:presence={{
+							y: 8,
+							opacity: 0,
+							mode: 'popLayout',
+							transition: { duration: 0.16, ease: 'easeOut' }
+						}}
 						onsubmit={(e) => {
 							e.preventDefault();
-							if (!feedback) return;
 							submit();
 						}}
 						class="feedback-form"
@@ -130,10 +139,12 @@
 						<textarea
 							autofocus
 							placeholder="Feedback"
+							aria-label="Feedback"
+							disabled={formState !== 'idle'}
 							bind:value={feedback}
 							class="textarea"
 							required
-						/>
+						></textarea>
 						<div class="feedback-footer">
 							<svg
 								class="dotted-line"
@@ -143,7 +154,7 @@
 								fill="none"
 								xmlns="http://www.w3.org/2000/svg"
 							>
-								<path d="M0 1H352" stroke="#E6E7E8" stroke-dasharray="4 4" />
+								<path class="line-stroke" d="M0 1H352" stroke-dasharray="4 4" />
 							</svg>
 							<div class="half-circle-left">
 								<svg
@@ -156,11 +167,11 @@
 									<g clip-path="url(#clip0_2029_22)">
 										<path
 											d="M0 2C0.656613 2 1.30679 2.10346 1.91341 2.30448C2.52005 2.5055 3.07124 2.80014 3.53554 3.17157C3.99982 3.54301 4.36812 3.98396 4.6194 4.46927C4.87067 4.95457 5 5.47471 5 6C5 6.52529 4.87067 7.04543 4.6194 7.53073C4.36812 8.01604 3.99982 8.45699 3.53554 8.82843C3.07124 9.19986 2.52005 9.4945 1.91341 9.69552C1.30679 9.89654 0.656613 10 0 10V6V2Z"
-											fill="#F5F6F7"
+											class="notch-fill"
 										/>
 										<path
 											d="M1 12V10C2.06087 10 3.07828 9.57857 3.82843 8.82843C4.57857 8.07828 5 7.06087 5 6C5 4.93913 4.57857 3.92172 3.82843 3.17157C3.07828 2.42143 2.06087 2 1 2V0"
-											stroke="#E6E7E8"
+											class="line-stroke"
 											stroke-width="1"
 											stroke-linejoin="round"
 										/>
@@ -184,11 +195,11 @@
 									<g clip-path="url(#clip0_2029_22)">
 										<path
 											d="M0 2C0.656613 2 1.30679 2.10346 1.91341 2.30448C2.52005 2.5055 3.07124 2.80014 3.53554 3.17157C3.99982 3.54301 4.36812 3.98396 4.6194 4.46927C4.87067 4.95457 5 5.47471 5 6C5 6.52529 4.87067 7.04543 4.6194 7.53073C4.36812 8.01604 3.99982 8.45699 3.53554 8.82843C3.07124 9.19986 2.52005 9.4945 1.91341 9.69552C1.30679 9.89654 0.656613 10 0 10V6V2Z"
-											fill="#F5F6F7"
+											class="notch-fill"
 										/>
 										<path
 											d="M1 12V10C2.06087 10 3.07828 9.57857 3.82843 8.82843C4.57857 8.07828 5 7.06087 5 6C5 4.93913 4.57857 3.92172 3.82843 3.17157C3.07828 2.42143 2.06087 2 1 2V0"
-											stroke="#E6E7E8"
+											class="line-stroke"
 											stroke-width="1"
 											stroke-linejoin="round"
 										/>
@@ -208,61 +219,98 @@
 							/>
 						</div>
 					</form>
-				{/key}
-			{/if}
-		</div>
-	{/if}
+				{/if}
+			</div>
+		{/if}
+	</div>
 </div>
 
 <style>
+	/* Theme tokens for the popover; the dark set mirrors the light one. */
 	.feedback-wrapper {
+		--feedback-shell: #f5f6f7;
+		--feedback-panel: #ffffff;
+		--feedback-ring: rgba(0, 0, 0, 0.08);
+		--feedback-shadow: rgba(0, 0, 0, 0.04);
+		--feedback-line: #e6e7e8;
+		--feedback-text: #21201c;
+		--feedback-muted: #63635d;
+		--feedback-accent: #2090ff;
+	}
+
+	:global([data-theme='dark']) .feedback-wrapper {
+		--feedback-shell: #1c1c1e;
+		--feedback-panel: #111113;
+		--feedback-ring: rgba(255, 255, 255, 0.1);
+		--feedback-shadow: rgba(0, 0, 0, 0.4);
+		--feedback-line: #2c2c30;
+		--feedback-text: #f4f4f5;
+		--feedback-muted: #a1a1aa;
+	}
+
+	.feedback-wrapper {
+		position: relative;
+		min-height: 216px;
+		height: 280px;
 		display: flex;
 		justify-content: center;
 		align-items: center;
 		width: 100%;
 	}
 
+	.feedback-stage {
+		position: relative;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 100%;
+	}
+
+	.feedback-button,
+	.feedback-popover {
+		position: relative;
+		border: none;
+		background-color: var(--feedback-shell);
+		box-shadow:
+			0 0 0 1px var(--feedback-ring),
+			0px 2px 2px var(--feedback-shadow);
+		outline: none;
+	}
+
 	.feedback-button {
 		position: relative;
 		display: flex;
-		height: 36px;
+		min-height: 44px;
 		align-items: center;
 		border-radius: 8px;
-		border: 1px solid #e9e9e7;
-		background: white;
 		padding: 0 12px;
 		font-weight: 500;
-		outline: none;
 	}
 
 	.feedback-button span {
 		display: block;
 		font-size: 14px;
+		color: var(--feedback-muted);
 	}
 
 	.feedback-popover {
-		position: absolute;
 		height: 192px;
-		width: 364px;
+		width: min(364px, 100%);
 		overflow: hidden;
 		border-radius: 12px;
-		background: #f5f6f7;
 		padding: 4px;
-		box-shadow:
-			0 0 0 1px rgba(0, 0, 0, 0.08),
-			0px 2px 2px rgba(0, 0, 0, 0.04);
-		outline: none;
 	}
 
 	.placeholder {
 		position: absolute;
 		font-size: 14px;
-		color: #63635d;
+		color: var(--feedback-muted);
 		left: 16px;
 		top: 17px;
 		z-index: 10;
 	}
-	.placeholder[data-feedback='true'] {
+	.placeholder[data-feedback='true'],
+	.placeholder[data-success='true'] {
 		opacity: 0 !important;
 	}
 
@@ -283,28 +331,37 @@
 		margin-top: 8px;
 		font-size: 14px;
 		font-weight: 500;
-		color: #21201c;
+		color: var(--feedback-text);
 	}
 
 	.success-wrapper p {
 		font-size: 14px;
-		color: #63635d;
+		color: var(--feedback-muted);
 	}
 
 	.feedback-form {
 		border-radius: 8px;
-		border: 1px solid #e6e7e8;
-		background: white;
+		background: var(--feedback-panel);
+		outline: none;
 	}
 
 	.textarea {
 		width: 100%;
 		height: 128px;
 		resize: none;
+		border: none;
 		border-radius: 8px 0;
 		padding: 12px;
 		font-size: 14px;
+		color: var(--feedback-text);
+		background: transparent;
 		outline: none;
+	}
+
+	.textarea:focus,
+	.textarea:focus-visible {
+		outline: none;
+		box-shadow: none;
 	}
 
 	.textarea::placeholder {
@@ -317,6 +374,14 @@
 		height: 48px;
 		align-items: center;
 		padding: 0 10px;
+	}
+
+	.line-stroke {
+		stroke: var(--feedback-line);
+	}
+
+	.notch-fill {
+		fill: var(--feedback-shell);
 	}
 
 	.dotted-line {
@@ -340,7 +405,7 @@
 		transform: translateX(1.5px) translateY(-50%) rotate(180deg);
 	}
 
-	:global(.feedback-footer .blue-button) {
+	.feedback-footer :global(.blue-button) {
 		margin-left: auto !important;
 		display: flex !important;
 		align-items: center !important;
@@ -348,7 +413,7 @@
 		border-radius: 6px !important;
 		font-weight: 600 !important;
 		font-size: 12px !important;
-		height: 24px !important;
+		min-height: 40px !important;
 		width: 104px !important;
 		overflow: hidden !important;
 		background: linear-gradient(180deg, #1994ff 0%, #157cff 100%) !important;
@@ -359,7 +424,7 @@
 		position: relative !important;
 	}
 
-	:global(.feedback-footer .blue-button) span {
+	.feedback-footer :global(.blue-button span) {
 		display: flex !important;
 		width: 100% !important;
 		align-items: center !important;
@@ -368,96 +433,8 @@
 		text-shadow: 0px 1px 1.5px rgba(0, 0, 0, 0.16) !important;
 	}
 
-	.wrapper {
-		height: var(--spinner-size, 20px);
-		width: var(--spinner-size, 20px);
-	}
-
-	.spinner {
-		position: relative;
-		top: 50%;
-		left: 50%;
-		height: var(--spinner-size, 20px);
-		width: var(--spinner-size, 20px);
-	}
-
-	.bar {
-		animation: spin 1.2s linear infinite;
-		background: var(--spinner-color);
-		border-radius: 6px;
-		height: 8%;
-		left: -10%;
-		position: absolute;
-		top: -3.9%;
-		width: 24%;
-	}
-
-	.bar:nth-child(1) {
-		animation-delay: -1.2s;
-		transform: rotate(0.0001deg) translate(146%);
-	}
-
-	.bar:nth-child(2) {
-		animation-delay: -1.1s;
-		transform: rotate(30deg) translate(146%);
-	}
-
-	.bar:nth-child(3) {
-		animation-delay: -1s;
-		transform: rotate(60deg) translate(146%);
-	}
-
-	.bar:nth-child(4) {
-		animation-delay: -0.9s;
-		transform: rotate(90deg) translate(146%);
-	}
-
-	.bar:nth-child(5) {
-		animation-delay: -0.8s;
-		transform: rotate(120deg) translate(146%);
-	}
-
-	.bar:nth-child(6) {
-		animation-delay: -0.7s;
-		transform: rotate(150deg) translate(146%);
-	}
-
-	.bar:nth-child(7) {
-		animation-delay: -0.6s;
-		transform: rotate(180deg) translate(146%);
-	}
-
-	.bar:nth-child(8) {
-		animation-delay: -0.5s;
-		transform: rotate(210deg) translate(146%);
-	}
-
-	.bar:nth-child(9) {
-		animation-delay: -0.4s;
-		transform: rotate(240deg) translate(146%);
-	}
-
-	.bar:nth-child(10) {
-		animation-delay: -0.3s;
-		transform: rotate(270deg) translate(146%);
-	}
-
-	.bar:nth-child(11) {
-		animation-delay: -0.2s;
-		transform: rotate(300deg) translate(146%);
-	}
-
-	.bar:nth-child(12) {
-		animation-delay: -0.1s;
-		transform: rotate(330deg) translate(146%);
-	}
-
-	@keyframes spin {
-		0% {
-			opacity: 1;
-		}
-		100% {
-			opacity: 0.15;
-		}
+	.feedback-button:focus-visible {
+		outline: 2px solid var(--feedback-accent);
+		outline-offset: 3px;
 	}
 </style>

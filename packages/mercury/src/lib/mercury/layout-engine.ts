@@ -1,20 +1,14 @@
 import {
-	addScaleCorrector,
-	correctBorderRadius,
-	frameData,
-	frameSteps,
 	GroupAnimation,
-	handOffElementState,
-	hasTransform,
-	HTMLProjectionNode,
-	HTMLVisualElement,
-	microtask,
-	time,
-	visualElementStore,
 	type AnimationPlaybackControls,
+	type HTMLVisualElement,
 	type IProjectionNode,
 	type Transition
 } from 'motion';
+// The projection classes are read through the namespace, not as named imports:
+// if a Motion release drops one, it's `undefined` here and `failSoft` kicks in,
+// instead of the app failing to link the module.
+import * as motion from 'motion';
 
 /**
  * Two-phase driver for Motion's layout projection engine — the engine behind
@@ -64,6 +58,8 @@ type Session = {
 	transitionFor: LayoutTransitionResolver;
 	tracked: Map<HTMLElement, IProjectionNode>;
 	restorePoints: Map<HTMLElement, RestorePoint>;
+	/** The projection root the snapshot started an update on, which the commit must complete. */
+	root?: IProjectionNode;
 	resolve: (animation: GroupAnimation) => void;
 };
 
@@ -72,8 +68,17 @@ const LAYOUT_SELECTOR = '[data-layout],[data-layout-id]';
 /** Every projection node Mercury has created, keyed by element for reuse. */
 const layoutNodes = new WeakMap<HTMLElement, IProjectionNode>();
 
-/** Elements seen under each scope, so nodes of elements removed between updates get dropped. */
+/** Every element Mercury has created a node for, so nodes of removed elements get dropped. */
+const knownElements = new Set<HTMLElement>();
+
+/** Elements seen under each scope, released with the group that owns the scope. */
 const scopeElements = new WeakMap<Element | Document, Set<HTMLElement>>();
+
+/**
+ * Sessions that took a snapshot but haven't been flushed yet. Their removed
+ * elements must survive pruning until the commit decides what to do with them.
+ */
+const openSessions = new Set<Session>();
 
 /**
  * Sessions committed within the same tick are flushed together, so a removed
@@ -82,14 +87,17 @@ const scopeElements = new WeakMap<Element | Document, Set<HTMLElement>>();
  */
 let pendingCommits: Session[] | undefined;
 
+/** Mid exit-crossfade: Mercury put the element back, and it removes itself once the animation completes. */
+const isExiting = (element: HTMLElement) =>
+	Boolean(layoutNodes.get(element)?.options.onExitComplete);
+
 function collectLayoutElements(scope: Element | Document): HTMLElement[] {
 	const elements: HTMLElement[] = [];
-	if (scope instanceof HTMLElement && scope.matches(LAYOUT_SELECTOR)) {
-		elements.push(scope);
-	}
-	scope.querySelectorAll(LAYOUT_SELECTOR).forEach((element) => {
-		if (element instanceof HTMLElement) elements.push(element);
-	});
+	const add = (element: Element) => {
+		if (element instanceof HTMLElement && !isExiting(element)) elements.push(element);
+	};
+	if (scope instanceof HTMLElement && scope.matches(LAYOUT_SELECTOR)) add(scope);
+	scope.querySelectorAll(LAYOUT_SELECTOR).forEach(add);
 	return elements;
 }
 
@@ -98,6 +106,7 @@ function collectLayoutElements(scope: Element | Document): HTMLElement[] {
  * animation has set but not yet rendered are in the DOM before measuring.
  */
 function flushPendingFrame() {
+	const { frameData, frameSteps, time } = motion;
 	if (frameData.isProcessing) return;
 	const now = time.now();
 	frameData.delta = Math.min(Math.max(now - frameData.timestamp, 0), 1000 / 60);
@@ -109,18 +118,8 @@ function flushPendingFrame() {
 	frameData.isProcessing = false;
 }
 
-function getProjectionParent(element: HTMLElement): IProjectionNode | undefined {
-	let ancestor = element.parentElement;
-	while (ancestor) {
-		const node = layoutNodes.get(ancestor);
-		if (node && node.instance) return node;
-		ancestor = ancestor.parentElement;
-	}
-	return undefined;
-}
-
 function createVisualElement() {
-	return new HTMLVisualElement(
+	return new motion.HTMLVisualElement(
 		{
 			props: {},
 			presenceContext: null,
@@ -161,15 +160,20 @@ function restoreRadius(element: HTMLElement) {
  * animation, so corners stay round while the element is scaled and morph
  * between shared elements (what Motion's React `style` prop does). While it
  * animates, Motion writes the corrected radius inline.
+ *
+ * Before the DOM changes, pass `restore`: mid-animation the inline radius holds
+ * Motion's corrected value, so put the authored one back first. After the DOM
+ * changed, whatever is inline is authored — possibly just updated by Svelte.
  */
-function readRadius(element: HTMLElement, node: IProjectionNode) {
+function readRadius(element: HTMLElement, node: IProjectionNode, restore: boolean) {
 	if (!hasScaleCorrectors) {
 		hasScaleCorrectors = true;
-		addScaleCorrector(Object.fromEntries(RADIUS_KEYS.map((key) => [key, correctBorderRadius])));
+		motion.addScaleCorrector(
+			Object.fromEntries(RADIUS_KEYS.map((key) => [key, motion.correctBorderRadius]))
+		);
 	}
 
-	// Mid-animation the inline radius holds Motion's corrected value, not the real one.
-	restoreRadius(element);
+	if (restore) restoreRadius(element);
 
 	const authored = {} as Record<RadiusKey, string>;
 	let computed: CSSStyleDeclaration | undefined;
@@ -213,49 +217,58 @@ function readNodeOptions(element: HTMLElement, transition: Transition | undefine
 	} as Parameters<IProjectionNode['setOptions']>[0];
 }
 
-function prepareNode(element: HTMLElement, transition: Transition | undefined): IProjectionNode {
-	let node = layoutNodes.get(element);
+/**
+ * The projection parent is fixed when a node is created, so a marked ancestor
+ * needs its node first — even when it's outside the scope being snapshotted
+ * (a nested group updating before the outer one ever has). Otherwise the
+ * children hang off the root and stretch when the ancestor animates.
+ */
+function getProjectionParent(element: HTMLElement): IProjectionNode | undefined {
+	const ancestor = element.parentElement?.closest(LAYOUT_SELECTOR);
+	if (!(ancestor instanceof HTMLElement)) return undefined;
+	return layoutNodes.get(ancestor) ?? createNode(ancestor, undefined);
+}
 
-	if (!node) {
-		let visualElement = visualElementStore.get(element);
-		if (!visualElement) {
-			visualElement = createVisualElement();
-			// Values `animate()` (mercury's `animate`, gestures…) has been rendering on
-			// this element move to the VisualElement, so the layout animation composes
-			// with them instead of overwriting them.
-			handOffElementState(element, visualElement);
-		}
+function createNode(element: HTMLElement, transition: Transition | undefined): IProjectionNode {
+	const parent = getProjectionParent(element);
 
-		// A first-time element may carry a projection transform in its inline style
-		// that isn't tracked in latestValues; clear it so the first measurement isn't
-		// inflated.
-		if (element.style.transform && !hasTransform(visualElement.latestValues)) {
-			element.style.transform = '';
-		}
-
-		node = new HTMLProjectionNode(
-			visualElement.latestValues,
-			getProjectionParent(element)
-		) as IProjectionNode;
-		visualElement.projection = node;
-		node.setOptions({ ...readNodeOptions(element, transition), visualElement });
-		node.mount(element);
-		layoutNodes.set(element, node);
-
-		const created = node;
-		node.addEventListener('animationComplete', () => {
-			// Shared elements animate as one: the lead completes for its whole stack.
-			(created.getStack()?.members ?? [created]).forEach(releaseRadius);
-		});
-	} else {
-		node.setOptions(readNodeOptions(element, transition));
+	let visualElement = motion.visualElementStore.get(element) as HTMLVisualElement | undefined;
+	if (!visualElement) {
+		visualElement = createVisualElement();
+		// Values `animate()` (mercury's `animate`, gestures…) has been rendering on
+		// this element move to the VisualElement, so the layout animation composes
+		// with them instead of overwriting them.
+		motion.handOffElementState(element, visualElement);
 	}
+
+	// A first-time element may carry a projection transform in its inline style
+	// that isn't tracked in latestValues; clear it so the first measurement isn't
+	// inflated.
+	if (element.style.transform && !motion.hasTransform(visualElement.latestValues)) {
+		element.style.transform = '';
+	}
+
+	const node = new motion.HTMLProjectionNode(visualElement.latestValues, parent) as IProjectionNode;
+	visualElement.projection = node;
+	node.setOptions({ ...readNodeOptions(element, transition), visualElement });
+	node.mount(element);
+	layoutNodes.set(element, node);
+	knownElements.add(element);
+
+	node.addEventListener('animationComplete', () => {
+		// Shared elements animate as one: the lead completes for its whole stack.
+		(node.getStack()?.members ?? [node]).forEach(releaseRadius);
+	});
+
+	return node;
+}
+
+function prepareNode(element: HTMLElement, transition: Transition | undefined): IProjectionNode {
+	const existing = layoutNodes.get(element);
+	const node = existing ?? createNode(element, transition);
+	if (existing) node.setOptions(readNodeOptions(element, transition));
 
 	node.isPresent = true;
-	if (node.options.onExitComplete) {
-		node.setOptions({ onExitComplete: undefined });
-	}
-
 	return node;
 }
 
@@ -267,6 +280,7 @@ function dropNode(element: HTMLElement, node: IProjectionNode) {
 	if (!node.getStack() || node.isLead()) node.currentAnimation?.stop();
 	node.unmount();
 	layoutNodes.delete(element);
+	knownElements.delete(element);
 }
 
 function reconcileAdditions(session: Session, newMemberIds: Set<string>) {
@@ -308,7 +322,10 @@ function reconcileRemovals(session: Session, newMemberIds: Set<string>) {
 						dropNode(element, node);
 					}
 				});
-				if (node.relegate()) return;
+				if (node.relegate()) {
+					session.tracked.delete(element);
+					return;
+				}
 				element.remove();
 			}
 		}
@@ -320,6 +337,7 @@ function reconcileRemovals(session: Session, newMemberIds: Set<string>) {
 }
 
 function track(session: Session, element: HTMLElement, node: IProjectionNode) {
+	session.root ||= node.root;
 	session.tracked.set(element, node);
 	session.restorePoints.set(element, {
 		parent: element.parentElement,
@@ -334,6 +352,7 @@ function track(session: Session, element: HTMLElement, node: IProjectionNode) {
 function flushCommits() {
 	const sessions = pendingCommits!;
 	pendingCommits = undefined;
+	for (const session of sessions) openSessions.delete(session);
 
 	try {
 		// All additions before any removals — see `pendingCommits`.
@@ -341,16 +360,17 @@ function flushCommits() {
 		for (const session of sessions) reconcileAdditions(session, newMemberIds);
 		for (const session of sessions) reconcileRemovals(session, newMemberIds);
 
-		let root: IProjectionNode | undefined;
 		for (const session of sessions) {
 			session.tracked.forEach((node, element) => {
-				root ||= node.root;
-				if (element.isConnected) readRadius(element, node);
+				if (element.isConnected) readRadius(element, node, false);
 			});
 		}
-		root?.didUpdate();
+		// Looked up from the snapshot, not from what's still tracked: the update may
+		// have removed every element the session was watching.
+		sessions.find((session) => session.root)?.root?.didUpdate();
 	} catch (error) {
 		failSoft(error);
+		sessions.find((session) => session.root)?.root?.checkUpdateFailed();
 		for (const session of sessions) session.resolve(new GroupAnimation([]));
 		return;
 	}
@@ -358,7 +378,7 @@ function flushCommits() {
 	// The root flushes the update on a microtask, synchronously processing the
 	// frame that creates the layout animations. Collect them in a later step of
 	// the same microtask pass.
-	microtask.render(() => {
+	motion.microtask.render(() => {
 		for (const session of sessions) {
 			const animations = new Set<AnimationPlaybackControls>();
 			session.tracked.forEach((node) => {
@@ -374,27 +394,30 @@ function flushCommits() {
 }
 
 /**
- * Drop the nodes of elements under `scope` that have left the DOM — or, with
- * `all`, every node that isn't in the middle of an exit crossfade. Returns the
- * projection root if anything was dropped: unmounting a shared node starts an
- * update on it, which the caller has to complete.
+ * Drop the nodes of elements that have left the DOM — plus, with `scope`, every
+ * node under it. Elements an open session is tracking are left for its commit,
+ * and elements mid exit-crossfade remove themselves. Returns the projection root
+ * if anything was dropped: unmounting a shared node starts an update on it,
+ * which the caller has to complete.
  */
-function pruneScope(scope: Element | Document, all = false): IProjectionNode | undefined {
-	const known = scopeElements.get(scope);
-	if (!known) return;
-
+function prune(scope?: Element | Document): IProjectionNode | undefined {
+	const scoped = scope ? scopeElements.get(scope) : undefined;
 	let root: IProjectionNode | undefined;
-	known.forEach((element) => {
-		const node = layoutNodes.get(element);
-		// Mid exit-crossfade: the node removes itself once the animation completes.
-		const isExiting = element.isConnected && node?.options.onExitComplete;
-		if (isExiting || (element.isConnected && !all)) return;
 
-		known.delete(element);
+	const drop = (element: HTMLElement) => {
+		if (isExiting(element)) return;
+		for (const session of openSessions) if (session.tracked.has(element)) return;
+		scoped?.delete(element);
+		const node = layoutNodes.get(element);
 		if (!node) return;
 		root ||= node.root;
 		dropNode(element, node);
+	};
+
+	knownElements.forEach((element) => {
+		if (!element.isConnected) drop(element);
 	});
+	scoped?.forEach(drop);
 
 	return root;
 }
@@ -424,7 +447,7 @@ export function snapshotLayout(
 		// Nodes of elements that left the DOM outside of a layout update (e.g. after
 		// an exit transition) would otherwise linger in the projection tree. The
 		// commit completes the update this may start.
-		pruneScope(scope);
+		session.root = prune();
 
 		// Mount every node before snapshotting any: querySelectorAll's document order
 		// guarantees ancestors mount before their descendants.
@@ -436,7 +459,7 @@ export function snapshotLayout(
 			// Another group may have already snapshotted this node in the same update
 			// (nested scopes) — by now part of the DOM may have changed, so keep theirs.
 			if (node.root?.isUpdating && node.snapshot) return;
-			readRadius(element, node);
+			readRadius(element, node, true);
 			// Mounting during an active update flags isLayoutDirty, which would make
 			// willUpdate skip the snapshot.
 			node.isLayoutDirty = false;
@@ -444,9 +467,11 @@ export function snapshotLayout(
 		});
 	} catch (error) {
 		failSoft(error);
+		session.root?.checkUpdateFailed();
 		return null;
 	}
 
+	openSessions.add(session);
 	let committed = false;
 
 	// If the commit never comes (e.g. the owning component was destroyed by the
@@ -455,9 +480,8 @@ export function snapshotLayout(
 	setTimeout(() => {
 		if (committed) return;
 		committed = true;
-		let root: IProjectionNode | undefined;
-		session.tracked.forEach((node) => (root ||= node.root));
-		root?.checkUpdateFailed();
+		openSessions.delete(session);
+		session.root?.checkUpdateFailed();
 		resolve(new GroupAnimation([]));
 	});
 
@@ -477,15 +501,20 @@ export function snapshotLayout(
 }
 
 /**
- * Release the projection nodes Mercury created under `scope`: those of elements
- * that have left the DOM, or all of them when the scope itself is going away.
+ * Release the projection nodes of elements that have left the DOM — and, with
+ * `all`, every node Mercury created under `scope`, when the scope itself is
+ * going away.
  *
  * Deferred so an update that's still committing can hand removed shared
  * elements over to their replacements first.
  */
 export function releaseLayoutScope(scope: Element | Document, all = false) {
 	setTimeout(() => {
-		pruneScope(scope, all)?.didUpdate();
+		try {
+			prune(all ? scope : undefined)?.didUpdate();
+		} catch (error) {
+			failSoft(error);
+		}
 		if (all) scopeElements.delete(scope);
 	});
 }

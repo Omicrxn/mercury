@@ -3,14 +3,14 @@
 
 	let columns = $state(4);
 	let stage = $state<HTMLElement>();
-	let log = $state('—');
+	let log = $state('Ready');
 
 	const items = Array.from({ length: 8 }, (_, index) => index + 1);
 
-	// No group, no trigger: wrap the change that moves things.
+	// Capture the current layout before changing the column count.
 	const setColumns = (next: number) =>
 		layout.animate(() => (columns = next), {
-			transition: { type: 'spring', bounce: 0.2, duration: 0.5 },
+			transition: { type: 'spring', bounce: 0, duration: 0.3 },
 			scope: stage,
 			callbacks: {
 				onPlay: () => (log = 'playing'),
@@ -20,7 +20,10 @@
 
 	// Also works for DOM changes Svelte doesn't know about.
 	const toggleCompact = () =>
-		layout.animate(() => stage?.classList.toggle('compact'), { scope: stage });
+		layout.animate(() => stage?.classList.toggle('compact'), {
+			scope: stage,
+			transition: { type: 'spring', duration: 0.3, bounce: 0 }
+		});
 
 	const buttonClass =
 		'rounded-md border border-slate-500 bg-blue-200 px-4 py-2 text-sm font-medium text-slate-800 transition-colors hover:bg-blue-300';
@@ -31,7 +34,7 @@
 		<div class="flex flex-col gap-1">
 			<h2 class="text-xl font-bold">Layout Animation: layout.animate()</h2>
 			<p class="text-sm text-slate-600">
-				Imperative layout animation — status: <span data-log>{log}</span>
+				Animation status: <span data-log>{log}</span>
 			</p>
 		</div>
 
@@ -42,10 +45,10 @@
 		>
 			{#each items as item (item)}
 				<div
-					data-layout
-					class="box flex h-16 items-center justify-center rounded-md border border-slate-500 bg-blue-200 font-medium text-slate-800"
+					{...layout.props()}
+					class="tile flex h-16 items-center justify-center rounded-md border border-slate-500 bg-blue-200 font-medium text-slate-800"
 				>
-					{item}
+					<span {...layout.props({ type: 'position' })}>{item}</span>
 				</div>
 			{/each}
 		</div>
@@ -60,7 +63,7 @@
 </div>
 
 <style>
-	.stage:global(.compact) .box {
+	.stage:global(.compact) .tile {
 		height: 2rem;
 	}
 </style>

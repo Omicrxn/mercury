@@ -18,14 +18,26 @@ export type LayoutPropsOptions = {
 	type?: LayoutType;
 };
 
+/**
+ * A layout animation runs once, from the old layout to the new one: there's
+ * nothing to repeat, pause or decay.
+ */
+export type LayoutTransition = Omit<
+	AnimationTransition,
+	'type' | 'autoplay' | 'times' | 'repeat' | 'repeatType' | 'repeatDelay'
+> & {
+	type?: 'spring' | 'tween' | 'keyframes';
+};
+
 export type LayoutOptions = {
 	/** Transition for every element that changes layout. */
-	transition?: AnimationTransition;
+	transition?: LayoutTransition;
 	/** Per layout id overrides of `transition`, keyed by the id passed to `layout.props(id)`. */
-	shared?: Record<string, AnimationTransition>;
+	shared?: Record<string, LayoutTransition>;
 	/**
 	 * `onPlay` runs when a change starts layout animations, `onComplete` once they
-	 * have all ended.
+	 * have all ended. A change interrupted by another one doesn't complete: the
+	 * new change reports its own.
 	 */
 	callbacks?: Pick<AnimationCallbacks, 'onPlay' | 'onComplete'>;
 };
@@ -79,7 +91,7 @@ function trackDeep(value: unknown, seen = new Set<unknown>()): void {
 function begin(scope: Element | Document, options: LayoutOptions): LayoutSession | null {
 	if (prefersReducedMotion()) return null;
 
-	const toMotion = (transition?: AnimationTransition) =>
+	const toMotion = (transition?: LayoutTransition) =>
 		transition ? (mapTransitionToMotion(transition) as Transition) : undefined;
 	const base = toMotion(options.transition);
 	const shared = new Map(
@@ -162,8 +174,13 @@ async function animateLayout(
 	update: () => void,
 	options: LayoutAnimateOptions = {}
 ): Promise<GroupAnimation> {
-	const session = begin(options.scope ?? document, options);
-	update();
+	// Called from an effect, `update` must not make the effect depend on the
+	// state it changes.
+	const session = untrack(() => {
+		const session = begin(options.scope ?? document, options);
+		update();
+		return session;
+	});
 	await tick();
 	return finish(session, options);
 }

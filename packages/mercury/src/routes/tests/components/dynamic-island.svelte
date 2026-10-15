@@ -2,21 +2,25 @@
 	import { layout } from '$lib/index.js';
 	import Ring from './dynamic-island/ring.svelte';
 
-	let view = $state('idle');
+	let view = $state<'idle' | 'ring'>('idle');
 	const layoutGroup = layout(() => view, {
-		transition: { type: 'spring', bounce: 0.5}
+		transition: { type: 'spring', bounce: 0.5 }
 	});
 </script>
 
 <div>
 	<div class="flex h-[160px] justify-center">
-		<div class="h-fit min-w-[100px] overflow-hidden bg-black" style="border-radius: 32px;" {@attach layoutGroup}>
-            {#if view === 'idle'}
-            <div class="h-7" {...layout.props('island')}>Idle</div>
-        {/if}
-        {#if view === 'ring'}
-            <Ring {...layout.props('island')} />
-        {/if}
+		<div
+			{...layout.props()}
+			class="h-fit min-w-[100px] overflow-hidden bg-black text-white"
+			style="border-radius: 32px;"
+			{@attach layoutGroup}
+		>
+			{#if view === 'idle'}
+				<div class="h-7" {...layout.props({ type: 'position' })}>Idle</div>
+			{:else}
+				<Ring {...layout.props({ type: 'position' })} />
+			{/if}
 		</div>
 	</div>
 	<div class="flex justify-center gap-4">

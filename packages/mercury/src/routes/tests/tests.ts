@@ -24,7 +24,7 @@ export const categories: Category[] = [
 	{
 		id: 'layout',
 		label: 'Layout',
-		description: 'FLIP, shared element & reordering transitions'
+		description: 'Position, size, shared elements & imperative layout transitions'
 	},
 	{
 		id: 'gestures',
@@ -62,8 +62,7 @@ export const tests: TestEntry[] = Object.entries(modules)
 	.sort(
 		(a, b) =>
 			(categoryOrder.get(a.category) ?? Number.MAX_SAFE_INTEGER) -
-				(categoryOrder.get(b.category) ?? Number.MAX_SAFE_INTEGER) ||
-			a.slug.localeCompare(b.slug)
+				(categoryOrder.get(b.category) ?? Number.MAX_SAFE_INTEGER) || a.slug.localeCompare(b.slug)
 	);
 
 export type TestGroup = {

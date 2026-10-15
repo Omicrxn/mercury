@@ -1,27 +1,35 @@
 <script lang="ts">
-    import { spring } from "motion";
-    let value = $state(true);
-    const springAnimation = spring(0.5, 0.8);
+	import { spring } from 'motion';
+	let value = $state(true);
+	const springAnimation = spring(0.35, 0.2);
 </script>
 
-<div class="flex flex-col gap-6 items-center">
-    <div
-        data-state={value}
-        class="box"
-        style="transition: transform {springAnimation};"
-    ></div>
-    <button
-        class="dark:bg-indigo-400 bg-indigo-200 dark:border-slate-50 border-slate-500 dark:hover:bg-indigo-500 hover:bg-indigo-300 cursor-pointer px-2 py-1 rounded-md"
-        onclick={() => (value = !value)}>Toggle position</button
-    >
+<div class="flex flex-col gap-4 items-center">
+	<h2 class="text-xl font-bold">CSS Spring</h2>
+	<div
+		data-state={value}
+		class={['box w-16 h-16 bg-demo-fill rounded-md border border-demo-stroke']}
+		style="--spring-transition: {springAnimation};"
+	></div>
+	<button
+		type="button"
+		class="bg-demo-fill hover:bg-demo-fill-hover text-demo-fill-foreground min-h-11 cursor-pointer p-2 rounded-md"
+		onclick={() => (value = !value)}>Toggle position</button
+	>
 </div>
 
 <style>
-    .box {
-        transform: translateX(-100%);
-    }
+	.box {
+		transition: transform var(--spring-transition);
+		transform: translateX(-100%);
+	}
 
-    .box[data-state="true"] {
-        transform: translateX(100%) rotate(180deg);
-    }
+	.box[data-state='true'] {
+		transform: translateX(100%) rotate(180deg);
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.box {
+			transition: none;
+		}
+	}
 </style>
